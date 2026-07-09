@@ -109,4 +109,21 @@ router.post('/admin/bloecke/:id/unteraufgabe', requireAdmin, (req, res) => {
   res.redirect(`/admin/faecher/${block.fach_id}`);
 });
 
+router.get('/admin/termine/:id/kriterien', requireAdmin, (req, res) => {
+  const db = getDb();
+  const termin = db.prepare('SELECT * FROM pruefungstermin WHERE id = ?').get(req.params.id);
+  const kriterien = db
+    .prepare('SELECT * FROM projekt_kriterium WHERE pruefungstermin_id = ? ORDER BY sortierung')
+    .all(termin.id);
+  res.render('admin/kriterien', { title: 'Bewertungskriterien', user: req.user, termin, kriterien });
+});
+
+router.post('/admin/termine/:id/kriterien', requireAdmin, (req, res) => {
+  const { name, faktor } = req.body;
+  getDb()
+    .prepare('INSERT INTO projekt_kriterium (pruefungstermin_id, name, faktor) VALUES (?, ?, ?)')
+    .run(req.params.id, name, Number(faktor));
+  res.redirect(`/admin/termine/${req.params.id}/kriterien`);
+});
+
 module.exports = router;

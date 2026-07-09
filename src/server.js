@@ -9,6 +9,7 @@ const { getSessionUser } = require('./auth');
 const authRoutes = require('./routes/auth.routes');
 const adminRoutes = require('./routes/admin.routes');
 const schriftlichRoutes = require('./routes/schriftlich.routes');
+const projektRoutes = require('./routes/projekt.routes');
 const { requireAuth } = require('./middleware');
 
 function fsExistsEnvFile() {
@@ -60,6 +61,8 @@ app.use('/', authRoutes);
 app.use('/', adminRoutes);
 
 app.use('/', schriftlichRoutes);
+
+app.use('/', projektRoutes);
 
 app.get('/', requireAuth, (req, res) => {
   res.render('dashboard', { title: 'Dashboard', user: req.user });
