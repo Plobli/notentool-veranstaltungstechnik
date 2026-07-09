@@ -1,0 +1,25 @@
+<!-- src/views/admin/termin.ejs -->
+<h1><%= termin.name %></h1>
+
+<h2>Prüflinge</h2>
+<ul>
+  <% pruefliche.forEach(p => { %>
+    <li><%= p.name %><%= p.betrieb ? ' – ' + p.betrieb : '' %></li>
+  <% }) %>
+</ul>
+<form method="post" action="/admin/termine/<%= termin.id %>/pruefling">
+  <input type="text" name="name" placeholder="Name" required>
+  <input type="text" name="betrieb" placeholder="Betrieb (optional)">
+  <button type="submit">Prüfling hinzufügen</button>
+</form>
+
+<h2>Fächer</h2>
+<ul>
+  <% faecher.forEach(f => { %>
+    <li>
+      <a href="/admin/faecher/<%= f.id %>"><%= f.name %></a>
+      (<%= f.gewichtung_prozent %>%<%= f.ist_sperrfach ? ', Sperrfach' : '' %>)
+    </li>
+  <% }) %>
+</ul>
+<a href="/admin/termine/<%= termin.id %>/fach/neu">Fach anlegen</a>
