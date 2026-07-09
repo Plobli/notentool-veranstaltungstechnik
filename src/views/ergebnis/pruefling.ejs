@@ -1,0 +1,15 @@
+<!-- src/views/ergebnis/pruefling.ejs -->
+<h1>Gesamtergebnis – <%= pruefling.name %></h1>
+
+<% if (!ergebnis) { %>
+  <p>Noch keine abgeschlossenen Bewertungen für diesen Prüfling vorhanden.</p>
+<% } else { %>
+  <p>Gesamtpunkte: <strong class="<%= ergebnis.bestanden ? 'ok' : 'error' %>"><%= ergebnis.gesamtpunkte %></strong></p>
+  <p>Note: <strong><%= ergebnis.note %></strong></p>
+  <p>Status: <strong class="<%= ergebnis.bestanden ? 'ok' : 'error' %>"><%= ergebnis.bestanden ? 'Bestanden' : 'Nicht bestanden' %></strong></p>
+  <% if (!ergebnis.bestanden) { %>
+    <ul>
+      <% ergebnis.gruende.forEach(g => { %><li><%= g %></li><% }) %>
+    </ul>
+  <% } %>
+<% } %>

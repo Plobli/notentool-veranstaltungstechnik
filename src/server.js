@@ -10,6 +10,7 @@ const authRoutes = require('./routes/auth.routes');
 const adminRoutes = require('./routes/admin.routes');
 const schriftlichRoutes = require('./routes/schriftlich.routes');
 const projektRoutes = require('./routes/projekt.routes');
+const ergebnisRoutes = require('./routes/ergebnis.routes');
 const { requireAuth } = require('./middleware');
 
 function fsExistsEnvFile() {
@@ -63,6 +64,8 @@ app.use('/', adminRoutes);
 app.use('/', schriftlichRoutes);
 
 app.use('/', projektRoutes);
+
+app.use('/', ergebnisRoutes);
 
 app.get('/', requireAuth, (req, res) => {
   const db = getDb();
