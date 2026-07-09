@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> – Prüfungsverwaltung</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <a href="/" class="logo">Prüfungsverwaltung</a>
+    <% if (user) { %>
+      <nav>
+        <a href="/">Dashboard</a>
+        <% if (user.role === 'admin') { %><a href="/admin">Verwaltung</a><% } %>
+        <span><%= user.name %></span>
+        <form method="post" action="/logout" style="display:inline">
+          <button type="submit">Abmelden</button>
+        </form>
+      </nav>
+    <% } %>
+  </header>
+  <main>
+    <%- body %>
+  </main>
+</body>
+</html>
