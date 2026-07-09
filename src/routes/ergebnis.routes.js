@@ -97,6 +97,9 @@ router.get('/ergebnis/:prueflingId', requireAuth, (req, res) => {
 
 router.get('/ergebnis/termin/:terminId/export.csv', requireAuth, (req, res) => {
   const db = getDb();
+  const termin = db.prepare('SELECT * FROM pruefungstermin WHERE id = ?').get(req.params.terminId);
+  if (!termin) return res.status(404).send('Prüfungstermin nicht gefunden.');
+
   const pruefliche = db
     .prepare('SELECT * FROM pruefling WHERE pruefungstermin_id = ? ORDER BY name')
     .all(req.params.terminId);

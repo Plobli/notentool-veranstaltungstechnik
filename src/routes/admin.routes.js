@@ -103,6 +103,7 @@ router.post('/admin/bloecke/:id/unteraufgabe', requireAdmin, (req, res) => {
   const { code, max_punkte } = req.body;
   const db = getDb();
   const block = db.prepare('SELECT * FROM aufgabenblock WHERE id = ?').get(req.params.id);
+  if (!block) return res.status(404).send('Block nicht gefunden.');
   db.prepare(
     'INSERT INTO unteraufgabe (aufgabenblock_id, code, max_punkte) VALUES (?, ?, ?)'
   ).run(req.params.id, code, Number(max_punkte));

@@ -62,6 +62,10 @@ router.get('/schriftlich/:fachId/:prueflingId', requireAuth, (req, res) => {
 router.post('/schriftlich/:fachId/:prueflingId', requireAuth, (req, res) => {
   const db = getDb();
   const { fachId, prueflingId } = req.params;
+  const fach = db.prepare('SELECT * FROM fach WHERE id = ?').get(fachId);
+  const pruefling = db.prepare('SELECT * FROM pruefling WHERE id = ?').get(prueflingId);
+  if (!fach || !pruefling) return res.status(404).send('Nicht gefunden.');
+
   const abschliessen = req.body.abschliessen === '1';
 
   let eintrag = db
@@ -107,6 +111,7 @@ router.get('/schriftlich/:fachId/:prueflingId/vergleich', requireAuth, (req, res
   const db = getDb();
   const fach = db.prepare('SELECT * FROM fach WHERE id = ?').get(req.params.fachId);
   const pruefling = db.prepare('SELECT * FROM pruefling WHERE id = ?').get(req.params.prueflingId);
+  if (!fach || !pruefling) return res.status(404).send('Nicht gefunden.');
 
   const eintraege = db
     .prepare(
