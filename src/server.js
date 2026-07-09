@@ -7,6 +7,8 @@ const path = require('node:path');
 const { getDb } = require('./db');
 const { getSessionUser } = require('./auth');
 const authRoutes = require('./routes/auth.routes');
+const adminRoutes = require('./routes/admin.routes');
+const { requireAuth } = require('./middleware');
 
 function fsExistsEnvFile() {
   return require('node:fs').existsSync('.env');
@@ -51,18 +53,10 @@ app.use((req, res, next) => {
   next();
 });
 
-function requireAuth(req, res, next) {
-  if (!req.user) return res.redirect('/login');
-  next();
-}
-
-function requireAdmin(req, res, next) {
-  if (!req.user) return res.redirect('/login');
-  if (req.user.role !== 'admin') return res.status(403).send('Nur für Admins.');
-  next();
-}
 
 app.use('/', authRoutes);
+
+app.use('/', adminRoutes);
 
 app.get('/', requireAuth, (req, res) => {
   res.render('dashboard', { title: 'Dashboard', user: req.user });
@@ -73,4 +67,4 @@ if (require.main === module) {
   app.listen(port, () => console.log(`Server läuft auf Port ${port}`));
 }
 
-module.exports = { app, requireAuth, requireAdmin };
+module.exports = { app };

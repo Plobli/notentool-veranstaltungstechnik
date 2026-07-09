@@ -1,0 +1,20 @@
+<h1>Verwaltung</h1>
+
+<h2>Prüfungstermine</h2>
+<ul>
+  <% termine.forEach(t => { %>
+    <li><a href="/admin/termine/<%= t.id %>"><%= t.name %></a> <%= t.ist_aktiv ? '(aktiv)' : '' %></li>
+  <% }) %>
+</ul>
+<form method="post" action="/admin/pruefungstermine">
+  <input type="text" name="name" placeholder="z.B. Sommer 2026" required>
+  <button type="submit">Prüfungstermin anlegen</button>
+</form>
+
+<h2>Prüfer</h2>
+<ul>
+  <% pruefer.forEach(p => { %>
+    <li><%= p.name %> (<%= p.email %>, <%= p.role %>)</li>
+  <% }) %>
+</ul>
+<a href="/admin/pruefer/neu">Prüfer anlegen</a>

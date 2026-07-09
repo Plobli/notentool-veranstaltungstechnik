@@ -1,0 +1,14 @@
+<h1>Prüfer anlegen</h1>
+<% if (error) { %><p class="error"><%= error %></p><% } %>
+<form method="post" action="/admin/pruefer">
+  <label>Name<br><input type="text" name="name" required></label><br>
+  <label>E-Mail<br><input type="email" name="email" required></label><br>
+  <label>Passwort<br><input type="password" name="password" required></label><br>
+  <label>Rolle<br>
+    <select name="role">
+      <option value="pruefer">Prüfer</option>
+      <option value="admin">Admin</option>
+    </select>
+  </label><br>
+  <button type="submit">Anlegen</button>
+</form>
