@@ -103,4 +103,43 @@ router.post('/schriftlich/:fachId/:prueflingId', requireAuth, (req, res) => {
   res.redirect(`/schriftlich/${fachId}/${prueflingId}`);
 });
 
+router.get('/schriftlich/:fachId/:prueflingId/vergleich', requireAuth, (req, res) => {
+  const db = getDb();
+  const fach = db.prepare('SELECT * FROM fach WHERE id = ?').get(req.params.fachId);
+  const pruefling = db.prepare('SELECT * FROM pruefling WHERE id = ?').get(req.params.prueflingId);
+
+  const eintraege = db
+    .prepare(
+      `SELECT k.*, u.name as pruefer_name FROM korrektureintrag k
+       JOIN user u ON u.id = k.pruefer_id
+       WHERE k.fach_id = ? AND k.pruefling_id = ? AND k.status = 'abgeschlossen'`
+    )
+    .all(fach.id, pruefling.id);
+
+  const ergebnisse = eintraege.map((eintrag) => {
+    const bloecke = ladeBloeckeMitEintraegen(db, fach.id, eintrag.id);
+    const ergebnis = berechneFachPunkte(
+      bloecke.map((b) => ({
+        ziel_anteil: b.ziel_anteil,
+        unteraufgaben: b.unteraufgaben,
+        punkteEintraege: b.punkteEintraege,
+      }))
+    );
+    return { pruefer_name: eintrag.pruefer_name, punkte: ergebnis.punkte };
+  });
+
+  const durchschnitt = ergebnisse.length
+    ? Math.round(ergebnisse.reduce((s, e) => s + e.punkte, 0) / ergebnisse.length)
+    : null;
+
+  res.render('schriftlich/vergleich', {
+    title: `Vergleich: ${fach.name} – ${pruefling.name}`,
+    user: req.user,
+    fach,
+    pruefling,
+    ergebnisse,
+    durchschnitt,
+  });
+});
+
 module.exports = router;
