@@ -8,6 +8,7 @@ const { getDb } = require('./db');
 const { getSessionUser } = require('./auth');
 const authRoutes = require('./routes/auth.routes');
 const adminRoutes = require('./routes/admin.routes');
+const schriftlichRoutes = require('./routes/schriftlich.routes');
 const { requireAuth } = require('./middleware');
 
 function fsExistsEnvFile() {
@@ -57,6 +58,8 @@ app.use((req, res, next) => {
 app.use('/', authRoutes);
 
 app.use('/', adminRoutes);
+
+app.use('/', schriftlichRoutes);
 
 app.get('/', requireAuth, (req, res) => {
   res.render('dashboard', { title: 'Dashboard', user: req.user });

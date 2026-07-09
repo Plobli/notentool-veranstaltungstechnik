@@ -1,0 +1,44 @@
+<!-- src/views/schriftlich/eingabe.ejs -->
+<h1><%= fach.name %> – <%= pruefling.name %></h1>
+<% if (eintrag && eintrag.status === 'abgeschlossen') { %>
+  <p class="ok">Deine Korrektur ist abgeschlossen. Endpunktzahl: <strong><%= ergebnis.punkte %></strong></p>
+<% } %>
+
+<form method="post" action="/schriftlich/<%= fach.id %>/<%= pruefling.id %>" id="korrektur-form">
+  <% bloecke.forEach(block => { %>
+    <h2><%= block.name %></h2>
+    <table>
+      <thead><tr><th>Aufgabe</th><th>Max</th><th>Punkte</th><th>entfällt</th></tr></thead>
+      <tbody>
+        <% block.unteraufgaben.forEach(u => {
+          const eintragZeile = block.punkteEintraege.find(p => p.unteraufgabe_id === u.id);
+        %>
+          <tr>
+            <td><%= u.code %></td>
+            <td><%= u.max_punkte %></td>
+            <td>
+              <input type="number" step="0.5" min="0" max="<%= u.max_punkte %>"
+                name="punkte_<%= u.id %>" class="punkte-feld"
+                value="<%= eintragZeile && eintragZeile.punkte !== null ? eintragZeile.punkte : '' %>"
+                <%= eintrag && eintrag.status === 'abgeschlossen' ? 'disabled' : '' %>>
+            </td>
+            <td>
+              <input type="checkbox" name="entfaellt_<%= u.id %>" value="1"
+                <%= eintragZeile && eintragZeile.entfaellt ? 'checked' : '' %>
+                <%= eintrag && eintrag.status === 'abgeschlossen' ? 'disabled' : '' %>>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% }) %>
+
+  <p>Aktuelle Endpunktzahl (live berechnet): <strong id="live-summe"><%= ergebnis.punkte %></strong> / 100</p>
+
+  <% if (!eintrag || eintrag.status !== 'abgeschlossen') { %>
+    <button type="submit" name="abschliessen" value="0">Als Entwurf speichern</button>
+    <button type="submit" name="abschliessen" value="1">Korrektur abschließen</button>
+  <% } %>
+</form>
+
+<script src="/live-calc.js"></script>
