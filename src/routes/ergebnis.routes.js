@@ -61,15 +61,19 @@ function berechnePrueflingsErgebnis(db, pruefling) {
   if (projektBewertungen.length === projektKriterien.length && projektKriterien.length > 0) {
     const zeilen = projektKriterien.map((k) => {
       const b = projektBewertungen.find((x) => x.projekt_kriterium_id === k.id);
-      return { punkte: b.punkte, faktor: k.faktor };
+      return b ? { punkte: b.punkte, faktor: k.faktor } : undefined;
     });
-    const projektErgebnis = berechneProjektErgebnis(zeilen);
-    bereiche.push({
-      name: 'Realisieren eines veranstaltungstechnischen Projekts',
-      punkte: projektErgebnis.gesamtpunkte,
-      gewichtung_prozent: 50,
-      ist_sperrfach: true,
-    });
+
+    // Only proceed if all criteria have matching bewertungen
+    if (zeilen.every((z) => z !== undefined)) {
+      const projektErgebnis = berechneProjektErgebnis(zeilen);
+      bereiche.push({
+        name: 'Realisieren eines veranstaltungstechnischen Projekts',
+        punkte: projektErgebnis.gesamtpunkte,
+        gewichtung_prozent: 50,
+        ist_sperrfach: true,
+      });
+    }
   }
 
   if (bereiche.length === 0) return null;
