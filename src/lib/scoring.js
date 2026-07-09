@@ -48,4 +48,56 @@ function berechneProjektErgebnis(kriterien) {
   return { gesamtpunkte, kriterien: berechnet };
 }
 
-module.exports = { berechneBlockPunkte, berechneFachPunkte, berechneProjektErgebnis };
+function note(punkte) {
+  if (punkte >= 92) return 'sehr gut';
+  if (punkte >= 81) return 'gut';
+  if (punkte >= 67) return 'befriedigend';
+  if (punkte >= 50) return 'ausreichend';
+  if (punkte >= 30) return 'mangelhaft';
+  return 'ungenügend';
+}
+
+function berechneGesamtergebnis(bereiche) {
+  const gesamtpunkte = Math.floor(
+    bereiche.reduce((sum, b) => sum + b.punkte * (b.gewichtung_prozent / 100), 0)
+  );
+
+  const gruende = [];
+
+  for (const b of bereiche) {
+    if (b.punkte < 30) {
+      gruende.push(`${b.name} ist ungenügend (${b.punkte} Punkte)`);
+    }
+  }
+
+  for (const b of bereiche) {
+    if (b.ist_sperrfach && b.punkte < 50) {
+      gruende.push(`Sperrfach ${b.name} ist nicht mindestens ausreichend (${b.punkte} Punkte)`);
+    }
+  }
+
+  const nichtSperrfaecher = bereiche.filter((b) => !b.ist_sperrfach);
+  const ausreichendeNichtSperrfaecher = nichtSperrfaecher.filter((b) => b.punkte >= 50);
+  if (ausreichendeNichtSperrfaecher.length < 2) {
+    gruende.push('Weniger als mindestens 2 weitere Bereiche sind ausreichend');
+  }
+
+  if (gesamtpunkte < 50) {
+    gruende.push(`Gesamtergebnis ist nicht mindestens ausreichend (${gesamtpunkte} Punkte)`);
+  }
+
+  return {
+    gesamtpunkte,
+    note: note(gesamtpunkte),
+    bestanden: gruende.length === 0,
+    gruende,
+  };
+}
+
+module.exports = {
+  berechneBlockPunkte,
+  berechneFachPunkte,
+  berechneProjektErgebnis,
+  note,
+  berechneGesamtergebnis,
+};
