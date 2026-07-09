@@ -1,0 +1,4 @@
+# Domain durch eure echte Domain ersetzen, z.B. pruefung.euredomain.de
+:80 {
+  reverse_proxy app:3000
+}
