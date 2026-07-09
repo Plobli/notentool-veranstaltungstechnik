@@ -46,6 +46,7 @@ router.get('/projekt/:prueflingId', requireAuth, (req, res) => {
 router.post('/projekt/:prueflingId', requireAuth, (req, res) => {
   const db = getDb();
   const pruefling = db.prepare('SELECT * FROM pruefling WHERE id = ?').get(req.params.prueflingId);
+  if (!pruefling) return res.status(404).send('Prüfling nicht gefunden.');
   const kriterien = db
     .prepare('SELECT * FROM projekt_kriterium WHERE pruefungstermin_id = ?')
     .all(pruefling.pruefungstermin_id);

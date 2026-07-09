@@ -112,6 +112,7 @@ router.post('/admin/bloecke/:id/unteraufgabe', requireAdmin, (req, res) => {
 router.get('/admin/termine/:id/kriterien', requireAdmin, (req, res) => {
   const db = getDb();
   const termin = db.prepare('SELECT * FROM pruefungstermin WHERE id = ?').get(req.params.id);
+  if (!termin) return res.status(404).send('Prüfungstermin nicht gefunden.');
   const kriterien = db
     .prepare('SELECT * FROM projekt_kriterium WHERE pruefungstermin_id = ? ORDER BY sortierung')
     .all(termin.id);
