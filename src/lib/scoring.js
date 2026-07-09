@@ -37,4 +37,15 @@ function berechneFachPunkte(bloecke) {
   return { punkte, bloecke: berechneteBloecke };
 }
 
-module.exports = { berechneBlockPunkte, berechneFachPunkte };
+function berechneProjektErgebnis(kriterien) {
+  const berechnet = kriterien.map((k) => ({
+    ...k,
+    ergebnis: Math.round(k.punkte * k.faktor * 100) / 100,
+  }));
+  const gesamtpunkte = Math.round(
+    berechnet.reduce((sum, k) => sum + k.ergebnis, 0)
+  );
+  return { gesamtpunkte, kriterien: berechnet };
+}
+
+module.exports = { berechneBlockPunkte, berechneFachPunkte, berechneProjektErgebnis };
