@@ -58,7 +58,7 @@ function note(punkte) {
 }
 
 function berechneGesamtergebnis(bereiche) {
-  const gesamtpunkte = Math.floor(
+  const gesamtpunkte = Math.round(
     bereiche.reduce((sum, b) => sum + b.punkte * (b.gewichtung_prozent / 100), 0)
   );
 
