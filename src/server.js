@@ -65,7 +65,37 @@ app.use('/', schriftlichRoutes);
 app.use('/', projektRoutes);
 
 app.get('/', requireAuth, (req, res) => {
-  res.render('dashboard', { title: 'Dashboard', user: req.user });
+  const db = getDb();
+  const termin = db.prepare('SELECT * FROM pruefungstermin WHERE ist_aktiv = 1 ORDER BY id DESC LIMIT 1').get();
+
+  if (!termin) {
+    return res.render('dashboard', { title: 'Dashboard', user: req.user, termin: null, pruefliche: [] });
+  }
+
+  const pruefliche = db
+    .prepare('SELECT * FROM pruefling WHERE pruefungstermin_id = ? ORDER BY name')
+    .all(termin.id);
+  const faecher = db
+    .prepare('SELECT * FROM fach WHERE pruefungstermin_id = ? ORDER BY sortierung')
+    .all(termin.id);
+
+  const status = pruefliche.map((p) => {
+    const abgeschlosseneFaecher = faecher.filter((f) => {
+      const eintrag = db
+        .prepare(
+          "SELECT 1 FROM korrektureintrag WHERE pruefling_id = ? AND fach_id = ? AND pruefer_id = ? AND status = 'abgeschlossen'"
+        )
+        .get(p.id, f.id, req.user.id);
+      return Boolean(eintrag);
+    });
+    return {
+      pruefling: p,
+      abgeschlossen: abgeschlosseneFaecher.length,
+      gesamt: faecher.length,
+    };
+  });
+
+  res.render('dashboard', { title: 'Dashboard', user: req.user, termin, pruefliche: status, faecher });
 });
 
 if (require.main === module) {

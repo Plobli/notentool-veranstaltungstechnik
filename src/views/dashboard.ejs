@@ -1,2 +1,25 @@
 <h1>Dashboard</h1>
-<p>Willkommen, <%= user.name %>!</p>
+
+<% if (!termin) { %>
+  <p>Kein aktiver Prüfungstermin. <% if (user.role === 'admin') { %><a href="/admin">Jetzt anlegen</a><% } %></p>
+<% } else { %>
+  <h2><%= termin.name %></h2>
+  <table>
+    <thead><tr><th>Prüfling</th><th>Deine Fächer</th><th>Aktionen</th></tr></thead>
+    <tbody>
+      <% pruefliche.forEach(s => { %>
+        <tr>
+          <td><%= s.pruefling.name %></td>
+          <td><%= s.abgeschlossen %> von <%= s.gesamt %></td>
+          <td>
+            <% faecher.forEach(f => { %>
+              <a href="/schriftlich/<%= f.id %>/<%= s.pruefling.id %>"><%= f.name %></a>
+            <% }) %>
+            <a href="/projekt/<%= s.pruefling.id %>">Projekt</a>
+            <a href="/ergebnis/<%= s.pruefling.id %>">Gesamtergebnis</a>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } %>
