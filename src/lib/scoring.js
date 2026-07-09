@@ -94,10 +94,16 @@ function berechneGesamtergebnis(bereiche) {
   };
 }
 
+function berechneMepErgebnis(schriftlichePunkte, mepPunkte) {
+  const ergebnis = Math.round((schriftlichePunkte * 2 + mepPunkte) / 3);
+  return { ergebnis, bestanden: ergebnis >= 50 };
+}
+
 module.exports = {
   berechneBlockPunkte,
   berechneFachPunkte,
   berechneProjektErgebnis,
   note,
   berechneGesamtergebnis,
+  berechneMepErgebnis,
 };
