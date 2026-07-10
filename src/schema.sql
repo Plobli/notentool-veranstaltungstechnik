@@ -88,6 +88,20 @@ CREATE TABLE IF NOT EXISTS projekt_bewertung (
   UNIQUE(pruefling_id, projekt_kriterium_id)
 );
 
+-- Schriftliche Prüfung als feste Tabelle (Auswertungsbogen).
+-- Struktur (Teilgebiete/Felder/Faktoren) ist im Code verankert
+-- (src/lib/schriftlich-struktur.js); hier werden nur die Rohpunkte je Prüfling
+-- gespeichert. Ein gemeinsamer Bogen pro Jahrgang, kein Prüfer-getrennter Status.
+CREATE TABLE IF NOT EXISTS schriftlich_punkt (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  pruefling_id INTEGER NOT NULL REFERENCES pruefling(id) ON DELETE CASCADE,
+  teilgebiet TEXT NOT NULL,        -- 'wiso' | 'planung' | 'durchfuehrung' | 'energie'
+  feld TEXT NOT NULL,              -- 'gebunden' | 'u1' … 'u11'
+  punkte REAL,                     -- Rohpunkte; NULL = noch nicht eingetragen
+  gestrichen INTEGER NOT NULL DEFAULT 0,  -- nur WISO: markiert die gestrichene Aufgabe
+  UNIQUE(pruefling_id, teilgebiet, feld)
+);
+
 CREATE TABLE IF NOT EXISTS mep_ergebnis (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   pruefling_id INTEGER NOT NULL REFERENCES pruefling(id) ON DELETE CASCADE,

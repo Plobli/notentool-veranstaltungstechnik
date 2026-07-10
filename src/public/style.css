@@ -12,3 +12,21 @@ th:first-child, td:first-child { text-align: left; }
 .besser { background: #d7f5d7; }
 .schlechter { background: #f8d7d7; }
 input[type="number"] { width: 4.5rem; }
+
+/* Schriftlicher Auswertungsbogen */
+.bogen-actions { display: flex; gap: 1rem; align-items: center; margin: 1rem 0; flex-wrap: wrap; }
+.bogen-wrap { overflow-x: auto; }
+table.bogen { min-width: max-content; }
+table.bogen input[type="number"] { width: 3.2rem; }
+table.bogen .tg-zeile td { background: #eef2f7; font-weight: bold; }
+table.bogen .feld-name { text-align: left; white-space: nowrap; }
+table.bogen .gebunden td:first-child { font-style: italic; }
+table.bogen .ergebnis-zeile td { background: #d7f5d7; font-weight: bold; }
+table.bogen .gesamt-zeile td { background: #cfe3ff; font-weight: bold; }
+.strich-radio { display: inline-block; }
+.hinweis { color: #555; font-size: 0.9rem; }
+.pruefling-nav { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0.5rem 0 1rem; }
+.pruefling-nav a { padding: 0.2rem 0.6rem; border: 1px solid #ccc; border-radius: 4px; text-decoration: none; color: #1a2b3c; }
+.pruefling-nav a.aktiv { background: #1a2b3c; color: white; }
+.tg-block { margin: 1.5rem 0; }
+.tg-block h2 { margin-bottom: 0.3rem; }

@@ -1,0 +1,84 @@
+<!-- src/views/schriftlichbogen/pruefling.ejs -->
+<h1>Schriftliche Prüfung – <%= pruefling.name %></h1>
+<p class="hinweis">Ansicht: Pro Prüfling · <a href="/schriftlich">zur Matrix-Ansicht</a></p>
+
+<div class="pruefling-nav">
+  <% geschwister.forEach(g => { %>
+    <a href="/schriftlich/pruefling/<%= g.id %>" class="<%= g.id === pruefling.id ? 'aktiv' : '' %>"><%= g.name %></a>
+  <% }) %>
+</div>
+
+<form method="post" action="/schriftlich/pruefling/<%= pruefling.id %>" id="bogen-form" data-modus="einzel">
+  <div class="bogen-actions">
+    <button type="submit">Speichern</button>
+  </div>
+
+  <% teilgebiete.forEach(tg => {
+       const erg = ergebnis.teilgebiete[tg.key]; %>
+    <div class="tg-block" data-tg="<%= tg.key %>">
+      <h2><%= tg.name %></h2>
+      <table class="bogen">
+        <thead>
+          <tr><th class="feld-name">Aufgabe</th><th>Punkte</th>
+            <% if (tg.streichung) { %><th>streichen</th><% } %>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (tg.gebunden) {
+               const e = daten[tg.key].get('gebunden'); %>
+            <tr class="gebunden" data-tg="<%= tg.key %>" data-feld="gebunden">
+              <td class="feld-name">Gebunden</td>
+              <td>
+                <input type="number" step="1" min="0" max="<%= tg.gebundenMax %>"
+                  class="feld-input" data-tg="<%= tg.key %>" data-feld="gebunden"
+                  name="<%= tg.key %>_gebunden"
+                  value="<%= e && e.punkte !== null ? e.punkte : '' %>">
+              </td>
+              <% if (tg.streichung) { %><td></td><% } %>
+            </tr>
+          <% } %>
+
+          <% tg.felder.forEach(feld => {
+               const e = daten[tg.key].get(feld);
+               const istGestrichen = tg.streichung && erg.gestrichenesFeld === feld; %>
+            <tr data-tg="<%= tg.key %>" data-feld="<%= feld %>">
+              <td class="feld-name"><%= feld.toUpperCase() %></td>
+              <td>
+                <input type="number" step="1" min="0" max="10"
+                  class="feld-input" data-tg="<%= tg.key %>" data-feld="<%= feld %>"
+                  name="<%= tg.key %>_<%= feld %>"
+                  value="<%= e && e.punkte !== null ? e.punkte : '' %>">
+              </td>
+              <% if (tg.streichung) { %>
+                <td>
+                  <label class="strich-radio" title="Diese Aufgabe streichen">
+                    <input type="radio" name="strich_wiso" value="<%= feld %>"
+                      class="strich-input" <%= istGestrichen ? 'checked' : '' %>>✗
+                  </label>
+                </td>
+              <% } %>
+            </tr>
+          <% }) %>
+
+          <tr class="ergebnis-zeile" data-tg="<%= tg.key %>">
+            <td class="feld-name">Punkte</td>
+            <td class="tg-ergebnis" data-tg="<%= tg.key %>"><%= erg.punkte %></td>
+            <% if (tg.streichung) { %><td></td><% } %>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  <% }) %>
+
+  <p class="gesamt-zeile" style="padding:0.6rem;display:inline-block">
+    Gesamt (Summe Teilgebiete):
+    <strong class="gesamt-ergebnis"><%= ergebnis.gesamt %></strong>
+  </p>
+
+  <div class="bogen-actions">
+    <button type="submit">Speichern</button>
+  </div>
+  <p class="hinweis">Bei WISO wird genau eine Aufgabe gestrichen (✗). Ohne Auswahl fällt automatisch U6 weg.</p>
+</form>
+
+<script src="/schriftlich-calc.js"></script>

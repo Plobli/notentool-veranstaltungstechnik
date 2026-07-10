@@ -1,0 +1,118 @@
+<!-- src/views/schriftlichbogen/matrix.ejs -->
+<h1>Schriftliche Prüfung</h1>
+
+<% if (!termin) { %>
+  <p>Kein aktiver Prüfungstermin.
+    <% if (user.role === 'admin') { %><a href="/admin">Jetzt anlegen</a><% } %>
+  </p>
+<% } else if (pruefliche.length === 0) { %>
+  <p><strong><%= termin.name %></strong> hat noch keine Prüflinge.
+    <% if (user.role === 'admin') { %>
+      <a href="/admin/termine/<%= termin.id %>">Prüflinge anlegen</a>
+    <% } %>
+  </p>
+<% } else { %>
+  <p class="hinweis"><strong><%= termin.name %></strong> · Ansicht: Matrix (alle Prüflinge nebeneinander)</p>
+
+  <form method="post" action="/schriftlich" id="bogen-form" data-modus="matrix">
+    <div class="bogen-actions">
+      <button type="submit">Speichern</button>
+      <span class="hinweis">Ansicht wechseln:
+        <% pruefliche.forEach(p => { %>
+          <a href="/schriftlich/pruefling/<%= p.id %>"><%= p.name %></a><%= ' ' %>
+        <% }) %>
+      </span>
+    </div>
+
+    <div class="bogen-wrap">
+      <table class="bogen">
+        <thead>
+          <tr>
+            <th class="feld-name">Aufgabe</th>
+            <% pruefliche.forEach(p => { %>
+              <th><a href="/schriftlich/pruefling/<%= p.id %>"><%= p.name %></a></th>
+            <% }) %>
+          </tr>
+        </thead>
+        <tbody>
+          <% teilgebiete.forEach(tg => { %>
+            <tr class="tg-zeile" data-tg="<%= tg.key %>">
+              <td class="feld-name"><%= tg.name %></td>
+              <% pruefliche.forEach(p => { %><td></td><% }) %>
+            </tr>
+
+            <% if (tg.gebunden) { %>
+              <tr class="gebunden" data-tg="<%= tg.key %>" data-feld="gebunden">
+                <td class="feld-name">Gebunden</td>
+                <% pruefliche.forEach(p => {
+                     const e = daten.get(p.id)[tg.key].get('gebunden'); %>
+                  <td>
+                    <input type="number" step="1" min="0" max="<%= tg.gebundenMax %>"
+                      class="feld-input" data-tg="<%= tg.key %>" data-feld="gebunden"
+                      name="p<%= p.id %>_<%= tg.key %>_gebunden"
+                      value="<%= e && e.punkte !== null ? e.punkte : '' %>">
+                  </td>
+                <% }) %>
+              </tr>
+            <% } %>
+
+            <% tg.felder.forEach(feld => { %>
+              <tr data-tg="<%= tg.key %>" data-feld="<%= feld %>">
+                <td class="feld-name">
+                  <%= feld.toUpperCase() %>
+                  <% if (tg.streichung) { %>
+                    <span class="hinweis">(streichbar)</span>
+                  <% } %>
+                </td>
+                <% pruefliche.forEach(p => {
+                     const e = daten.get(p.id)[tg.key].get(feld);
+                     const erg = ergebnisse.get(p.id).teilgebiete[tg.key];
+                     const istGestrichen = tg.streichung && erg.gestrichenesFeld === feld; %>
+                  <td>
+                    <input type="number" step="1" min="0" max="10"
+                      class="feld-input" data-tg="<%= tg.key %>" data-feld="<%= feld %>"
+                      name="p<%= p.id %>_<%= tg.key %>_<%= feld %>"
+                      value="<%= e && e.punkte !== null ? e.punkte : '' %>">
+                    <% if (tg.streichung) { %>
+                      <label class="strich-radio" title="Diese Aufgabe streichen">
+                        <input type="radio" name="strich_p<%= p.id %>_wiso"
+                          value="<%= feld %>" class="strich-input"
+                          data-pruefling="<%= p.id %>"
+                          <%= istGestrichen ? 'checked' : '' %>>✗
+                      </label>
+                    <% } %>
+                  </td>
+                <% }) %>
+              </tr>
+            <% }) %>
+
+            <tr class="ergebnis-zeile" data-tg="<%= tg.key %>">
+              <td class="feld-name"><%= tg.name %> – Punkte</td>
+              <% pruefliche.forEach(p => { %>
+                <td class="tg-ergebnis" data-tg="<%= tg.key %>" data-pruefling="<%= p.id %>">
+                  <%= ergebnisse.get(p.id).teilgebiete[tg.key].punkte %>
+                </td>
+              <% }) %>
+            </tr>
+          <% }) %>
+
+          <tr class="gesamt-zeile">
+            <td class="feld-name">Gesamt (Summe Teilgebiete)</td>
+            <% pruefliche.forEach(p => { %>
+              <td class="gesamt-ergebnis" data-pruefling="<%= p.id %>">
+                <%= ergebnisse.get(p.id).gesamt %>
+              </td>
+            <% }) %>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="bogen-actions">
+      <button type="submit">Speichern</button>
+    </div>
+    <p class="hinweis">Bei WISO wird genau eine Aufgabe gestrichen (✗). Ohne Auswahl fällt automatisch U6 weg.</p>
+  </form>
+
+  <script src="/schriftlich-calc.js"></script>
+<% } %>

@@ -9,6 +9,7 @@ const { getSessionUser } = require('./auth');
 const authRoutes = require('./routes/auth.routes');
 const adminRoutes = require('./routes/admin.routes');
 const schriftlichRoutes = require('./routes/schriftlich.routes');
+const schriftlichbogenRoutes = require('./routes/schriftlichbogen.routes');
 const projektRoutes = require('./routes/projekt.routes');
 const ergebnisRoutes = require('./routes/ergebnis.routes');
 const { requireAuth } = require('./middleware');
@@ -50,6 +51,21 @@ function parseCookies(req, res, next) {
 
 app.use(parseCookies);
 
+// Bettet jede gerenderte View in das gemeinsame Layout (layout.ejs) ein.
+// Views bleiben reine Inhalts-Fragmente; hier wird das HTML-Gerüst inkl. CSS
+// darum gelegt. 'layout' selbst wird unverändert durchgereicht.
+app.use((req, res, next) => {
+  const originalRender = res.render.bind(res);
+  res.render = (view, options = {}, callback) => {
+    if (view === 'layout') return originalRender(view, options, callback);
+    originalRender(view, options, (err, html) => {
+      if (err) return next(err);
+      originalRender('layout', { ...options, body: html }, callback);
+    });
+  };
+  next();
+});
+
 app.use((req, res, next) => {
   const db = getDb();
   req.user = getSessionUser(db, req.cookies.session_id);
@@ -61,6 +77,8 @@ app.use((req, res, next) => {
 app.use('/', authRoutes);
 
 app.use('/', adminRoutes);
+
+app.use('/', schriftlichbogenRoutes);
 
 app.use('/', schriftlichRoutes);
 
