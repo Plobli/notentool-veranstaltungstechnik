@@ -24,7 +24,7 @@ router.post('/login', async (req, res) => {
   const sessionId = createSession(db, user.id);
   res.cookie('session_id', sessionId, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: req.secure,
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });
   res.redirect('/');
