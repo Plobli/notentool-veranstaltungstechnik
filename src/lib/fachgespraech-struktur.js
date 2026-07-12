@@ -72,11 +72,11 @@ const FACHGESPRAECH_BESTEHENSGRENZE = 50;
 // Höchstwert 10, damit Ergebnis = Summe × 10 / Anzahl Zeilen auf max. 100 kommt.
 // wert = Punktwert; key = stabiler Bezeichner; symbol/label für die Anzeige.
 const FACHGESPRAECH_SKALA = [
-  { key: 'pp', wert: 10, symbol: '+++', label: 'vollständig' },
-  { key: 'p', wert: 7.5, symbol: '++', label: 'teilweise' },
+  { key: 'pp', wert: 10, symbol: '++', label: 'vollständig' },
+  { key: 'p', wert: 7.5, symbol: '+', label: 'teilweise' },
   { key: 'null', wert: 5, symbol: '0', label: 'mit Hilfe korrekt' },
   { key: 'm', wert: 2.5, symbol: '−', label: 'mit Hilfe teilweise' },
-  { key: 'mm', wert: 0, symbol: '−−−', label: 'nicht okay' },
+  { key: 'mm', wert: 0, symbol: '−−', label: 'nicht okay' },
 ];
 
 const FACHGESPRAECH_SKALA_BY_KEY = new Map(
