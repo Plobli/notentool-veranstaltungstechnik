@@ -9,80 +9,88 @@
   <% }) %>
 </div>
 
-<div id="fg-form" data-pruefling="<%= pruefling.id %>">
-  <div class="bogen-wrap">
-    <table class="bogen fg-tabelle">
-      <colgroup>
-        <col class="fg-col-kriterium">
-        <col class="fg-col-protokoll">
-        <col class="fg-col-punkte">
-        <col class="fg-col-faktor">
-        <col class="fg-col-ergebnis">
-      </colgroup>
-      <thead>
-        <tr>
-          <th class="feld-name">Kriterium</th>
-          <th>Protokoll zu Fragen und Antworten</th>
-          <th>Punkte</th>
-          <th>Faktor</th>
-          <th>Ergebnis</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% kriterien.forEach(k => {
-             const b = bewertung.get(k.key);
-             const erg = ergebnis.kriterien.find(e => e.key === k.key); %>
-          <tr data-kriterium="<%= k.key %>">
-            <td class="fg-kriterium">
-              <div class="fg-kriterium-inner">
-                <div class="fg-nr"><%= k.nr %></div>
-                <div class="fg-kriterium-text">
-                  <strong><%= k.name %></strong>
-                  <p class="fg-beschreibung"><%= k.beschreibung %></p>
-                </div>
-              </div>
-            </td>
-            <td class="fg-protokoll-zelle">
-              <div class="fg-protokoll" data-kriterium="<%= k.key %>">
-                <div class="fg-eintraege">
-                  <% const eintraege = (b && b.protokoll && b.protokoll.length) ? b.protokoll : [{ text: '', bewertung: '' }]; %>
-                  <% eintraege.forEach(e => { %>
-                    <div class="fg-eintrag" data-bewertung="<%= e.bewertung %>">
-                      <textarea class="fg-eintrag-text" rows="1" placeholder="Frage / Antwort notieren …"><%= e.text %></textarea>
-                      <div class="fg-bewertung" role="group" aria-label="Antwort bewerten">
-                        <button type="button" class="fg-btn-korrekt" title="Antwort korrekt">✓</button>
-                        <button type="button" class="fg-btn-falsch" title="Antwort falsch">✗</button>
-                      </div>
-                    </div>
-                  <% }) %>
-                </div>
-                <button type="button" class="fg-eintrag-add">+ Eintrag</button>
-              </div>
-            </td>
-            <td class="feld-zelle fg-punkte-zelle">
-              <input type="number" min="0" max="100" step="1"
-                class="feld-input fg-punkte" data-kriterium="<%= k.key %>"
-                value="<%= b && b.punkte !== null && b.punkte !== undefined ? b.punkte : '' %>">
-            </td>
-            <td class="fg-faktor"><%= k.faktor.toLocaleString('de-DE') %></td>
-            <td class="fg-ergebnis" data-kriterium="<%= k.key %>"><%= erg ? erg.ergebnis.toLocaleString('de-DE') : 0 %></td>
-          </tr>
-        <% }) %>
+<p class="hinweis fg-skala-legende">
+  Bewertung je Zeile:
+  <% skala.forEach(s => { %>
+    <span class="fg-skala-legende-item"><strong><%= s.symbol %></strong> <%= s.label %> (<%= s.wert.toLocaleString('de-DE') %>)</span>
+  <% }) %>
+  · Ergebnis = Summe × 10 / Anzahl bewerteter Zeilen (max. 100)
+</p>
 
-        <tr class="gesamt-zeile">
-          <td class="feld-name" colspan="3">Gesamtpunkte</td>
-          <td class="fg-gesamt punkte-status <%= ergebnis.bestanden ? 'bestanden' : 'durchgefallen' %>" colspan="2"><%= ergebnis.gesamtpunkte %></td>
-        </tr>
-        <tr class="gesamt-status-zeile">
-          <td class="feld-name" colspan="3">Ergebnis</td>
-          <td class="gesamt-status fg-status <%= ergebnis.bestanden ? 'bestanden' : 'durchgefallen' %>" colspan="2">
-            <span class="fg-status-text"><%= ergebnis.bestanden ? 'bestanden' : 'nicht bestanden' %></span>
-            <span class="fg-note">Note: <%= ergebnis.note %></span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+<div id="fg-form" data-pruefling="<%= pruefling.id %>">
+
+  <% kriterien.forEach(k => {
+       const zeilenListe = zeilen.get(k.key) || [];
+       const erg = ergebnis.kriterien.find(e => e.key === k.key); %>
+    <section class="fg-bereich" data-kriterium="<%= k.key %>">
+      <div class="fg-bereich-header">
+        <h2><span class="fg-nr"><%= k.nr %></span> <%= k.name %> <span class="fg-faktor-badge">Faktor <%= k.faktor.toLocaleString('de-DE') %></span></h2>
+        <p class="fg-beschreibung"><%= k.beschreibung %></p>
+      </div>
+
+      <div class="bogen-wrap">
+        <table class="bogen fg-tabelle">
+          <colgroup>
+            <col class="fg-col-nr">
+            <col class="fg-col-thema">
+            <col class="fg-col-begruendung">
+            <col class="fg-col-skala">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="fg-th-nr">Nr.</th>
+              <th>Thema in Stichpunkten</th>
+              <th>Begründung der Punktevergabe</th>
+              <th>Bewertung</th>
+            </tr>
+          </thead>
+          <tbody class="fg-zeilen">
+            <% const anzuzeigen = zeilenListe.length ? zeilenListe : [{ thema: '', begruendung: '', skala: '' }]; %>
+            <% anzuzeigen.forEach((z, i) => { %>
+              <tr class="fg-zeile" data-skala="<%= z.skala %>">
+                <td class="fg-zeile-nr"><%= i + 1 %></td>
+                <td class="fg-zelle"><textarea class="fg-thema" rows="1" placeholder="Thema notieren …"><%= z.thema %></textarea></td>
+                <td class="fg-zelle"><textarea class="fg-begruendung" rows="1" placeholder="Begründung …"><%= z.begruendung %></textarea></td>
+                <td class="fg-skala-zelle">
+                  <div class="fg-skala-wahl" role="group" aria-label="Bewertung">
+                    <% skala.forEach(s => { %>
+                      <button type="button" class="fg-skala-btn" data-skala="<%= s.key %>"
+                        title="<%= s.label %> (<%= s.wert.toLocaleString('de-DE') %>)"><%= s.symbol %></button>
+                    <% }) %>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+          <tfoot>
+            <tr class="fg-add-zeile">
+              <td colspan="4"><button type="button" class="fg-zeile-add">+ Zeile</button></td>
+            </tr>
+            <tr class="ergebnis-zeile fg-bereich-ergebnis">
+              <td colspan="3" class="feld-name">Ergebnis „<%= k.name %>“</td>
+              <td class="fg-bereich-punkte" data-kriterium="<%= k.key %>"><%= erg ? erg.punkte : 0 %></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+  <% }) %>
+
+  <table class="bogen fg-gesamt-tabelle">
+    <tbody>
+      <tr class="gesamt-zeile">
+        <td class="feld-name">Gesamtergebnis Fachgespräch (gewichtet)</td>
+        <td class="fg-gesamt punkte-status <%= ergebnis.bestanden ? 'bestanden' : 'durchgefallen' %>"><%= ergebnis.gesamtpunkte %></td>
+      </tr>
+      <tr class="gesamt-status-zeile">
+        <td class="feld-name">Ergebnis</td>
+        <td class="gesamt-status fg-status <%= ergebnis.bestanden ? 'bestanden' : 'durchgefallen' %>">
+          <span class="fg-status-text"><%= ergebnis.bestanden ? 'bestanden' : 'nicht bestanden' %></span>
+          <span class="fg-note">Note: <%= ergebnis.note %></span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 </div>
 
 <script src="/fachgespraech-calc.js"></script>

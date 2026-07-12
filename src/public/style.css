@@ -121,69 +121,67 @@ td.zelle-gestrichen .feld-input { text-decoration: line-through; opacity: 0.5; }
 .tg-block { margin: 1.5rem 0; }
 .tg-block h2 { margin-bottom: 0.3rem; }
 
-/* Fachgespräch-Bogen */
-table.fg-tabelle { table-layout: fixed; width: 100%; min-width: 52rem; }
-table.fg-tabelle col.fg-col-kriterium { width: 20rem; }
-table.fg-tabelle col.fg-col-protokoll { width: auto; }
-table.fg-tabelle col.fg-col-punkte { width: 5rem; }
-table.fg-tabelle col.fg-col-faktor { width: 4rem; }
-table.fg-tabelle col.fg-col-ergebnis { width: 5rem; }
-table.fg-tabelle thead th { background: #f4f7fa; }
-table.fg-tabelle .fg-faktor, table.fg-tabelle .fg-ergebnis { text-align: right; }
-table.fg-tabelle .fg-ergebnis { font-weight: bold; background: #f4f7fa; }
+/* Fachgespräch-Bogen: je Bereich eine eigene Tabelle mit Bewertungszeilen. */
+.fg-skala-legende { display: flex; flex-wrap: wrap; gap: 0.2rem 0.9rem; align-items: baseline; }
+.fg-skala-legende-item { white-space: nowrap; }
 
-/* Kriterium-Zelle: Nummer + Name + Beschreibung.
-   Zelle bleibt table-cell; der innere Wrapper ist das Flex-Element, damit die
-   feste Spaltenbreite eingehalten wird und der Text umbricht statt auszubrechen. */
-table.fg-tabelle td.fg-kriterium { white-space: normal; vertical-align: top;
-  text-align: left; overflow: hidden; }
-.fg-kriterium-inner { display: flex; gap: 0.6rem; align-items: flex-start; }
-.fg-kriterium-text { min-width: 0; overflow-wrap: anywhere; }
-.fg-kriterium-text strong { display: block; overflow-wrap: anywhere; }
-.fg-nr { flex: 0 0 auto; width: 1.5rem; height: 1.5rem; border-radius: 50%;
+.fg-bereich { margin: 1.75rem 0; }
+.fg-bereich:first-of-type { margin-top: 0.5rem; }
+.fg-bereich-header h2 { margin: 0 0 0.15rem; font-size: 1.15rem;
+  display: inline-flex; align-items: center; gap: 0.5rem; }
+.fg-bereich-header .fg-beschreibung { margin: 0 0 0.5rem; font-size: 0.82rem;
+  font-style: italic; color: #555; }
+.fg-nr { flex: 0 0 auto; width: 1.6rem; height: 1.6rem; border-radius: 50%;
   background: #1a2b3c; color: #fff; display: inline-flex; align-items: center;
   justify-content: center; font-size: 0.85rem; font-weight: bold; }
-.fg-beschreibung { margin: 0.2rem 0 0; font-size: 0.78rem; font-style: italic;
-  color: #555; font-weight: normal; overflow-wrap: anywhere; }
+.fg-faktor-badge { font-size: 0.75rem; font-weight: normal; color: #fff;
+  background: #5b6b7f; border-radius: 4px; padding: 0.05rem 0.4rem; }
 
-/* Protokoll als Liste von Einträgen (zitierte Gesprächspunkte) */
-td.fg-protokoll-zelle { padding: 0.4rem 0.5rem; vertical-align: top; }
-.fg-eintraege { display: flex; flex-direction: column; gap: 0.4rem; }
+table.fg-tabelle { table-layout: fixed; width: 100%; min-width: 48rem; }
+table.fg-tabelle col.fg-col-nr { width: 3rem; }
+table.fg-tabelle col.fg-col-thema { width: 30%; }
+table.fg-tabelle col.fg-col-begruendung { width: auto; }
+table.fg-tabelle col.fg-col-skala { width: 14rem; }
+table.fg-tabelle thead th { background: #f4f7fa; text-align: left; }
+table.fg-tabelle th.fg-th-nr, table.fg-tabelle td.fg-zeile-nr { text-align: center; }
+table.fg-tabelle td.fg-zeile-nr { vertical-align: top; color: #667; }
 
-/* Ein Eintrag: Zitatstrich links, Textfeld, Bewertungs-Toggle rechts */
-.fg-eintrag { display: flex; align-items: flex-start; gap: 0.4rem;
-  border-left: 3px solid #cdd6e0; padding-left: 0.5rem; }
-.fg-eintrag::before { content: '\201E'; color: #9aa7b5; font-size: 1.2rem;
-  line-height: 1; flex: 0 0 auto; }
-.fg-eintrag[data-bewertung="korrekt"] { border-left-color: #0a7d1e; }
-.fg-eintrag[data-bewertung="falsch"] { border-left-color: #b00020; }
+/* Text-Zellen: Auto-Grow-Textfeld ohne Kasten-Optik, füllt die Zelle. */
+td.fg-zelle { padding: 0; vertical-align: top; }
+.fg-thema, .fg-begruendung { display: block; width: 100%; box-sizing: border-box;
+  font: inherit; color: inherit; border: none; background: transparent;
+  resize: none; overflow: hidden; padding: 0.4rem 0.5rem; line-height: 1.4; }
+.fg-thema:focus, .fg-begruendung:focus { outline: 2px solid #7c5cff;
+  outline-offset: -2px; background: #f3f0ff; }
 
-/* Auto-Grow-Textfeld: kein Rahmen, kein Scrollbalken, wächst mit dem Inhalt */
-.fg-eintrag-text { flex: 1 1 auto; min-width: 0; font: inherit; color: inherit;
-  border: none; background: transparent; resize: none; overflow: hidden;
-  padding: 0.15rem 0.2rem; line-height: 1.4; }
-.fg-eintrag-text:focus { outline: 2px solid #7c5cff; outline-offset: -2px;
-  background: #f3f0ff; border-radius: 3px; }
-
-/* Bewertungs-Toggle (drei Zustände: offen / korrekt / falsch) */
-.fg-bewertung { flex: 0 0 auto; display: inline-flex; gap: 0.2rem; }
-.fg-bewertung button { width: 1.5rem; height: 1.5rem; border-radius: 50%; cursor: pointer;
-  border: 1px solid #ccc; background: #fafafa; color: #aaa; font-size: 0.8rem;
-  line-height: 1; padding: 0; }
-.fg-btn-korrekt:hover { border-color: #0a7d1e; color: #0a7d1e; }
-.fg-btn-falsch:hover { border-color: #b00020; color: #b00020; }
-.fg-eintrag[data-bewertung="korrekt"] .fg-btn-korrekt {
+/* Skala-Wahl je Zeile (fünf Stufen). */
+td.fg-skala-zelle { vertical-align: top; }
+.fg-skala-wahl { display: flex; gap: 0.2rem; flex-wrap: wrap; }
+.fg-skala-btn { cursor: pointer; border: 1px solid #ccc; background: #fafafa;
+  color: #667; border-radius: 4px; padding: 0.15rem 0.35rem; font-size: 0.78rem;
+  line-height: 1.1; min-width: 2rem; }
+.fg-skala-btn:hover { border-color: #7c5cff; color: #1a2b3c; }
+/* Aktive Stufe hervorheben: hoch=grün, mittel=neutral, niedrig=rot. */
+.fg-zeile[data-skala="pp"] .fg-skala-btn[data-skala="pp"],
+.fg-zeile[data-skala="p"] .fg-skala-btn[data-skala="p"] {
   background: #d7f5d7; border-color: #0a7d1e; color: #0a5d1e; font-weight: bold; }
-.fg-eintrag[data-bewertung="falsch"] .fg-btn-falsch {
+.fg-zeile[data-skala="null"] .fg-skala-btn[data-skala="null"] {
+  background: #e7edf3; border-color: #5b6b7f; color: #1a2b3c; font-weight: bold; }
+.fg-zeile[data-skala="m"] .fg-skala-btn[data-skala="m"],
+.fg-zeile[data-skala="mm"] .fg-skala-btn[data-skala="mm"] {
   background: #f8d7d7; border-color: #b00020; color: #8a0016; font-weight: bold; }
 
-.fg-eintrag-add { margin-top: 0.4rem; font-size: 0.78rem; padding: 0.15rem 0.6rem;
-  background: transparent; color: #567; border: 1px solid #b7c2d0; border-radius: 4px; cursor: pointer; }
-.fg-eintrag-add:hover { background: #e7edf3; color: #1a2b3c; }
+/* +Zeile und Bereichs-Ergebniszeile. */
+.fg-zeile-add { font-size: 0.78rem; padding: 0.15rem 0.6rem; background: transparent;
+  color: #567; border: 1px solid #b7c2d0; border-radius: 4px; cursor: pointer; }
+.fg-zeile-add:hover { background: #e7edf3; color: #1a2b3c; }
+table.fg-tabelle .fg-bereich-ergebnis td { background: #d7f5d7; font-weight: bold; }
+table.fg-tabelle td.fg-bereich-punkte { text-align: right; }
 
-/* Gesamt-/Statuszeile des Fachgespräch-Bogens */
-table.fg-tabelle .fg-gesamt { text-align: right; font-weight: bold; }
-table.fg-tabelle .fg-status { white-space: normal; }
+/* Gesamt-/Statuszeile. */
+table.fg-gesamt-tabelle { max-width: 40rem; }
+table.fg-gesamt-tabelle .fg-gesamt { text-align: right; font-weight: bold; }
+table.fg-gesamt-tabelle .fg-status { white-space: normal; }
 .fg-status-text { display: block; }
 .fg-note { display: block; margin-top: 0.2rem; font-size: 0.72rem; font-weight: normal;
   text-transform: none; letter-spacing: 0; }

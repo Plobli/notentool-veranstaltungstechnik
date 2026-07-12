@@ -1,8 +1,7 @@
 // src/public/fachgespraech-calc.js
-// Auto-Save des Fachgespräch-Bogens: Punkte und Protokoll werden beim Verlassen
-// des Feldes (bzw. Enter im Punktefeld) gespeichert. Der Server berechnet die
-// Einzelergebnisse, das Gesamt, den Bestehens-Status und die Note und liefert
-// sie zurück; damit werden die entsprechenden Zellen verbindlich aktualisiert.
+// Fachgespräch-Bogen nach IHK-Protokollierbogen: je Bereich eine Tabelle mit
+// Bewertungszeilen (Thema, Begründung, Skalenwert). Auto-Save der Zeilenliste je
+// Bereich; der Server berechnet Bereichspunkte, Gesamt, Status und Note zurück.
 (function () {
   const root = document.getElementById('fg-form');
   if (!root) return;
@@ -22,14 +21,17 @@
     }
   }
 
-  function formatDe(n) {
-    return Number(n).toLocaleString('de-DE');
+  // Textarea an Inhalt anpassen (Auto-Grow).
+  function autoGrow(ta) {
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
   }
 
+  // Ergebnisse aus der Server-Antwort anwenden.
   function ergebnisseAnwenden(data) {
     for (const [key, k] of Object.entries(data.kriterien)) {
-      const cell = root.querySelector(`.fg-ergebnis[data-kriterium="${key}"]`);
-      if (cell) cell.textContent = formatDe(k.ergebnis);
+      const cell = root.querySelector(`.fg-bereich-punkte[data-kriterium="${key}"]`);
+      if (cell) cell.textContent = k.punkte;
     }
     const gesamt = root.querySelector('.fg-gesamt');
     if (gesamt) {
@@ -48,152 +50,117 @@
     }
   }
 
-  async function speichere(kriterium, feld, wert) {
+  // Liest die Zeilenliste eines Bereichs.
+  function leseZeilen(bereich) {
+    const zeilen = [];
+    bereich.querySelectorAll('.fg-zeile').forEach((row) => {
+      const thema = row.querySelector('.fg-thema');
+      const begr = row.querySelector('.fg-begruendung');
+      zeilen.push({
+        thema: thema ? thema.value : '',
+        begruendung: begr ? begr.value : '',
+        skala: row.dataset.skala || '',
+      });
+    });
+    return zeilen;
+  }
+
+  // Zeilennummern nach Änderungen neu setzen.
+  function nummeriere(bereich) {
+    bereich.querySelectorAll('.fg-zeile .fg-zeile-nr').forEach((td, i) => {
+      td.textContent = i + 1;
+    });
+  }
+
+  async function speichere(bereich) {
     zeigeStatus('Speichern …');
     try {
       const res = await fetch(`/fachgespraech/${prueflingId}/feld`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ kriterium, feld, wert }),
+        body: JSON.stringify({ kriterium: bereich.dataset.kriterium, zeilen: leseZeilen(bereich) }),
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      ergebnisseAnwenden(data);
+      ergebnisseAnwenden(await res.json());
       zeigeStatus('Gespeichert.');
     } catch (err) {
       zeigeStatus('Nicht gespeichert – bitte erneut versuchen.', true);
     }
   }
 
-  // Punkte hart auf 0..100 klemmen beim Tippen.
-  root.addEventListener('input', (ev) => {
-    const inp = ev.target;
-    if (!inp.classList || !inp.classList.contains('fg-punkte')) return;
-    if (inp.value === '') return;
-    const n = parseFloat(inp.value);
-    if (!Number.isFinite(n)) return;
-    if (n > 100) inp.value = '100';
-    else if (n < 0) inp.value = '0';
-  });
-
-  // Punkte: speichern beim Verlassen.
-  root.addEventListener('change', (ev) => {
-    const el = ev.target;
-    if (el.classList && el.classList.contains('fg-punkte')) {
-      speichere(el.dataset.kriterium, 'punkte', el.value);
-    }
-  });
-
-  // Enter im Punktefeld: speichern und Zeilenumbruch verhindern.
-  root.addEventListener('keydown', (ev) => {
-    const el = ev.target;
-    if (ev.key !== 'Enter') return;
-    if (el.classList && el.classList.contains('fg-punkte')) {
-      ev.preventDefault();
-      el.blur();
-    }
-  });
-
-  // --- Protokoll: Eintragsliste je Kriterium ---
-
-  // Textarea an ihren Inhalt anpassen (Auto-Grow, kein Scrollbalken).
-  function autoGrow(ta) {
-    ta.style.height = 'auto';
-    ta.style.height = ta.scrollHeight + 'px';
+  // Neues Zeilen-Element (entspricht dem Server-Markup).
+  function neueZeile(bereich) {
+    const tr = document.createElement('tr');
+    tr.className = 'fg-zeile';
+    tr.dataset.skala = '';
+    const skalaButtons = Array.from(bereich.querySelectorAll('.fg-zeile:first-child .fg-skala-btn'))
+      .map((b) => `<button type="button" class="fg-skala-btn" data-skala="${b.dataset.skala}" title="${b.title}">${b.textContent}</button>`)
+      .join('');
+    tr.innerHTML =
+      '<td class="fg-zeile-nr"></td>' +
+      '<td class="fg-zelle"><textarea class="fg-thema" rows="1" placeholder="Thema notieren …"></textarea></td>' +
+      '<td class="fg-zelle"><textarea class="fg-begruendung" rows="1" placeholder="Begründung …"></textarea></td>' +
+      '<td class="fg-skala-zelle"><div class="fg-skala-wahl" role="group" aria-label="Bewertung">' + skalaButtons + '</div></td>';
+    return tr;
   }
 
-  // Liest die aktuelle Eintragsliste eines Protokoll-Containers.
-  function leseProtokoll(container) {
-    const eintraege = [];
-    container.querySelectorAll('.fg-eintrag').forEach((row) => {
-      const ta = row.querySelector('.fg-eintrag-text');
-      eintraege.push({
-        text: ta ? ta.value : '',
-        bewertung: row.dataset.bewertung || '',
-      });
-    });
-    return eintraege;
-  }
-
-  function speichereProtokoll(container) {
-    speichere(container.dataset.kriterium, 'protokoll', leseProtokoll(container));
-  }
-
-  // Erzeugt ein neues Eintrags-Element (wie im Server-Markup).
-  function neuerEintrag() {
-    const div = document.createElement('div');
-    div.className = 'fg-eintrag';
-    div.dataset.bewertung = '';
-    div.innerHTML =
-      '<textarea class="fg-eintrag-text" rows="1" placeholder="Frage / Antwort notieren …"></textarea>' +
-      '<div class="fg-bewertung" role="group" aria-label="Antwort bewerten">' +
-      '<button type="button" class="fg-btn-korrekt" title="Antwort korrekt">✓</button>' +
-      '<button type="button" class="fg-btn-falsch" title="Antwort falsch">✗</button>' +
-      '</div>';
-    return div;
-  }
-
-  function fuegeEintragHinzu(container, fokus) {
-    const liste = container.querySelector('.fg-eintraege');
-    const el = neuerEintrag();
-    liste.appendChild(el);
-    const ta = el.querySelector('.fg-eintrag-text');
+  function fuegeZeileHinzu(bereich, fokus) {
+    const koerper = bereich.querySelector('.fg-zeilen');
+    const tr = neueZeile(bereich);
+    koerper.appendChild(tr);
+    nummeriere(bereich);
+    const ta = tr.querySelector('.fg-thema');
     autoGrow(ta);
     if (fokus && ta) ta.focus();
-    return el;
+    return tr;
   }
 
-  // Setzt/entfernt die Bewertung eines Eintrags (Toggle, drei Zustände).
-  function setzeBewertung(row, wert) {
-    row.dataset.bewertung = row.dataset.bewertung === wert ? '' : wert;
-    const container = row.closest('.fg-protokoll');
-    if (container) speichereProtokoll(container);
-  }
+  // Initiales Auto-Grow.
+  root.querySelectorAll('.fg-thema, .fg-begruendung').forEach(autoGrow);
 
-  // Auto-Grow initial für alle vorhandenen Textareas.
-  root.querySelectorAll('.fg-eintrag-text').forEach(autoGrow);
-
-  // Tippen: Textarea mitwachsen lassen.
+  // Tippen: Textarea mitwachsen.
   root.addEventListener('input', (ev) => {
-    if (ev.target.classList && ev.target.classList.contains('fg-eintrag-text')) {
-      autoGrow(ev.target);
+    const el = ev.target;
+    if (el.classList && (el.classList.contains('fg-thema') || el.classList.contains('fg-begruendung'))) {
+      autoGrow(el);
     }
   });
 
-  // Verlassen eines Eintrag-Textfeldes: speichern.
+  // Verlassen eines Textfeldes: Bereich speichern.
   root.addEventListener('change', (ev) => {
-    if (ev.target.classList && ev.target.classList.contains('fg-eintrag-text')) {
-      const container = ev.target.closest('.fg-protokoll');
-      if (container) speichereProtokoll(container);
+    const el = ev.target;
+    if (el.classList && (el.classList.contains('fg-thema') || el.classList.contains('fg-begruendung'))) {
+      const bereich = el.closest('.fg-bereich');
+      if (bereich) speichere(bereich);
     }
   });
 
-  // Enter im Eintrag-Textfeld: neuen Eintrag anlegen (kein Zeilenumbruch).
+  // Enter im Thema/Begründung: neue Zeile (kein Zeilenumbruch); Shift+Enter = Umbruch.
   root.addEventListener('keydown', (ev) => {
     const el = ev.target;
     if (ev.key !== 'Enter' || ev.shiftKey) return;
-    if (!el.classList || !el.classList.contains('fg-eintrag-text')) return;
+    if (!el.classList || !(el.classList.contains('fg-thema') || el.classList.contains('fg-begruendung'))) return;
     ev.preventDefault();
-    const container = el.closest('.fg-protokoll');
-    speichereProtokoll(container);
-    fuegeEintragHinzu(container, true);
+    const bereich = el.closest('.fg-bereich');
+    speichere(bereich);
+    fuegeZeileHinzu(bereich, true);
   });
 
-  // Klicks: +Eintrag und Bewertungs-Buttons.
+  // Klicks: +Zeile und Skala-Buttons.
   root.addEventListener('click', (ev) => {
-    const add = ev.target.closest('.fg-eintrag-add');
+    const add = ev.target.closest('.fg-zeile-add');
     if (add) {
-      fuegeEintragHinzu(add.closest('.fg-protokoll'), true);
+      fuegeZeileHinzu(add.closest('.fg-bereich'), true);
       return;
     }
-    const korrekt = ev.target.closest('.fg-btn-korrekt');
-    if (korrekt) {
-      setzeBewertung(korrekt.closest('.fg-eintrag'), 'korrekt');
-      return;
-    }
-    const falsch = ev.target.closest('.fg-btn-falsch');
-    if (falsch) {
-      setzeBewertung(falsch.closest('.fg-eintrag'), 'falsch');
+    const skalaBtn = ev.target.closest('.fg-skala-btn');
+    if (skalaBtn) {
+      const row = skalaBtn.closest('.fg-zeile');
+      const wert = skalaBtn.dataset.skala;
+      // Toggle: erneuter Klick auf denselben Wert setzt zurück.
+      row.dataset.skala = row.dataset.skala === wert ? '' : wert;
+      const bereich = row.closest('.fg-bereich');
+      if (bereich) speichere(bereich);
     }
   });
 })();

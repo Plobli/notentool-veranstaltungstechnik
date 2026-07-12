@@ -68,9 +68,26 @@ const FACHGESPRAECH_KRITERIUM_BY_KEY = new Map(
 const FACHGESPRAECH_MAX_PUNKTE = 100;
 const FACHGESPRAECH_BESTEHENSGRENZE = 50;
 
+// Bewertungsskala je Protokoll-Zeile (Entscheidungshilfe des IHK-Bogens).
+// Höchstwert 10, damit Ergebnis = Summe × 10 / Anzahl Zeilen auf max. 100 kommt.
+// wert = Punktwert; key = stabiler Bezeichner; symbol/label für die Anzeige.
+const FACHGESPRAECH_SKALA = [
+  { key: 'pp', wert: 10, symbol: '+++', label: 'vollständig' },
+  { key: 'p', wert: 7.5, symbol: '++', label: 'teilweise' },
+  { key: 'null', wert: 5, symbol: '0', label: 'mit Hilfe korrekt' },
+  { key: 'm', wert: 2.5, symbol: '−', label: 'mit Hilfe teilweise' },
+  { key: 'mm', wert: 0, symbol: '−−−', label: 'nicht okay' },
+];
+
+const FACHGESPRAECH_SKALA_BY_KEY = new Map(
+  FACHGESPRAECH_SKALA.map((s) => [s.key, s])
+);
+
 module.exports = {
   FACHGESPRAECH_KRITERIEN,
   FACHGESPRAECH_KRITERIUM_BY_KEY,
   FACHGESPRAECH_MAX_PUNKTE,
   FACHGESPRAECH_BESTEHENSGRENZE,
+  FACHGESPRAECH_SKALA,
+  FACHGESPRAECH_SKALA_BY_KEY,
 };
