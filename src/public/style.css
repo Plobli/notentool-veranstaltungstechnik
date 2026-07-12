@@ -14,20 +14,28 @@ th:first-child, td:first-child { text-align: left; }
 input[type="number"] { width: 4.5rem; }
 
 /* Schriftlicher Auswertungsbogen */
-.bogen-actions { display: flex; gap: 1rem; align-items: center; margin: 1rem 0; flex-wrap: wrap; }
 .bogen-wrap { overflow-x: auto; }
-/* Feste Spaltenbreiten: erste Spalte (Aufgabe) schmal und fix, alle
-   Prüflingsspalten teilen sich den Rest zu gleichen Teilen. */
-table.bogen { table-layout: fixed; width: 100%; min-width: 40rem; }
-table.bogen th.feld-name, table.bogen td.feld-name { width: 22rem; }
-table.bogen .tg-zeile td { background: #eef2f7; font-weight: bold; }
+
+/* Jeder Bereich ist eine eigene Tabelle mit echter <h2>-Überschrift. Damit die
+   Spalten über alle Bereichs-Tabellen bündig untereinander stehen, nutzen alle
+   Tabellen dieselbe feste Spaltenaufteilung (colgroup + table-layout: fixed). */
+table.bogen { table-layout: fixed; width: 100%; min-width: 40rem; margin: 0; }
+table.bogen col.col-feldname { width: 16rem; }
+table.bogen col.col-pruefling { width: auto; }
 table.bogen .feld-name { text-align: left; white-space: nowrap; }
 table.bogen .gebunden td:first-child { font-style: italic; }
 table.bogen .ergebnis-zeile td { background: #d7f5d7; font-weight: bold; }
 table.bogen .gesamt-zeile td { background: #cfe3ff; font-weight: bold; }
 
-/* Echter Abstand zwischen den Aufgabenbereichen: leere Zeile ohne Rahmen. */
-table.bogen .tg-abstand td { height: 1.6rem; background: #fff; border: none; }
+/* Kopf-Tabelle nur mit den Prüflingsnamen. */
+table.bogen-kopf { margin-bottom: 0.25rem; }
+table.bogen-kopf th { background: #f4f7fa; }
+
+/* Bereichsblock: echter Abstand zwischen den Bereichen + Header mit h2. */
+.tg-block { margin-top: 1.75rem; }
+.tg-block:first-of-type { margin-top: 0.5rem; }
+.tg-header { display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.35rem; }
+.tg-header h2 { margin: 0; font-size: 1.15rem; }
 
 /* Punkt-Zelle: kein Padding, Eingabefeld füllt die ganze Zelle klickbar aus.
    Bei WISO liegt der Streich-Button absolut in der linken Ecke. */
@@ -60,7 +68,7 @@ table.bogen .feld-input:focus {
 }
 
 /* Anzahl-Feld in der Teilgebiets-Überschrift, mit eigenem Speichern-Button */
-.anzahl-form { display: inline-flex; align-items: center; gap: 0.4rem; margin-left: 0.6rem; }
+.anzahl-form { display: inline-flex; align-items: center; gap: 0.4rem; }
 .anzahl-label { font-weight: normal; font-size: 0.85em; }
 .anzahl-input { width: 3.5rem; }
 .anzahl-speichern {
