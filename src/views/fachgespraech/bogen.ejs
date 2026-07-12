@@ -72,14 +72,20 @@
     </section>
   <% }) %>
 
-  <table class="bogen fg-gesamt-tabelle">
+  <table class="bogen fg-tabelle fg-gesamt-tabelle">
+    <colgroup>
+      <col class="fg-col-nr">
+      <col class="fg-col-thema">
+      <col class="fg-col-begruendung">
+      <col class="fg-col-skala">
+    </colgroup>
     <tbody>
       <tr class="gesamt-zeile">
-        <td class="feld-name">Gesamtergebnis Fachgespräch (gewichtet)</td>
+        <td colspan="3" class="feld-name">Gesamtergebnis Fachgespräch (gewichtet)</td>
         <td class="fg-gesamt punkte-status <%= ergebnis.bestanden ? 'bestanden' : 'durchgefallen' %>"><%= ergebnis.gesamtpunkte %></td>
       </tr>
       <tr class="gesamt-status-zeile">
-        <td class="feld-name">Ergebnis</td>
+        <td colspan="3" class="feld-name">Ergebnis</td>
         <td class="gesamt-status fg-status <%= ergebnis.bestanden ? 'bestanden' : 'durchgefallen' %>">
           <span class="fg-status-text"><%= ergebnis.bestanden ? 'bestanden' : 'nicht bestanden' %></span>
           <span class="fg-note">Note: <%= ergebnis.note %></span>

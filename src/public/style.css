@@ -185,11 +185,11 @@ table.fg-tabelle td.fg-bereich-punkte { text-align: right; white-space: nowrap; 
 .fg-ergebnis-label { font-size: 0.8rem; color: #778; }
 .fg-ergebnis-wert { font-weight: 600; font-size: 1rem; color: #1a2b3c; margin-left: 0.3rem; }
 
-/* Gesamt-/Statuszeile: gleiche Breite wie die Bereichstabellen. */
-table.fg-gesamt-tabelle { table-layout: fixed; width: 100%; min-width: 48rem; }
-table.fg-gesamt-tabelle .feld-name { width: 30%; }
+/* Gesamt-/Statuszeile: erbt fg-tabelle (gleiche Spaltenbreiten wie die
+   Bereichstabellen). Ergebnis-/Statuswert steht in der letzten Spalte. */
+table.fg-gesamt-tabelle .feld-name { font-weight: bold; }
 table.fg-gesamt-tabelle .fg-gesamt { text-align: right; font-weight: bold; }
-table.fg-gesamt-tabelle .fg-status { white-space: normal; }
+table.fg-gesamt-tabelle .fg-status { white-space: normal; text-align: right; }
 .fg-status-text { display: block; }
 .fg-note { display: block; margin-top: 0.2rem; font-size: 0.72rem; font-weight: normal;
   text-transform: none; letter-spacing: 0; }
