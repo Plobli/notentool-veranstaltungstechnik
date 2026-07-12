@@ -28,7 +28,12 @@
         </thead>
         <tbody>
           <% teilgebiete.forEach((tg, tgIndex) => { %>
-            <tr class="tg-zeile <%= tgIndex > 0 ? 'tg-trenner' : '' %>" data-tg="<%= tg.key %>">
+            <% if (tgIndex > 0) { %>
+              <tr class="tg-abstand" aria-hidden="true">
+                <td colspan="<%= pruefliche.length + 1 %>"></td>
+              </tr>
+            <% } %>
+            <tr class="tg-zeile" data-tg="<%= tg.key %>">
               <td class="feld-name">
                 <%= tg.name %>
                 <% if (['planung','durchfuehrung','energie'].includes(tg.key)) { %>
@@ -95,7 +100,7 @@
             <% }) %>
 
             <tr class="ergebnis-zeile" data-tg="<%= tg.key %>">
-              <td class="feld-name"><%= tg.name %> – Punkte</td>
+              <td class="feld-name">Punkte</td>
               <% pruefliche.forEach(p => { %>
                 <td class="tg-ergebnis" data-tg="<%= tg.key %>" data-pruefling="<%= p.id %>">
                   <%= ergebnisse.get(p.id).teilgebiete[tg.key].punkte %>

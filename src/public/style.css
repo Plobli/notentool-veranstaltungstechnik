@@ -16,16 +16,18 @@ input[type="number"] { width: 4.5rem; }
 /* Schriftlicher Auswertungsbogen */
 .bogen-actions { display: flex; gap: 1rem; align-items: center; margin: 1rem 0; flex-wrap: wrap; }
 .bogen-wrap { overflow-x: auto; }
-table.bogen { min-width: max-content; }
+/* Feste Spaltenbreiten: erste Spalte (Aufgabe) schmal und fix, alle
+   Prüflingsspalten teilen sich den Rest zu gleichen Teilen. */
+table.bogen { table-layout: fixed; width: 100%; min-width: 40rem; }
+table.bogen th.feld-name, table.bogen td.feld-name { width: 22rem; }
 table.bogen .tg-zeile td { background: #eef2f7; font-weight: bold; }
 table.bogen .feld-name { text-align: left; white-space: nowrap; }
 table.bogen .gebunden td:first-child { font-style: italic; }
 table.bogen .ergebnis-zeile td { background: #d7f5d7; font-weight: bold; }
 table.bogen .gesamt-zeile td { background: #cfe3ff; font-weight: bold; }
 
-/* Abstand zwischen den Aufgabenbereichen: kräftige Trennlinie über der
-   Überschrift jedes weiteren Teilgebiets. */
-table.bogen .tg-trenner td { border-top: 3px solid #b7c2d0; }
+/* Echter Abstand zwischen den Aufgabenbereichen: leere Zeile ohne Rahmen. */
+table.bogen .tg-abstand td { height: 1.6rem; background: #fff; border: none; }
 
 /* Punkt-Zelle: kein Padding, Eingabefeld füllt die ganze Zelle klickbar aus.
    Bei WISO liegt der Streich-Button absolut in der linken Ecke. */
@@ -61,7 +63,17 @@ table.bogen .feld-input:focus {
 .anzahl-form { display: inline-flex; align-items: center; gap: 0.4rem; margin-left: 0.6rem; }
 .anzahl-label { font-weight: normal; font-size: 0.85em; }
 .anzahl-input { width: 3.5rem; }
-.anzahl-speichern { font-size: 0.8rem; padding: 0.15rem 0.55rem; }
+.anzahl-speichern {
+  font-size: 0.78rem;
+  font-weight: normal;
+  padding: 0.12rem 0.5rem;
+  background: transparent;
+  color: #567;
+  border: 1px solid #b7c2d0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.anzahl-speichern:hover { background: #e7edf3; color: #1a2b3c; }
 
 /* Streich-Button: nur ✗, kompakt, absolut in der linken Zellenecke */
 .strich-btn { position: absolute; left: 0.35rem; top: 50%; transform: translateY(-50%);
