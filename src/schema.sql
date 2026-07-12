@@ -102,6 +102,14 @@ CREATE TABLE IF NOT EXISTS schriftlich_punkt (
   UNIQUE(pruefling_id, teilgebiet, feld)
 );
 
+CREATE TABLE IF NOT EXISTS schriftlich_config (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  pruefungstermin_id INTEGER NOT NULL REFERENCES pruefungstermin(id) ON DELETE CASCADE,
+  teilgebiet TEXT NOT NULL,          -- 'planung' | 'durchfuehrung' | 'energie'
+  anzahl_fragen INTEGER NOT NULL,
+  UNIQUE(pruefungstermin_id, teilgebiet)
+);
+
 CREATE TABLE IF NOT EXISTS mep_ergebnis (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   pruefling_id INTEGER NOT NULL REFERENCES pruefling(id) ON DELETE CASCADE,
