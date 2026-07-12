@@ -20,13 +20,27 @@ const {
   berechneSchriftlichGesamt,
 } = require('../lib/schriftlich-scoring');
 
+const { terminBySlug } = require('../lib/pruefung');
+
 const router = express.Router();
 
-// Liefert den aktiven Prüfungstermin oder null.
-function aktiverTermin(db) {
-  return db
-    .prepare('SELECT * FROM pruefungstermin WHERE ist_aktiv = 1 ORDER BY id DESC LIMIT 1')
-    .get();
+// Lädt den Prüfungstermin per Slug (req.termin), 404 sonst. Die schriftliche
+// Prüfung ist derzeit nur für die Abschlussprüfung umgesetzt; bei der
+// Zwischenprüfung wird eine Platzhalterseite angezeigt.
+function ladeTermin(req, res, next) {
+  const db = getDb();
+  const termin = terminBySlug(db, req.params.slug);
+  if (!termin) return res.status(404).send('Prüfung nicht gefunden.');
+  if (termin.art !== 'abschluss') {
+    return res.render('pruefung/platzhalter', {
+      title: 'Schriftliche Prüfung',
+      user: req.user,
+      termin,
+      bereichName: 'Schriftliche Prüfung',
+    });
+  }
+  req.termin = termin;
+  next();
 }
 
 // Liefert die effektive Fragenanzahl je konfigurierbarem Teilgebiet für einen
@@ -158,22 +172,9 @@ function speichereFelder(db, felder) {
 
 // --- Matrix-Ansicht ---
 
-router.get('/schriftlich', requireAuth, (req, res) => {
+router.get('/pruefung/:slug/schriftlich', requireAuth, ladeTermin, (req, res) => {
   const db = getDb();
-  const termin = aktiverTermin(db);
-  if (!termin) {
-    return res.render('schriftlichbogen/matrix', {
-      title: 'Schriftliche Prüfung',
-      user: req.user,
-      termin: null,
-      teilgebiete: TEILGEBIETE,
-      anzahlMap: { ...DEFAULT_ANZAHL },
-      felderMap: ladeFelderMap({ ...DEFAULT_ANZAHL }),
-      pruefliche: [],
-      daten: new Map(),
-      ergebnisse: new Map(),
-    });
-  }
+  const termin = req.termin;
 
   const anzahlMap = ladeAnzahlMap(db, termin.id);
   const felderMap = ladeFelderMap(anzahlMap);
@@ -198,21 +199,19 @@ router.get('/schriftlich', requireAuth, (req, res) => {
 
 // Speichert nur die Fragenanzahl eines Bereichs (eigener Speichern-Button je
 // Teilgebiet bzw. Enter). Danach Reload, damit die U-Zeilen neu gerendert werden.
-router.post('/schriftlich/anzahl', requireAuth, (req, res) => {
+router.post('/pruefung/:slug/schriftlich/anzahl', requireAuth, ladeTermin, (req, res) => {
   const db = getDb();
-  const termin = aktiverTermin(db);
-  if (!termin) return res.redirect('/schriftlich');
+  const termin = req.termin;
   speichereAnzahl(db, termin.id, req.body);
-  res.redirect('/schriftlich');
+  res.redirect(`/pruefung/${termin.slug}/schriftlich`);
 });
 
 // Auto-Save eines einzelnen Feldes (JSON). Speichert entweder einen Punktewert
 // oder verschiebt die WISO-Streichung und liefert die neu berechneten
 // Teilgebiet-Punkte + Gesamt des betroffenen Prüflings zurück.
-router.post('/schriftlich/feld', requireAuth, express.json(), (req, res) => {
+router.post('/pruefung/:slug/schriftlich/feld', requireAuth, ladeTermin, express.json(), (req, res) => {
   const db = getDb();
-  const termin = aktiverTermin(db);
-  if (!termin) return res.status(400).json({ error: 'Kein aktiver Termin.' });
+  const termin = req.termin;
 
   const { prueflingId, teilgebiet, feld, punkte } = req.body || {};
   const pId = Number(prueflingId);

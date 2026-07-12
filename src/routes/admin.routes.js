@@ -2,6 +2,8 @@ const express = require('express');
 const { getDb } = require('../db');
 const { hashPassword } = require('../auth');
 const { requireAdmin } = require('../middleware');
+const { ART_LABEL, nameVorschlaege } = require('../lib/pruefung');
+const { slugify, eindeutigerSlug } = require('../lib/slug');
 
 const router = express.Router();
 
@@ -9,14 +11,29 @@ router.get('/admin', requireAdmin, (req, res) => {
   const db = getDb();
   const termine = db.prepare('SELECT * FROM pruefungstermin ORDER BY id DESC').all();
   const pruefer = db.prepare("SELECT * FROM user ORDER BY name").all();
-  res.render('admin/index', { title: 'Verwaltung', user: req.user, termine, pruefer });
+  res.render('admin/index', {
+    title: 'Verwaltung',
+    user: req.user,
+    termine,
+    pruefer,
+    artLabel: ART_LABEL,
+    vorschlaege: nameVorschlaege(),
+  });
 });
 
 router.post('/admin/pruefungstermine', requireAdmin, (req, res) => {
-  const { name } = req.body;
-  getDb()
-    .prepare('INSERT INTO pruefungstermin (name, ist_aktiv) VALUES (?, 1)')
-    .run(name);
+  const db = getDb();
+  const name = (req.body.name || '').trim();
+  const art = req.body.art === 'zwischen' ? 'zwischen' : 'abschluss';
+  if (!name) return res.redirect('/admin');
+
+  const vergebene = new Set(
+    db.prepare('SELECT slug FROM pruefungstermin WHERE slug IS NOT NULL').all().map((r) => r.slug)
+  );
+  const slug = eindeutigerSlug(slugify(name), vergebene);
+
+  db.prepare('INSERT INTO pruefungstermin (name, art, slug, ist_aktiv) VALUES (?, ?, ?, 1)')
+    .run(name, art, slug);
   res.redirect('/admin');
 });
 

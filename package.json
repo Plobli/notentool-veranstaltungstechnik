@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "type": "commonjs",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
-    "start": "node --env-file=.env src/server.js",
     "test": "node --test 'tests/**/*.test.js'"
   },
   "dependencies": {
-    "better-sqlite3": "^11.3.0",
+    "better-sqlite3": "^11.10.0",
     "ejs": "^3.1.10",
     "express": "^4.21.0"
   }

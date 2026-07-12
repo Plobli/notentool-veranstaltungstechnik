@@ -6,6 +6,8 @@
   const root = document.getElementById('fg-form');
   if (!root) return;
   const prueflingId = root.dataset.pruefling;
+  const terminSlug = root.dataset.terminSlug;
+  const feldUrl = `/pruefung/${terminSlug}/fachgespraech/${prueflingId}/feld`;
   const statusEl = document.getElementById('autosave-status');
 
   let statusTimer = null;
@@ -75,7 +77,7 @@
   async function speichere(bereich) {
     zeigeStatus('Speichern …');
     try {
-      const res = await fetch(`/fachgespraech/${prueflingId}/feld`, {
+      const res = await fetch(feldUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ kriterium: bereich.dataset.kriterium, zeilen: leseZeilen(bereich) }),

@@ -8,11 +8,11 @@ const { getDb } = require('./db');
 const { getSessionUser } = require('./auth');
 const authRoutes = require('./routes/auth.routes');
 const adminRoutes = require('./routes/admin.routes');
+const pruefungRoutes = require('./routes/pruefung.routes');
 const schriftlichbogenRoutes = require('./routes/schriftlichbogen.routes');
 const fachgespraechRoutes = require('./routes/fachgespraech.routes');
 const { requireAuth } = require('./middleware');
-const { ladeTerminErgebnisse } = require('./lib/termin-ergebnisse');
-const { TEILGEBIETE } = require('./lib/schriftlich-struktur');
+const { ART_LABEL } = require('./lib/pruefung');
 
 function fsExistsEnvFile() {
   return require('node:fs').existsSync('.env');
@@ -78,6 +78,8 @@ app.use('/', authRoutes);
 
 app.use('/', adminRoutes);
 
+app.use('/', pruefungRoutes);
+
 app.use('/', schriftlichbogenRoutes);
 
 app.use('/', fachgespraechRoutes);
@@ -85,30 +87,22 @@ app.use('/', fachgespraechRoutes);
 app.get('/', requireAuth, (req, res) => {
   const db = getDb();
 
-  const aktiverTermin = db
-    .prepare('SELECT * FROM pruefungstermin WHERE ist_aktiv = 1 ORDER BY id DESC LIMIT 1')
-    .get();
-
-  // Die letzten 2 vergangenen (inaktiven) Termine, neueste zuerst.
-  const vergangeneTermine = db
-    .prepare('SELECT * FROM pruefungstermin WHERE ist_aktiv = 0 ORDER BY id DESC LIMIT 2')
+  // Alle aktiven Termine, neueste zuerst.
+  const aktive = db
+    .prepare('SELECT * FROM pruefungstermin WHERE ist_aktiv = 1 ORDER BY id DESC')
     .all();
 
-  const aktiv = aktiverTermin
-    ? { termin: aktiverTermin, zeilen: ladeTerminErgebnisse(db, aktiverTermin.id) }
-    : null;
-
-  const vergangene = vergangeneTermine.map((t) => ({
-    termin: t,
-    zeilen: ladeTerminErgebnisse(db, t.id),
-  }));
+  // Vergangene (inaktive) Termine, neueste zuerst.
+  const vergangene = db
+    .prepare('SELECT * FROM pruefungstermin WHERE ist_aktiv = 0 ORDER BY id DESC')
+    .all();
 
   res.render('dashboard', {
     title: 'Dashboard',
     user: req.user,
-    aktiv,
+    aktive,
     vergangene,
-    teilgebiete: TEILGEBIETE,
+    artLabel: ART_LABEL,
   });
 });
 

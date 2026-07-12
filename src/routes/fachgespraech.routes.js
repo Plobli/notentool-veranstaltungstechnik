@@ -20,12 +20,17 @@ const {
   serialisiereZeilen,
 } = require('../lib/fachgespraech-protokoll');
 
+const { terminBySlug } = require('../lib/pruefung');
+
 const router = express.Router();
 
-function aktiverTermin(db) {
-  return db
-    .prepare('SELECT * FROM pruefungstermin WHERE ist_aktiv = 1 ORDER BY id DESC LIMIT 1')
-    .get();
+// Lädt den Prüfungstermin per Slug (req.termin), 404 sonst.
+function ladeTermin(req, res, next) {
+  const db = getDb();
+  const termin = terminBySlug(db, req.params.slug);
+  if (!termin) return res.status(404).send('Prüfung nicht gefunden.');
+  req.termin = termin;
+  next();
 }
 
 // Lädt die Protokoll-Zeilen je Bereich für einen Prüfling.
@@ -52,14 +57,12 @@ function zeilenObjekt(zeilenMap) {
 
 // --- Übersicht: Prüflingsliste ---
 
-router.get('/fachgespraech', requireAuth, (req, res) => {
+router.get('/pruefung/:slug/fachgespraech', requireAuth, ladeTermin, (req, res) => {
   const db = getDb();
-  const termin = aktiverTermin(db);
-  const pruefliche = termin
-    ? db
-        .prepare('SELECT * FROM pruefling WHERE pruefungstermin_id = ? ORDER BY name')
-        .all(termin.id)
-    : [];
+  const termin = req.termin;
+  const pruefliche = db
+    .prepare('SELECT * FROM pruefling WHERE pruefungstermin_id = ? ORDER BY name')
+    .all(termin.id);
 
   const uebersicht = pruefliche.map((p) => {
     const erg = berechneFachgespraech(zeilenObjekt(ladeZeilen(db, p.id)));
@@ -76,11 +79,12 @@ router.get('/fachgespraech', requireAuth, (req, res) => {
 
 // --- Bogen je Prüfling ---
 
-router.get('/fachgespraech/:prueflingId', requireAuth, (req, res) => {
+router.get('/pruefung/:slug/fachgespraech/:prueflingId', requireAuth, ladeTermin, (req, res) => {
   const db = getDb();
+  const termin = req.termin;
   const pruefling = db
-    .prepare('SELECT * FROM pruefling WHERE id = ?')
-    .get(req.params.prueflingId);
+    .prepare('SELECT * FROM pruefling WHERE id = ? AND pruefungstermin_id = ?')
+    .get(req.params.prueflingId, termin.id);
   if (!pruefling) return res.status(404).send('Prüfling nicht gefunden.');
 
   const geschwister = db
@@ -93,6 +97,7 @@ router.get('/fachgespraech/:prueflingId', requireAuth, (req, res) => {
   res.render('fachgespraech/bogen', {
     title: `Fachgespräch – ${pruefling.name}`,
     user: req.user,
+    termin,
     pruefling,
     geschwister,
     kriterien: FACHGESPRAECH_KRITERIEN,
@@ -104,11 +109,11 @@ router.get('/fachgespraech/:prueflingId', requireAuth, (req, res) => {
 
 // --- Auto-Save der Zeilenliste eines Bereichs ---
 
-router.post('/fachgespraech/:prueflingId/feld', requireAuth, express.json(), (req, res) => {
+router.post('/pruefung/:slug/fachgespraech/:prueflingId/feld', requireAuth, ladeTermin, express.json(), (req, res) => {
   const db = getDb();
   const pruefling = db
-    .prepare('SELECT id FROM pruefling WHERE id = ?')
-    .get(req.params.prueflingId);
+    .prepare('SELECT id FROM pruefling WHERE id = ? AND pruefungstermin_id = ?')
+    .get(req.params.prueflingId, req.termin.id);
   if (!pruefling) return res.status(404).json({ error: 'Prüfling nicht gefunden.' });
 
   const { kriterium, zeilen } = req.body || {};

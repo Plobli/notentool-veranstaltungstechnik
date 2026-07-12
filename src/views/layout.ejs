@@ -12,8 +12,6 @@
     <% if (user) { %>
       <nav>
         <a href="/">Dashboard</a>
-        <a href="/schriftlich">Schriftliche Prüfung</a>
-        <a href="/fachgespraech">Fachgespräch</a>
         <% if (user.role === 'admin') { %><a href="/admin">Verwaltung</a><% } %>
         <span><%= user.name %></span>
         <form method="post" action="/logout" style="display:inline">

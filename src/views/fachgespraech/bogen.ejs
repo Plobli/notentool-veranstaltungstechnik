@@ -1,15 +1,19 @@
 <!-- src/views/fachgespraech/bogen.ejs -->
+<nav class="brotkrumen">
+  <a href="/">Dashboard</a> › <a href="/pruefung/<%= termin.slug %>"><%= termin.name %></a> ›
+  <a href="/pruefung/<%= termin.slug %>/fachgespraech">Fachgespräch</a> › <%= pruefling.name %>
+</nav>
 <h1>Fachgespräch – <%= pruefling.name %></h1>
-<p class="hinweis"><a href="/fachgespraech">← zur Übersicht</a></p>
+<p class="hinweis"><a href="/pruefung/<%= termin.slug %>/fachgespraech">← zur Übersicht</a></p>
 <p class="hinweis" id="autosave-status" role="status" aria-live="polite">Eingaben werden automatisch gespeichert.</p>
 
 <div class="pruefling-nav">
   <% geschwister.forEach(g => { %>
-    <a href="/fachgespraech/<%= g.id %>" class="<%= g.id === pruefling.id ? 'aktiv' : '' %>"><%= g.name %></a>
+    <a href="/pruefung/<%= termin.slug %>/fachgespraech/<%= g.id %>" class="<%= g.id === pruefling.id ? 'aktiv' : '' %>"><%= g.name %></a>
   <% }) %>
 </div>
 
-<div id="fg-form" data-pruefling="<%= pruefling.id %>">
+<div id="fg-form" data-pruefling="<%= pruefling.id %>" data-termin-slug="<%= termin.slug %>">
 
   <% kriterien.forEach(k => {
        const zeilenListe = zeilen.get(k.key) || [];

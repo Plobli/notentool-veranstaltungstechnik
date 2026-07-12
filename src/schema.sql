@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS session (
 CREATE TABLE IF NOT EXISTS pruefungstermin (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
+  art TEXT NOT NULL DEFAULT 'abschluss' CHECK (art IN ('abschluss','zwischen')),
+  slug TEXT UNIQUE,
   ist_aktiv INTEGER NOT NULL DEFAULT 1
 );
 

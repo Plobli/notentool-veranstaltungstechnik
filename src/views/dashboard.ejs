@@ -1,20 +1,33 @@
 <h1>Dashboard</h1>
 
-<% if (!aktiv) { %>
-  <p>Kein aktiver Prüfungstermin. <% if (user.role === 'admin') { %><a href="/admin">Jetzt anlegen</a><% } %></p>
-<% } else { %>
-  <h2><%= aktiv.termin.name %></h2>
-  <%- include('_ergebnis-tabelle', { zeilen: aktiv.zeilen }) %>
+<%
+  function terminKarte(t) { %>
+    <a class="pruefung-karte" href="/pruefung/<%= t.slug %>">
+      <span class="pruefung-karte-name"><%= t.name %></span>
+      <span class="art-badge art-<%= t.art %>"><%= artLabel[t.art] || t.art %></span>
+    </a>
+<% } %>
 
-  <% if (vergangene.length) { %>
-    <section class="vergangene">
-      <h2>Vergangene Prüfungen</h2>
-      <% vergangene.forEach(v => { %>
-        <details>
-          <summary><%= v.termin.name %></summary>
-          <%- include('_ergebnis-tabelle', { zeilen: v.zeilen }) %>
-        </details>
-      <% }) %>
-    </section>
-  <% } %>
+<% if (!aktive.length && !vergangene.length) { %>
+  <p>Noch keine Prüfung angelegt.
+    <% if (user.role === 'admin') { %><a href="/admin">Jetzt anlegen</a><% } %>
+  </p>
+<% } %>
+
+<% if (aktive.length) { %>
+  <section>
+    <h2>Aktuelle Prüfungen</h2>
+    <div class="pruefung-liste">
+      <% aktive.forEach(terminKarte) %>
+    </div>
+  </section>
+<% } %>
+
+<% if (vergangene.length) { %>
+  <section class="vergangene">
+    <h2>Vergangene Prüfungen</h2>
+    <div class="pruefung-liste">
+      <% vergangene.forEach(terminKarte) %>
+    </div>
+  </section>
 <% } %>

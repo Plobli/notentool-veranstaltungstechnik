@@ -8,6 +8,8 @@
   const root = document.getElementById('bogen-form');
   if (!root) return;
   const statusEl = document.getElementById('autosave-status');
+  const terminSlug = root.dataset.terminSlug;
+  const feldUrl = `/pruefung/${terminSlug}/schriftlich/feld`;
 
   let statusTimer = null;
   function zeigeStatus(text, fehler) {
@@ -94,7 +96,7 @@
   async function speichere(payload) {
     zeigeStatus('Speichern …');
     try {
-      const res = await fetch('/schriftlich/feld', {
+      const res = await fetch(feldUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

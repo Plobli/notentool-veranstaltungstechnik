@@ -1,11 +1,10 @@
 <!-- src/views/schriftlichbogen/matrix.ejs -->
+<nav class="brotkrumen">
+  <a href="/">Dashboard</a> › <a href="/pruefung/<%= termin.slug %>"><%= termin.name %></a> › Schriftliche Prüfung
+</nav>
 <h1>Schriftliche Prüfung</h1>
 
-<% if (!termin) { %>
-  <p>Kein aktiver Prüfungstermin.
-    <% if (user.role === 'admin') { %><a href="/admin">Jetzt anlegen</a><% } %>
-  </p>
-<% } else if (pruefliche.length === 0) { %>
+<% if (pruefliche.length === 0) { %>
   <p><strong><%= termin.name %></strong> hat noch keine Prüflinge.
     <% if (user.role === 'admin') { %>
       <a href="/admin/termine/<%= termin.id %>">Prüflinge anlegen</a>
@@ -20,7 +19,7 @@
     Die <strong>Energieversorgung</strong> ist Sperrfach – ist sie nicht bestanden, gilt die schriftliche Prüfung als nicht bestanden.
   </p>
 
-  <div id="bogen-form" data-modus="matrix">
+  <div id="bogen-form" data-modus="matrix" data-termin-slug="<%= termin.slug %>">
     <div class="bogen-wrap">
 
       <% teilgebiete.forEach(tg => { %>
@@ -32,7 +31,7 @@
               <% if (tg.sperrfach) { %><span class="tg-sperrfach" title="Sperrfach – muss mindestens ausreichend sein">Sperrfach</span><% } %>
             </h2>
             <% if (['planung','durchfuehrung','energie'].includes(tg.key)) { %>
-              <form method="post" action="/schriftlich/anzahl" class="anzahl-form">
+              <form method="post" action="/pruefung/<%= termin.slug %>/schriftlich/anzahl" class="anzahl-form">
                 <label class="anzahl-label">Fragen:
                   <input type="number" min="1" max="20" step="1"
                     class="anzahl-input"

@@ -1,0 +1,16 @@
+<nav class="brotkrumen"><a href="/">Dashboard</a> › <%= termin.name %></nav>
+
+<h1><%= termin.name %> <span class="art-badge art-<%= termin.art %>"><%= artLabel %></span></h1>
+
+<section class="bereich-links">
+  <% bereiche.forEach(b => { %>
+    <a class="bereich-karte<%= b.fertig ? '' : ' bereich-karte--offen' %>"
+       href="/pruefung/<%= termin.slug %>/<%= b.slug %>">
+      <span class="bereich-karte-name"><%= b.name %></span>
+      <% if (!b.fertig) { %><span class="bereich-karte-hinweis">in Vorbereitung</span><% } %>
+    </a>
+  <% }) %>
+</section>
+
+<h2>Ergebnisübersicht</h2>
+<%- include('../_ergebnis-tabelle', { zeilen }) %>
