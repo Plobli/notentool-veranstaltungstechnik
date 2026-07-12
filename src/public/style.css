@@ -193,3 +193,15 @@ table.fg-gesamt-tabelle .fg-status { white-space: normal; text-align: right; }
 .fg-status-text { display: block; }
 .fg-note { display: block; margin-top: 0.2rem; font-size: 0.72rem; font-weight: normal;
   text-transform: none; letter-spacing: 0; }
+
+/* Dashboard-Ergebnistabelle */
+.ergebnis-tabelle th, .ergebnis-tabelle td {
+  padding: 0.4rem 0.6rem; text-align: center; border-bottom: 1px solid #e0e6ec; }
+.ergebnis-tabelle th:first-child, .ergebnis-tabelle td:first-child { text-align: left; }
+.ergebnis-tabelle thead th { background: #f4f7fa; }
+.ergebnis-tabelle td.ok, .ergebnis-tabelle td.error { font-weight: 600; }
+.mep-moeglich { color: #8a6d00; font-weight: 600; cursor: help; }
+
+.vergangene { margin-top: 2rem; }
+.vergangene details { margin: 0.5rem 0; }
+.vergangene summary { cursor: pointer; font-weight: 600; padding: 0.3rem 0; }
