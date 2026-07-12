@@ -147,7 +147,9 @@ table.fg-tabelle col.fg-col-nr { width: 3rem; }
 table.fg-tabelle col.fg-col-thema { width: 30%; }
 table.fg-tabelle col.fg-col-begruendung { width: auto; }
 table.fg-tabelle col.fg-col-skala { width: 14rem; }
-table.fg-tabelle thead th { background: #f4f7fa; text-align: left; }
+table.fg-tabelle thead th { background: #f7f9fb; text-align: left;
+  font-weight: normal; font-size: 0.78rem; color: #778; text-transform: none;
+  letter-spacing: 0; padding: 0.3rem 0.5rem; }
 table.fg-tabelle th.fg-th-nr, table.fg-tabelle td.fg-zeile-nr { text-align: center; }
 table.fg-tabelle td.fg-zeile-nr { vertical-align: top; color: #667; }
 
