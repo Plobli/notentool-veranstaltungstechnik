@@ -132,10 +132,10 @@ td.zelle-gestrichen .feld-input { text-decoration: line-through; opacity: 0.5; }
   color: #445; display: inline-flex; align-items: center; gap: 0.45rem; }
 .fg-bereich-name { font-weight: 600; color: #1a2b3c; }
 .fg-beschreibung { margin: 0 0 0.5rem; font-size: 0.82rem; font-style: italic; color: #555; }
-.fg-info { width: 1.25rem; height: 1.25rem; border-radius: 50%; cursor: pointer;
-  border: 1px solid #b7c2d0; background: #f4f7fa; color: #567; font-size: 0.72rem;
+.fg-info { width: 1.1rem; height: 1.1rem; border-radius: 50%; cursor: pointer;
+  border: none; background: transparent; color: #aab3bd; font-size: 0.72rem;
   font-weight: bold; line-height: 1; padding: 0; }
-.fg-info:hover, .fg-info[aria-expanded="true"] { border-color: #7c5cff; color: #1a2b3c; }
+.fg-info:hover, .fg-info[aria-expanded="true"] { color: #5b6b7f; }
 .fg-faktor-badge { font-size: 0.72rem; font-weight: normal; color: #667;
   background: #eef2f7; border-radius: 4px; padding: 0.05rem 0.4rem; }
 
@@ -143,7 +143,7 @@ table.fg-tabelle { table-layout: fixed; width: 100%; min-width: 48rem; }
 table.fg-tabelle col.fg-col-nr { width: 3rem; }
 table.fg-tabelle col.fg-col-thema { width: 30%; }
 table.fg-tabelle col.fg-col-begruendung { width: auto; }
-table.fg-tabelle col.fg-col-skala { width: 14rem; }
+table.fg-tabelle col.fg-col-skala { width: 11rem; }
 table.fg-tabelle thead th { background: #f7f9fb; text-align: left;
   font-weight: normal; font-size: 0.78rem; color: #778; text-transform: none;
   letter-spacing: 0; padding: 0.3rem 0.5rem; }
@@ -160,10 +160,10 @@ td.fg-zelle { padding: 0; vertical-align: top; }
 
 /* Skala-Wahl je Zeile (fünf Stufen). */
 td.fg-skala-zelle { vertical-align: top; }
-.fg-skala-wahl { display: flex; gap: 0.2rem; flex-wrap: wrap; }
+.fg-skala-wahl { display: flex; gap: 0.15rem; flex-wrap: nowrap; }
 .fg-skala-btn { cursor: pointer; border: 1px solid #ccc; background: #fafafa;
-  color: #667; border-radius: 4px; padding: 0.15rem 0.35rem; font-size: 0.78rem;
-  line-height: 1.1; min-width: 2rem; }
+  color: #667; border-radius: 4px; padding: 0.15rem 0; font-size: 0.75rem;
+  line-height: 1.1; flex: 1 1 0; min-width: 0; }
 .fg-skala-btn:hover { border-color: #7c5cff; color: #1a2b3c; }
 /* Aktive Stufe hervorheben: hoch=grün, mittel=neutral, niedrig=rot. */
 .fg-zeile[data-skala="pp"] .fg-skala-btn[data-skala="pp"],
@@ -185,8 +185,9 @@ table.fg-tabelle td.fg-bereich-punkte { text-align: right; white-space: nowrap; 
 .fg-ergebnis-label { font-size: 0.8rem; color: #778; }
 .fg-ergebnis-wert { font-weight: 600; font-size: 1rem; color: #1a2b3c; margin-left: 0.3rem; }
 
-/* Gesamt-/Statuszeile. */
-table.fg-gesamt-tabelle { max-width: 40rem; }
+/* Gesamt-/Statuszeile: gleiche Breite wie die Bereichstabellen. */
+table.fg-gesamt-tabelle { table-layout: fixed; width: 100%; min-width: 48rem; }
+table.fg-gesamt-tabelle .feld-name { width: 30%; }
 table.fg-gesamt-tabelle .fg-gesamt { text-align: right; font-weight: bold; }
 table.fg-gesamt-tabelle .fg-status { white-space: normal; }
 .fg-status-text { display: block; }
