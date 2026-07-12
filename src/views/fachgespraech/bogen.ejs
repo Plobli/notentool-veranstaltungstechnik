@@ -55,8 +55,8 @@
             <% anzuzeigen.forEach((z, i) => { %>
               <tr class="fg-zeile" data-skala="<%= z.skala %>">
                 <td class="fg-zeile-nr"><%= i + 1 %></td>
-                <td class="fg-zelle"><textarea class="fg-thema" rows="1" placeholder="Thema notieren …"><%= z.thema %></textarea></td>
-                <td class="fg-zelle"><textarea class="fg-begruendung" rows="1" placeholder="Begründung …"><%= z.begruendung %></textarea></td>
+                <td class="fg-zelle"><textarea class="fg-thema" rows="1"><%= z.thema %></textarea></td>
+                <td class="fg-zelle"><textarea class="fg-begruendung" rows="1"><%= z.begruendung %></textarea></td>
                 <td class="fg-skala-zelle">
                   <div class="fg-skala-wahl" role="group" aria-label="Bewertung">
                     <% skala.forEach(s => { %>

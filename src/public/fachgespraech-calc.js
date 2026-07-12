@@ -98,8 +98,8 @@
       .join('');
     tr.innerHTML =
       '<td class="fg-zeile-nr"></td>' +
-      '<td class="fg-zelle"><textarea class="fg-thema" rows="1" placeholder="Thema notieren …"></textarea></td>' +
-      '<td class="fg-zelle"><textarea class="fg-begruendung" rows="1" placeholder="Begründung …"></textarea></td>' +
+      '<td class="fg-zelle"><textarea class="fg-thema" rows="1"></textarea></td>' +
+      '<td class="fg-zelle"><textarea class="fg-begruendung" rows="1"></textarea></td>' +
       '<td class="fg-skala-zelle"><div class="fg-skala-wahl" role="group" aria-label="Bewertung">' + skalaButtons + '</div></td>';
     return tr;
   }
