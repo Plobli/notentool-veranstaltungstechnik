@@ -9,14 +9,6 @@
   <% }) %>
 </div>
 
-<p class="hinweis fg-skala-legende">
-  Bewertung je Zeile:
-  <% skala.forEach(s => { %>
-    <span class="fg-skala-legende-item"><strong><%= s.symbol %></strong> <%= s.label %> (<%= s.wert.toLocaleString('de-DE') %>)</span>
-  <% }) %>
-  · Ergebnis = Summe × 10 / Anzahl bewerteter Zeilen (max. 100)
-</p>
-
 <div id="fg-form" data-pruefling="<%= pruefling.id %>">
 
   <% kriterien.forEach(k => {
@@ -97,5 +89,13 @@
     </tbody>
   </table>
 </div>
+
+<p class="hinweis fg-skala-legende">
+  Bewertung je Zeile:
+  <% skala.forEach(s => { %>
+    <span class="fg-skala-legende-item"><strong><%= s.symbol %></strong> <%= s.label %> (<%= s.wert.toLocaleString('de-DE') %>)</span>
+  <% }) %>
+  · Ergebnis = Summe × 10 / Anzahl bewerteter Zeilen (max. 100)
+</p>
 
 <script src="/fachgespraech-calc.js"></script>
