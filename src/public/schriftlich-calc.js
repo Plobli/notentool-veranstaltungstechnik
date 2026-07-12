@@ -53,8 +53,17 @@
       `.gesamt-status[data-pruefling="${prueflingId}"]`
     );
     if (statusZelle) {
-      statusZelle.textContent = data.bestanden ? 'bestanden' : 'nicht bestanden';
-      statusKlassen(statusZelle, data.bestanden);
+      statusZelle.classList.remove('bestanden', 'durchgefallen', 'mep');
+      if (data.bestanden) {
+        statusZelle.textContent = 'bestanden';
+        statusZelle.classList.add('bestanden');
+      } else if (data.mepMoeglich) {
+        statusZelle.textContent = 'nicht bestanden · MEP möglich';
+        statusZelle.classList.add('mep');
+      } else {
+        statusZelle.textContent = 'nicht bestanden';
+        statusZelle.classList.add('durchgefallen');
+      }
     }
   }
 

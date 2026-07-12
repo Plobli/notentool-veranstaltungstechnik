@@ -142,10 +142,15 @@
             <tr class="gesamt-status-zeile">
               <td class="feld-name">Ergebnis</td>
               <% pruefliche.forEach(p => {
-                   const erg = ergebnisse.get(p.id); %>
-                <td class="gesamt-status <%= erg.bestanden ? 'bestanden' : 'durchgefallen' %>"
-                  data-pruefling="<%= p.id %>">
-                  <%= erg.bestanden ? 'bestanden' : 'nicht bestanden' %>
+                   const erg = ergebnisse.get(p.id);
+                   let statusText, statusKlasse;
+                   if (erg.bestanden) { statusText = 'bestanden'; statusKlasse = 'bestanden'; }
+                   else if (erg.mepMoeglich) { statusText = 'nicht bestanden · MEP möglich'; statusKlasse = 'mep'; }
+                   else { statusText = 'nicht bestanden'; statusKlasse = 'durchgefallen'; } %>
+                <td class="gesamt-status <%= statusKlasse %>"
+                  data-pruefling="<%= p.id %>"
+                  title="MEP = mündliche Ergänzungsprüfung (§ 20 Abs. 3 VfAusbV)">
+                  <%= statusText %>
                 </td>
               <% }) %>
             </tr>

@@ -109,6 +109,8 @@ function ergebnisFuer(teilgebietMaps, anzahlMap) {
     teilgebiete,
     gesamt: gesamtInfo.gewichtet,
     bestanden: gesamtInfo.bestanden,
+    mepMoeglich: gesamtInfo.mepMoeglich,
+    mepBereiche: gesamtInfo.mepBereiche,
     bereiche: gesamtInfo.bereiche,
   };
 }
@@ -266,6 +268,8 @@ router.post('/schriftlich/feld', requireAuth, express.json(), (req, res) => {
     ),
     gesamt: ergebnis.gesamt,
     bestanden: ergebnis.bestanden,
+    mepMoeglich: ergebnis.mepMoeglich,
+    mepBereiche: ergebnis.mepBereiche,
   });
 });
 
