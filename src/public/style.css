@@ -238,3 +238,26 @@ table.fg-gesamt-tabelle .fg-status { white-space: normal; text-align: right; }
 /* Prüfung-anlegen-Formular */
 .pruefung-neu { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.6rem; margin: 0.5rem 0; }
 .pruefung-neu label { display: flex; flex-direction: column; font-size: 0.85rem; gap: 0.15rem; }
+
+/* Prüfer-getrennte schriftliche Bewertung */
+.eigene-bewertung-hinweis { background: #eef4fb; border: 1px solid #cdd6e0; border-radius: 6px;
+  padding: 0.5rem 0.75rem; font-size: 0.9rem; margin: 0.5rem 0; }
+.fremd-werte { display: flex; flex-wrap: wrap; gap: 0.2rem; margin-top: 0.15rem; }
+.fremd-wert { font-size: 0.72rem; color: #667; background: #f0f0f0; border-radius: 3px;
+  padding: 0 0.3rem; cursor: help; }
+
+/* Einstellungen auf der Prüfungs-Übersicht */
+.einstellungen { margin: 1rem 0; padding: 0.6rem 0.9rem; border: 1px solid #e0e0e0;
+  border-radius: 6px; background: #fafafa; }
+.einstellungen form { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.toggle-label { font-size: 0.9rem; }
+
+/* Finalisierung */
+.final-kopf { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.final-spalte { background: #eef4fb; }
+th.final-spalte { border-bottom: 2px solid #1a2b3c; }
+.feld-zelle.read-only { text-align: center; color: #556; background: #fafafa; }
+.final-badge { font-size: 0.8rem; font-weight: 600; border-radius: 4px; padding: 0.1rem 0.5rem; }
+.final-badge--zu { background: #fde9c8; color: #8a5a00; border: 1px solid #e6c78a; }
+.feld-input.gesperrt { background: #f0f0f0; color: #888; }
+.final-abschliessen { background: #1a2b3c; color: #fff; }

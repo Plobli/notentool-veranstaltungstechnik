@@ -47,10 +47,12 @@ function ladeSchriftlich(db, prueflingIds) {
     byPruefling.set(id, { tg, hat });
   }
   if (!prueflingIds.length) return byPruefling;
+  // Nur der finale Bogen (pruefer_id IS NULL) ist maßgeblich für Dashboard/§20.
   const rows = db
     .prepare(
       `SELECT * FROM schriftlich_punkt
-       WHERE pruefling_id IN (${prueflingIds.map(() => '?').join(',')})`
+       WHERE pruefling_id IN (${prueflingIds.map(() => '?').join(',')})
+         AND pruefer_id IS NULL`
     )
     .all(...prueflingIds);
   for (const row of rows) {

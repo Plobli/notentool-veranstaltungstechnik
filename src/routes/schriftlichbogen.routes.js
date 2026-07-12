@@ -71,21 +71,25 @@ function ladeFelderMap(anzahlMap) {
   return felder;
 }
 
-// Lädt alle gespeicherten Punkte eines Termins und baut je Prüfling eine
-// Struktur { [teilgebiet]: Map<feld, {punkte, gestrichen}> } auf.
-function ladeBogen(db, terminId) {
+// Lädt den Bogen EINES Prüfers (prueferId gesetzt) oder den finalen Bogen
+// (prueferId = null) für einen Termin und baut je Prüfling eine Struktur
+// { [teilgebiet]: Map<feld, {punkte, gestrichen}> } auf.
+function ladeBogen(db, terminId, prueferId = null) {
   const pruefliche = db
     .prepare('SELECT * FROM pruefling WHERE pruefungstermin_id = ? ORDER BY name')
     .all(terminId);
 
   const prueflingIds = pruefliche.map((p) => p.id);
+  const platzhalter = prueflingIds.map(() => '?').join(',');
+  const prueferBedingung = prueferId === null ? 'pruefer_id IS NULL' : 'pruefer_id = ?';
+  const args = prueferId === null ? prueflingIds : [...prueflingIds, prueferId];
   const punkte = prueflingIds.length
     ? db
         .prepare(
           `SELECT * FROM schriftlich_punkt
-           WHERE pruefling_id IN (${prueflingIds.map(() => '?').join(',')})`
+           WHERE pruefling_id IN (${platzhalter}) AND ${prueferBedingung}`
         )
-        .all(...prueflingIds)
+        .all(...args)
     : [];
 
   // pruefling_id -> teilgebiet -> feld -> {punkte, gestrichen}
@@ -145,26 +149,43 @@ function mepTextVon(mepDetails) {
   return `MEP: ${teile.join(' oder ')} Punkte mündlich`;
 }
 
-// Speichert die übermittelten Felder. `felder` ist ein Array von
+// Speichert die übermittelten Felder in den Bogen von `prueferId` (null =
+// finaler Bogen). `felder` ist ein Array von
 // { prueflingId, teilgebiet, feld, punkte, gestrichen }.
-function speichereFelder(db, felder) {
-  const upsert = db.prepare(
-    `INSERT INTO schriftlich_punkt (pruefling_id, teilgebiet, feld, punkte, gestrichen)
-     VALUES (?, ?, ?, ?, ?)
-     ON CONFLICT(pruefling_id, teilgebiet, feld)
-     DO UPDATE SET punkte = excluded.punkte, gestrichen = excluded.gestrichen`
+// Wegen der NULL-Semantik von UNIQUE (finaler Bogen) wird per Lookup entschieden,
+// ob aktualisiert oder eingefügt wird, statt ON CONFLICT.
+function speichereFelder(db, felder, prueferId = null) {
+  const finde = db.prepare(
+    prueferId === null
+      ? `SELECT id FROM schriftlich_punkt
+         WHERE pruefling_id = ? AND teilgebiet = ? AND feld = ? AND pruefer_id IS NULL`
+      : `SELECT id FROM schriftlich_punkt
+         WHERE pruefling_id = ? AND teilgebiet = ? AND feld = ? AND pruefer_id = ?`
+  );
+  const update = db.prepare(
+    'UPDATE schriftlich_punkt SET punkte = ?, gestrichen = ? WHERE id = ?'
+  );
+  const insert = db.prepare(
+    `INSERT INTO schriftlich_punkt (pruefling_id, pruefer_id, teilgebiet, feld, punkte, gestrichen)
+     VALUES (?, ?, ?, ?, ?, ?)`
   );
   const tx = db.transaction((rows) => {
     for (const r of rows) {
-      upsert.run(
-        r.prueflingId,
-        r.teilgebiet,
-        r.feld,
+      const punkte =
         r.punkte === '' || r.punkte === null || r.punkte === undefined
           ? null
-          : Number(r.punkte),
-        r.gestrichen ? 1 : 0
-      );
+          : Number(r.punkte);
+      const gestrichen = r.gestrichen ? 1 : 0;
+      const findeArgs =
+        prueferId === null
+          ? [r.prueflingId, r.teilgebiet, r.feld]
+          : [r.prueflingId, r.teilgebiet, r.feld, prueferId];
+      const vorhanden = finde.get(...findeArgs);
+      if (vorhanden) {
+        update.run(punkte, gestrichen, vorhanden.id);
+      } else {
+        insert.run(r.prueflingId, prueferId, r.teilgebiet, r.feld, punkte, gestrichen);
+      }
     }
   });
   tx(felder);
@@ -175,14 +196,22 @@ function speichereFelder(db, felder) {
 router.get('/pruefung/:slug/schriftlich', requireAuth, ladeTermin, (req, res) => {
   const db = getDb();
   const termin = req.termin;
+  const prueferId = req.user.id;
 
   const anzahlMap = ladeAnzahlMap(db, termin.id);
   const felderMap = ladeFelderMap(anzahlMap);
-  const { pruefliche, byPruefling } = ladeBogen(db, termin.id);
+  // Eigener Bogen des eingeloggten Prüfers.
+  const { pruefliche, byPruefling } = ladeBogen(db, termin.id, prueferId);
   const ergebnisse = new Map();
   for (const p of pruefliche) {
     ergebnisse.set(p.id, ergebnisFuer(byPruefling.get(p.id), anzahlMap));
   }
+
+  // Fremde Bewertungen nur laden, wenn der Termin die Einsicht erlaubt.
+  // fremdWerte: pruefling_id -> teilgebiet -> feld -> [{ prueferName, punkte }]
+  const fremdWerte = termin.einsicht_fremd
+    ? ladeFremdWerte(db, pruefliche.map((p) => p.id), prueferId)
+    : null;
 
   res.render('schriftlichbogen/matrix', {
     title: 'Schriftliche Prüfung',
@@ -194,8 +223,36 @@ router.get('/pruefung/:slug/schriftlich', requireAuth, ladeTermin, (req, res) =>
     pruefliche,
     daten: byPruefling,
     ergebnisse,
+    fremdWerte,
   });
 });
+
+// Lädt die Bewertungen ALLER anderen Prüfer (nicht des eigenen, nicht final)
+// für die Einsicht. Rückgabe: pruefling_id -> teilgebiet -> feld ->
+// [{ prueferName, punkte }].
+function ladeFremdWerte(db, prueflingIds, eigenerPrueferId) {
+  const map = new Map();
+  if (!prueflingIds.length) return map;
+  const platzhalter = prueflingIds.map(() => '?').join(',');
+  const rows = db
+    .prepare(
+      `SELECT sp.pruefling_id, sp.teilgebiet, sp.feld, sp.punkte, u.name AS pruefer_name
+       FROM schriftlich_punkt sp JOIN user u ON u.id = sp.pruefer_id
+       WHERE sp.pruefling_id IN (${platzhalter})
+         AND sp.pruefer_id IS NOT NULL AND sp.pruefer_id != ?
+         AND sp.punkte IS NOT NULL
+       ORDER BY u.name`
+    )
+    .all(...prueflingIds, eigenerPrueferId);
+  for (const r of rows) {
+    if (!map.has(r.pruefling_id)) map.set(r.pruefling_id, {});
+    const tgObj = map.get(r.pruefling_id);
+    if (!tgObj[r.teilgebiet]) tgObj[r.teilgebiet] = {};
+    if (!tgObj[r.teilgebiet][r.feld]) tgObj[r.teilgebiet][r.feld] = [];
+    tgObj[r.teilgebiet][r.feld].push({ prueferName: r.pruefer_name, punkte: r.punkte });
+  }
+  return map;
+}
 
 // Speichert nur die Fragenanzahl eines Bereichs (eigener Speichern-Button je
 // Teilgebiet bzw. Enter). Danach Reload, damit die U-Zeilen neu gerendert werden.
@@ -212,14 +269,19 @@ router.post('/pruefung/:slug/schriftlich/anzahl', requireAuth, ladeTermin, (req,
 router.post('/pruefung/:slug/schriftlich/feld', requireAuth, ladeTermin, express.json(), (req, res) => {
   const db = getDb();
   const termin = req.termin;
+  const prueferId = req.user.id;
 
   const { prueflingId, teilgebiet, feld, punkte } = req.body || {};
   const pId = Number(prueflingId);
 
   const pruefling = db
-    .prepare('SELECT id FROM pruefling WHERE id = ? AND pruefungstermin_id = ?')
+    .prepare('SELECT id, schriftlich_finalisiert FROM pruefling WHERE id = ? AND pruefungstermin_id = ?')
     .get(pId, termin.id);
   if (!pruefling) return res.status(404).json({ error: 'Prüfling nicht gefunden.' });
+  // Nach der Finalisierung sind die Einzelbögen gesperrt.
+  if (pruefling.schriftlich_finalisiert) {
+    return res.status(409).json({ error: 'Prüfling ist finalisiert – Einzelbewertung gesperrt.' });
+  }
   if (!TEILGEBIET_BY_KEY.has(teilgebiet)) {
     return res.status(400).json({ error: 'Unbekanntes Teilgebiet.' });
   }
@@ -232,22 +294,26 @@ router.post('/pruefung/:slug/schriftlich/feld', requireAuth, ladeTermin, express
 
   if (req.body.streichung) {
     // WISO: übergebenes Feld wird das gestrichene; alle anderen zurücksetzen.
+    // Immer nur im eigenen Bogen des Prüfers.
     if (!tg.streichung || !erlaubteFelder.has(feld)) {
       return res.status(400).json({ error: 'Streichung nicht möglich.' });
     }
-    // Alle vorhandenen Felder dieses Teilgebiets auf gestrichen=0 setzen,
-    // dann das gewählte Feld (Eintrag anlegen, falls nötig) auf gestrichen=1.
     const clearAlle = db.prepare(
-      'UPDATE schriftlich_punkt SET gestrichen = 0 WHERE pruefling_id = ? AND teilgebiet = ?'
+      'UPDATE schriftlich_punkt SET gestrichen = 0 WHERE pruefling_id = ? AND teilgebiet = ? AND pruefer_id = ?'
     );
-    const setStrich = db.prepare(
-      `INSERT INTO schriftlich_punkt (pruefling_id, teilgebiet, feld, punkte, gestrichen)
-       VALUES (?, ?, ?, NULL, 1)
-       ON CONFLICT(pruefling_id, teilgebiet, feld) DO UPDATE SET gestrichen = 1`
+    const findeStrich = db.prepare(
+      'SELECT id FROM schriftlich_punkt WHERE pruefling_id = ? AND teilgebiet = ? AND feld = ? AND pruefer_id = ?'
+    );
+    const setStrichUpd = db.prepare('UPDATE schriftlich_punkt SET gestrichen = 1 WHERE id = ?');
+    const setStrichIns = db.prepare(
+      `INSERT INTO schriftlich_punkt (pruefling_id, pruefer_id, teilgebiet, feld, punkte, gestrichen)
+       VALUES (?, ?, ?, ?, NULL, 1)`
     );
     const tx = db.transaction(() => {
-      clearAlle.run(pId, teilgebiet);
-      setStrich.run(pId, teilgebiet, feld);
+      clearAlle.run(pId, teilgebiet, prueferId);
+      const vorhanden = findeStrich.get(pId, teilgebiet, feld, prueferId);
+      if (vorhanden) setStrichUpd.run(vorhanden.id);
+      else setStrichIns.run(pId, prueferId, teilgebiet, feld);
     });
     tx();
   } else {
@@ -262,13 +328,15 @@ router.post('/pruefung/:slug/schriftlich/feld', requireAuth, ladeTermin, express
       const n = Number(wert);
       if (Number.isFinite(n)) wert = Math.max(0, Math.min(max, n));
     }
-    speichereFelder(db, [
-      { prueflingId: pId, teilgebiet, feld, punkte: wert, gestrichen: 0 },
-    ]);
+    speichereFelder(
+      db,
+      [{ prueflingId: pId, teilgebiet, feld, punkte: wert, gestrichen: 0 }],
+      prueferId
+    );
   }
 
-  // Neu berechnen und zurückgeben.
-  const { byPruefling } = ladeBogen(db, termin.id);
+  // Neu berechnen und zurückgeben – auf Basis des eigenen Bogens.
+  const { byPruefling } = ladeBogen(db, termin.id, prueferId);
   const ergebnis = ergebnisFuer(byPruefling.get(pId), anzahlMap);
   res.json({
     teilgebiete: Object.fromEntries(
@@ -310,5 +378,177 @@ function speichereAnzahl(db, terminId, body) {
   });
   tx();
 }
+
+// --- Finalisierung: Einzelbewertungen zusammenführen ---
+
+// Prüfer, die für einen Prüfling überhaupt etwas eingetragen haben.
+function ladePrueferMitBewertung(db, prueflingId) {
+  return db
+    .prepare(
+      `SELECT DISTINCT u.id, u.name
+       FROM schriftlich_punkt sp JOIN user u ON u.id = sp.pruefer_id
+       WHERE sp.pruefling_id = ? AND sp.pruefer_id IS NOT NULL
+       ORDER BY u.name`
+    )
+    .all(prueflingId);
+}
+
+// Baut je Prüfer (inkl. final) die Ergebnis-Struktur eines Prüflings.
+// Rückgabe: [{ prueferId|null, name, ergebnis, roh }] – final zuerst.
+// `roh` ist die teilgebiet -> Map<feld,{punkte,gestrichen}>-Struktur, damit die
+// View die eingetragenen Einzelwerte je Feld anzeigen kann.
+function boegenFuerPruefling(db, termin, prueflingId, prueferListe, anzahlMap) {
+  const eintraege = [];
+  const baue = (prueferId, name) => {
+    const { byPruefling } = ladeBogenEinerPruefling(db, prueflingId, prueferId);
+    eintraege.push({
+      prueferId,
+      name,
+      ergebnis: ergebnisFuer(byPruefling, anzahlMap),
+      roh: byPruefling,
+    });
+  };
+  baue(null, 'Final');
+  for (const p of prueferListe) baue(p.id, p.name);
+  return eintraege;
+}
+
+// Wie ladeBogen, aber nur für einen Prüfling und einen Bogen (Prüfer/final).
+function ladeBogenEinerPruefling(db, prueflingId, prueferId) {
+  const bedingung = prueferId === null ? 'pruefer_id IS NULL' : 'pruefer_id = ?';
+  const args = prueferId === null ? [prueflingId] : [prueflingId, prueferId];
+  const rows = db
+    .prepare(`SELECT * FROM schriftlich_punkt WHERE pruefling_id = ? AND ${bedingung}`)
+    .all(...args);
+  const tg = {};
+  for (const t of TEILGEBIETE) tg[t.key] = new Map();
+  for (const row of rows) {
+    if (!tg[row.teilgebiet]) continue;
+    tg[row.teilgebiet].set(row.feld, { punkte: row.punkte, gestrichen: row.gestrichen });
+  }
+  return { byPruefling: tg };
+}
+
+// Übersicht: Prüfling wählen, Bewertungen aller Prüfer nebeneinander, finalen
+// Bogen bearbeiten.
+router.get('/pruefung/:slug/schriftlich/final', requireAuth, ladeTermin, (req, res) => {
+  const db = getDb();
+  const termin = req.termin;
+  const anzahlMap = ladeAnzahlMap(db, termin.id);
+  const felderMap = ladeFelderMap(anzahlMap);
+
+  const pruefliche = db
+    .prepare('SELECT * FROM pruefling WHERE pruefungstermin_id = ? ORDER BY name')
+    .all(termin.id);
+
+  // Gewählter Prüfling (Query ?p=…) oder der erste.
+  const gewaehltId = Number(req.query.p) || (pruefliche[0] && pruefliche[0].id);
+  const gewaehlt = pruefliche.find((p) => p.id === gewaehltId) || null;
+
+  let prueferListe = [];
+  let boegen = [];
+  let finalDaten = null;
+  if (gewaehlt) {
+    prueferListe = ladePrueferMitBewertung(db, gewaehlt.id);
+    boegen = boegenFuerPruefling(db, termin, gewaehlt.id, prueferListe, anzahlMap);
+    finalDaten = ladeBogenEinerPruefling(db, gewaehlt.id, null).byPruefling;
+  }
+
+  res.render('schriftlichbogen/finalisierung', {
+    title: 'Finalisierung – Schriftliche Prüfung',
+    user: req.user,
+    termin,
+    teilgebiete: TEILGEBIETE,
+    anzahlMap,
+    felderMap,
+    pruefliche,
+    gewaehlt,
+    prueferListe,
+    boegen,
+    finalDaten,
+  });
+});
+
+// Auto-Save eines finalen Feldwerts (JSON). Schreibt in den finalen Bogen.
+router.post('/pruefung/:slug/schriftlich/final/feld', requireAuth, ladeTermin, express.json(), (req, res) => {
+  const db = getDb();
+  const termin = req.termin;
+  const { prueflingId, teilgebiet, feld, punkte } = req.body || {};
+  const pId = Number(prueflingId);
+
+  const pruefling = db
+    .prepare('SELECT id FROM pruefling WHERE id = ? AND pruefungstermin_id = ?')
+    .get(pId, termin.id);
+  if (!pruefling) return res.status(404).json({ error: 'Prüfling nicht gefunden.' });
+  if (!TEILGEBIET_BY_KEY.has(teilgebiet)) {
+    return res.status(400).json({ error: 'Unbekanntes Teilgebiet.' });
+  }
+  const anzahlMap = ladeAnzahlMap(db, termin.id);
+  const felderMap = ladeFelderMap(anzahlMap);
+  const erlaubteFelder = new Set(felderMap[teilgebiet]);
+  const tg = TEILGEBIET_BY_KEY.get(teilgebiet);
+  if (tg.gebunden) erlaubteFelder.add('gebunden');
+
+  if (req.body.streichung) {
+    if (!tg.streichung || !erlaubteFelder.has(feld)) {
+      return res.status(400).json({ error: 'Streichung nicht möglich.' });
+    }
+    const clearAlle = db.prepare(
+      'UPDATE schriftlich_punkt SET gestrichen = 0 WHERE pruefling_id = ? AND teilgebiet = ? AND pruefer_id IS NULL'
+    );
+    const findeStrich = db.prepare(
+      'SELECT id FROM schriftlich_punkt WHERE pruefling_id = ? AND teilgebiet = ? AND feld = ? AND pruefer_id IS NULL'
+    );
+    const setUpd = db.prepare('UPDATE schriftlich_punkt SET gestrichen = 1 WHERE id = ?');
+    const setIns = db.prepare(
+      `INSERT INTO schriftlich_punkt (pruefling_id, pruefer_id, teilgebiet, feld, punkte, gestrichen)
+       VALUES (?, NULL, ?, ?, NULL, 1)`
+    );
+    const tx = db.transaction(() => {
+      clearAlle.run(pId, teilgebiet);
+      const v = findeStrich.get(pId, teilgebiet, feld);
+      if (v) setUpd.run(v.id);
+      else setIns.run(pId, teilgebiet, feld);
+    });
+    tx();
+  } else {
+    if (!erlaubteFelder.has(feld)) {
+      return res.status(400).json({ error: 'Unbekanntes Feld.' });
+    }
+    const max = feld === 'gebunden' ? tg.gebundenMax : 10;
+    let wert = punkte;
+    if (wert !== '' && wert !== null && wert !== undefined) {
+      const n = Number(wert);
+      if (Number.isFinite(n)) wert = Math.max(0, Math.min(max, n));
+    }
+    speichereFelder(db, [{ prueflingId: pId, teilgebiet, feld, punkte: wert, gestrichen: 0 }], null);
+  }
+
+  const ergebnis = ergebnisFuer(ladeBogenEinerPruefling(db, pId, null).byPruefling, anzahlMap);
+  res.json({
+    teilgebiete: Object.fromEntries(
+      Object.entries(ergebnis.teilgebiete).map(([k, v]) => [
+        k,
+        { punkte: v.punkte, gestrichenesFeld: v.gestrichenesFeld, bestanden: ergebnis.bereiche[k].bestanden },
+      ])
+    ),
+    gesamt: ergebnis.gesamt,
+    bestanden: ergebnis.bestanden,
+    mepMoeglich: ergebnis.mepMoeglich,
+    mepBereiche: ergebnis.mepBereiche,
+    mepText: ergebnis.mepText,
+  });
+});
+
+// Finalisieren/Entsperren eines Prüflings (sperrt die Einzelbögen).
+router.post('/pruefung/:slug/schriftlich/final/status', requireAuth, ladeTermin, (req, res) => {
+  const db = getDb();
+  const termin = req.termin;
+  const pId = Number(req.body.prueflingId);
+  const finalisiert = req.body.finalisiert === '1' ? 1 : 0;
+  db.prepare('UPDATE pruefling SET schriftlich_finalisiert = ? WHERE id = ? AND pruefungstermin_id = ?')
+    .run(finalisiert, pId, termin.id);
+  res.redirect(`/pruefung/${termin.slug}/schriftlich/final?p=${pId}`);
+});
 
 module.exports = router;

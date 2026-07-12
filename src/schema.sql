@@ -18,14 +18,20 @@ CREATE TABLE IF NOT EXISTS pruefungstermin (
   name TEXT NOT NULL,
   art TEXT NOT NULL DEFAULT 'abschluss' CHECK (art IN ('abschluss','zwischen')),
   slug TEXT UNIQUE,
-  ist_aktiv INTEGER NOT NULL DEFAULT 1
+  ist_aktiv INTEGER NOT NULL DEFAULT 1,
+  -- Dürfen Prüfer bei der schriftlichen Einzelkorrektur die Bewertungen der
+  -- anderen einsehen? 0 = nein (nur eigener Bogen), 1 = ja (read-only sichtbar).
+  einsicht_fremd INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS pruefling (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   pruefungstermin_id INTEGER NOT NULL REFERENCES pruefungstermin(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
-  betrieb TEXT
+  betrieb TEXT,
+  -- Schriftliche Prüfung finalisiert? Dann sind die Einzelbögen gesperrt und
+  -- nur noch der finale Bogen (schriftlich_punkt.pruefer_id IS NULL) zählt.
+  schriftlich_finalisiert INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS fach (
@@ -93,15 +99,21 @@ CREATE TABLE IF NOT EXISTS projekt_bewertung (
 -- Schriftliche Prüfung als feste Tabelle (Auswertungsbogen).
 -- Struktur (Teilgebiete/Felder/Faktoren) ist im Code verankert
 -- (src/lib/schriftlich-struktur.js); hier werden nur die Rohpunkte je Prüfling
--- gespeichert. Ein gemeinsamer Bogen pro Jahrgang, kein Prüfer-getrennter Status.
+-- gespeichert.
+--
+-- Prüfer-getrennt: jeder Prüfer hat seinen eigenen Satz Punkte (pruefer_id).
+-- pruefer_id IS NULL kennzeichnet den FINALEN Bogen – das maßgebliche Ergebnis,
+-- das beim gemeinsamen Besprechungstermin festgelegt wird und in Dashboard/§20
+-- einfließt.
 CREATE TABLE IF NOT EXISTS schriftlich_punkt (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   pruefling_id INTEGER NOT NULL REFERENCES pruefling(id) ON DELETE CASCADE,
+  pruefer_id INTEGER REFERENCES user(id) ON DELETE CASCADE,  -- NULL = finaler Bogen
   teilgebiet TEXT NOT NULL,        -- 'wiso' | 'planung' | 'durchfuehrung' | 'energie'
   feld TEXT NOT NULL,              -- 'gebunden' | 'u1' … 'u11'
   punkte REAL,                     -- Rohpunkte; NULL = noch nicht eingetragen
   gestrichen INTEGER NOT NULL DEFAULT 0,  -- nur WISO: markiert die gestrichene Aufgabe
-  UNIQUE(pruefling_id, teilgebiet, feld)
+  UNIQUE(pruefling_id, pruefer_id, teilgebiet, feld)
 );
 
 CREATE TABLE IF NOT EXISTS schriftlich_config (
