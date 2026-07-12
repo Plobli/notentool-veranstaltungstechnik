@@ -17,13 +17,50 @@ input[type="number"] { width: 4.5rem; }
 .bogen-actions { display: flex; gap: 1rem; align-items: center; margin: 1rem 0; flex-wrap: wrap; }
 .bogen-wrap { overflow-x: auto; }
 table.bogen { min-width: max-content; }
-table.bogen input[type="number"] { width: 3.2rem; }
 table.bogen .tg-zeile td { background: #eef2f7; font-weight: bold; }
 table.bogen .feld-name { text-align: left; white-space: nowrap; }
 table.bogen .gebunden td:first-child { font-style: italic; }
 table.bogen .ergebnis-zeile td { background: #d7f5d7; font-weight: bold; }
 table.bogen .gesamt-zeile td { background: #cfe3ff; font-weight: bold; }
-.strich-radio { display: inline-block; }
+
+/* Inline-Eingabe: Punktefelder ohne Kästchen-Optik */
+table.bogen .feld-input {
+  width: 3rem;
+  border: none;
+  background: transparent;
+  text-align: right;
+  font: inherit;
+  color: inherit;
+  padding: 0.1rem 0.2rem;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+table.bogen .feld-input::-webkit-outer-spin-button,
+table.bogen .feld-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+table.bogen .feld-input:focus {
+  outline: 2px solid #7c5cff;
+  outline-offset: -1px;
+  background: #f3f0ff;
+  border-radius: 3px;
+}
+
+/* Anzahl-Feld in der Teilgebiets-Überschrift */
+.anzahl-label { font-weight: normal; font-size: 0.85em; margin-left: 0.6rem; }
+.anzahl-input { width: 3rem; }
+
+/* Streich-Button (Radio versteckt, Label als Chip) */
+.strich-btn { display: inline-flex; align-items: center; cursor: pointer; margin-left: 0.35rem;
+  padding: 0.1rem 0.4rem; border: 1px solid #ccc; border-radius: 999px;
+  font-size: 0.75rem; color: #888; background: #fafafa; user-select: none; }
+.strich-btn:hover { border-color: #b00020; color: #b00020; }
+.strich-input { position: absolute; opacity: 0; width: 0; height: 0; }
+.strich-btn.aktiv { background: #f8d7d7; border-color: #b00020; color: #b00020; font-weight: bold; }
+
+/* Sichtbare Streichung einer Aufgabe (Zelle) */
+td.zelle-gestrichen .feld-input { text-decoration: line-through; opacity: 0.5; }
 .hinweis { color: #555; font-size: 0.9rem; }
 .pruefling-nav { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0.5rem 0 1rem; }
 .pruefling-nav a { padding: 0.2rem 0.6rem; border: 1px solid #ccc; border-radius: 4px; text-decoration: none; color: #1a2b3c; }
