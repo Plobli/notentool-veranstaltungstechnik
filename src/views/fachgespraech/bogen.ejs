@@ -24,13 +24,14 @@
        const erg = ergebnis.kriterien.find(e => e.key === k.key); %>
     <section class="fg-bereich" data-kriterium="<%= k.key %>">
       <div class="fg-bereich-header">
-        <h2>
+        <h3>
           <span class="fg-nr"><%= k.nr %></span>
-          <%= k.name %>
+          <span class="fg-bereich-name"><%= k.name %></span>
           <span class="fg-faktor-badge">Faktor <%= k.faktor.toLocaleString('de-DE') %></span>
-          <button type="button" class="fg-info" aria-label="Bewertungskriterien anzeigen"
-            title="<%= k.beschreibung %>">?</button>
-        </h2>
+          <button type="button" class="fg-info" aria-expanded="false"
+            aria-label="Bewertungskriterien anzeigen">?</button>
+        </h3>
+        <p class="fg-beschreibung" hidden><%= k.beschreibung %></p>
       </div>
 
       <div class="bogen-wrap">
@@ -71,7 +72,7 @@
             <tr class="fg-add-zeile">
               <td colspan="4"><button type="button" class="fg-zeile-add">+ Zeile</button></td>
             </tr>
-            <tr class="ergebnis-zeile fg-bereich-ergebnis">
+            <tr class="fg-bereich-ergebnis">
               <td colspan="3" class="feld-name">Ergebnis „<%= k.name %>“</td>
               <td class="fg-bereich-punkte" data-kriterium="<%= k.key %>"><%= erg ? erg.punkte : 0 %></td>
             </tr>

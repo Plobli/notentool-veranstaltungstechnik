@@ -125,19 +125,22 @@ td.zelle-gestrichen .feld-input { text-decoration: line-through; opacity: 0.5; }
 .fg-skala-legende { display: flex; flex-wrap: wrap; gap: 0.2rem 0.9rem; align-items: baseline; }
 .fg-skala-legende-item { white-space: nowrap; }
 
-.fg-bereich { margin: 1.75rem 0; }
+.fg-bereich { margin: 1.5rem 0; }
 .fg-bereich:first-of-type { margin-top: 0.5rem; }
-.fg-bereich-header h2 { margin: 0 0 0.4rem; font-size: 1.15rem;
-  display: inline-flex; align-items: center; gap: 0.5rem; }
-.fg-info { width: 1.4rem; height: 1.4rem; border-radius: 50%; cursor: help;
-  border: 1px solid #b7c2d0; background: #f4f7fa; color: #567; font-size: 0.8rem;
+/* Bereichstitel dezent: kleiner, normale Schriftstärke. */
+.fg-bereich-header h3 { margin: 0 0 0.35rem; font-size: 0.95rem; font-weight: normal;
+  color: #445; display: inline-flex; align-items: center; gap: 0.45rem; }
+.fg-bereich-name { font-weight: 600; color: #1a2b3c; }
+.fg-beschreibung { margin: 0 0 0.5rem; font-size: 0.82rem; font-style: italic; color: #555; }
+.fg-info { width: 1.25rem; height: 1.25rem; border-radius: 50%; cursor: pointer;
+  border: 1px solid #b7c2d0; background: #f4f7fa; color: #567; font-size: 0.72rem;
   font-weight: bold; line-height: 1; padding: 0; }
-.fg-info:hover { border-color: #7c5cff; color: #1a2b3c; }
-.fg-nr { flex: 0 0 auto; width: 1.6rem; height: 1.6rem; border-radius: 50%;
-  background: #1a2b3c; color: #fff; display: inline-flex; align-items: center;
-  justify-content: center; font-size: 0.85rem; font-weight: bold; }
-.fg-faktor-badge { font-size: 0.75rem; font-weight: normal; color: #fff;
-  background: #5b6b7f; border-radius: 4px; padding: 0.05rem 0.4rem; }
+.fg-info:hover, .fg-info[aria-expanded="true"] { border-color: #7c5cff; color: #1a2b3c; }
+.fg-nr { flex: 0 0 auto; width: 1.35rem; height: 1.35rem; border-radius: 50%;
+  background: #5b6b7f; color: #fff; display: inline-flex; align-items: center;
+  justify-content: center; font-size: 0.78rem; font-weight: bold; }
+.fg-faktor-badge { font-size: 0.72rem; font-weight: normal; color: #667;
+  background: #eef2f7; border-radius: 4px; padding: 0.05rem 0.4rem; }
 
 table.fg-tabelle { table-layout: fixed; width: 100%; min-width: 48rem; }
 table.fg-tabelle col.fg-col-nr { width: 3rem; }
@@ -177,8 +180,9 @@ td.fg-skala-zelle { vertical-align: top; }
 .fg-zeile-add { font-size: 0.78rem; padding: 0.15rem 0.6rem; background: transparent;
   color: #567; border: 1px solid #b7c2d0; border-radius: 4px; cursor: pointer; }
 .fg-zeile-add:hover { background: #e7edf3; color: #1a2b3c; }
-table.fg-tabelle .fg-bereich-ergebnis td { background: #d7f5d7; font-weight: bold; }
-table.fg-tabelle td.fg-bereich-punkte { text-align: right; }
+/* Bereichsergebnis dezent: neutraler Hintergrund, normale Schriftstärke. */
+table.fg-tabelle .fg-bereich-ergebnis td { background: #f7f9fb; color: #445; font-weight: normal; }
+table.fg-tabelle td.fg-bereich-punkte { text-align: right; font-weight: 600; color: #1a2b3c; }
 
 /* Gesamt-/Statuszeile. */
 table.fg-gesamt-tabelle { max-width: 40rem; }

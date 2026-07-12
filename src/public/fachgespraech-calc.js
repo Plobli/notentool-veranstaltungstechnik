@@ -146,8 +146,20 @@
     fuegeZeileHinzu(bereich, true);
   });
 
-  // Klicks: +Zeile und Skala-Buttons.
+  // Klicks: Info-Button, +Zeile und Skala-Buttons.
   root.addEventListener('click', (ev) => {
+    const info = ev.target.closest('.fg-info');
+    if (info) {
+      const header = info.closest('.fg-bereich-header');
+      const beschreibung = header && header.querySelector('.fg-beschreibung');
+      if (beschreibung) {
+        const sichtbar = !beschreibung.hasAttribute('hidden');
+        if (sichtbar) beschreibung.setAttribute('hidden', '');
+        else beschreibung.removeAttribute('hidden');
+        info.setAttribute('aria-expanded', String(!sichtbar));
+      }
+      return;
+    }
     const add = ev.target.closest('.fg-zeile-add');
     if (add) {
       fuegeZeileHinzu(add.closest('.fg-bereich'), true);
