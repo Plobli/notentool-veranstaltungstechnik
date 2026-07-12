@@ -1,0 +1,75 @@
+<!-- src/views/fachgespraech/bogen.ejs -->
+<h1>Fachgespräch – <%= pruefling.name %></h1>
+<p class="hinweis"><a href="/fachgespraech">← zur Übersicht</a></p>
+<p class="hinweis" id="autosave-status" role="status" aria-live="polite">Eingaben werden automatisch gespeichert.</p>
+
+<div class="pruefling-nav">
+  <% geschwister.forEach(g => { %>
+    <a href="/fachgespraech/<%= g.id %>" class="<%= g.id === pruefling.id ? 'aktiv' : '' %>"><%= g.name %></a>
+  <% }) %>
+</div>
+
+<div id="fg-form" data-pruefling="<%= pruefling.id %>">
+  <div class="bogen-wrap">
+    <table class="bogen fg-tabelle">
+      <colgroup>
+        <col class="fg-col-kriterium">
+        <col class="fg-col-protokoll">
+        <col class="fg-col-punkte">
+        <col class="fg-col-faktor">
+        <col class="fg-col-ergebnis">
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="feld-name">Kriterium</th>
+          <th>Protokoll zu Fragen und Antworten</th>
+          <th>Punkte</th>
+          <th>Faktor</th>
+          <th>Ergebnis</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% kriterien.forEach(k => {
+             const b = bewertung.get(k.key);
+             const erg = ergebnis.kriterien.find(e => e.key === k.key); %>
+          <tr data-kriterium="<%= k.key %>">
+            <td class="feld-name fg-kriterium">
+              <div class="fg-kriterium-inner">
+                <div class="fg-nr"><%= k.nr %></div>
+                <div class="fg-kriterium-text">
+                  <strong><%= k.name %></strong>
+                  <p class="fg-beschreibung"><%= k.beschreibung %></p>
+                </div>
+              </div>
+            </td>
+            <td class="fg-protokoll-zelle">
+              <textarea class="fg-protokoll" data-kriterium="<%= k.key %>"
+                rows="4" placeholder="Notizen zum Gespräch …"><%= b && b.protokoll ? b.protokoll : '' %></textarea>
+            </td>
+            <td class="feld-zelle fg-punkte-zelle">
+              <input type="number" min="0" max="100" step="1"
+                class="feld-input fg-punkte" data-kriterium="<%= k.key %>"
+                value="<%= b && b.punkte !== null && b.punkte !== undefined ? b.punkte : '' %>">
+            </td>
+            <td class="fg-faktor"><%= k.faktor.toLocaleString('de-DE') %></td>
+            <td class="fg-ergebnis" data-kriterium="<%= k.key %>"><%= erg ? erg.ergebnis.toLocaleString('de-DE') : 0 %></td>
+          </tr>
+        <% }) %>
+
+        <tr class="gesamt-zeile">
+          <td class="feld-name" colspan="3">Gesamtpunkte</td>
+          <td class="fg-gesamt punkte-status <%= ergebnis.bestanden ? 'bestanden' : 'durchgefallen' %>" colspan="2"><%= ergebnis.gesamtpunkte %></td>
+        </tr>
+        <tr class="gesamt-status-zeile">
+          <td class="feld-name" colspan="3">Ergebnis</td>
+          <td class="gesamt-status fg-status <%= ergebnis.bestanden ? 'bestanden' : 'durchgefallen' %>" colspan="2">
+            <span class="fg-status-text"><%= ergebnis.bestanden ? 'bestanden' : 'nicht bestanden' %></span>
+            <span class="fg-note">Note: <%= ergebnis.note %></span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="/fachgespraech-calc.js"></script>

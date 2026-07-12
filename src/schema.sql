@@ -110,6 +110,18 @@ CREATE TABLE IF NOT EXISTS schriftlich_config (
   UNIQUE(pruefungstermin_id, teilgebiet)
 );
 
+-- Fachgespräch-Bewertung. Kriterien sind fest im Code
+-- (src/lib/fachgespraech-struktur.js); hier werden je Prüfling und Kriterium
+-- der Protokolltext und die Punkte gespeichert.
+CREATE TABLE IF NOT EXISTS fachgespraech_bewertung (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  pruefling_id INTEGER NOT NULL REFERENCES pruefling(id) ON DELETE CASCADE,
+  kriterium_key TEXT NOT NULL,       -- 'anforderungen' | 'planung' | 'energie' | 'ablaeufe' | 'unterlagen'
+  protokoll TEXT,
+  punkte REAL,                       -- 0–100; NULL = noch nicht bewertet
+  UNIQUE(pruefling_id, kriterium_key)
+);
+
 CREATE TABLE IF NOT EXISTS mep_ergebnis (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   pruefling_id INTEGER NOT NULL REFERENCES pruefling(id) ON DELETE CASCADE,

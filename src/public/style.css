@@ -3,7 +3,7 @@ body { font-family: system-ui, sans-serif; margin: 0; color: #1a1a1a; }
 header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1.5rem; background: #1a2b3c; color: white; }
 header .logo { color: white; text-decoration: none; font-weight: bold; }
 header nav a, header nav span { color: white; margin-left: 1rem; }
-main { padding: 1.5rem; max-width: 1000px; margin: 0 auto; }
+main { padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
 table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
 th, td { border: 1px solid #ccc; padding: 0.4rem 0.6rem; text-align: right; }
 th:first-child, td:first-child { text-align: left; }
@@ -120,3 +120,39 @@ td.zelle-gestrichen .feld-input { text-decoration: line-through; opacity: 0.5; }
 .pruefling-nav a.aktiv { background: #1a2b3c; color: white; }
 .tg-block { margin: 1.5rem 0; }
 .tg-block h2 { margin-bottom: 0.3rem; }
+
+/* Fachgespräch-Bogen */
+table.fg-tabelle { table-layout: fixed; width: 100%; min-width: 52rem; }
+table.fg-tabelle col.fg-col-kriterium { width: 20rem; }
+table.fg-tabelle col.fg-col-protokoll { width: auto; }
+table.fg-tabelle col.fg-col-punkte { width: 5rem; }
+table.fg-tabelle col.fg-col-faktor { width: 4rem; }
+table.fg-tabelle col.fg-col-ergebnis { width: 5rem; }
+table.fg-tabelle thead th { background: #f4f7fa; }
+table.fg-tabelle .fg-faktor, table.fg-tabelle .fg-ergebnis { text-align: right; }
+table.fg-tabelle .fg-ergebnis { font-weight: bold; background: #f4f7fa; }
+
+/* Kriterium-Zelle: Nummer + Name + Beschreibung.
+   Zelle bleibt table-cell; der innere Wrapper ist das Flex-Element, damit die
+   feste Spaltenbreite eingehalten wird und der Text umbricht statt auszubrechen. */
+td.fg-kriterium { white-space: normal; vertical-align: top; }
+.fg-kriterium-inner { display: flex; gap: 0.6rem; align-items: flex-start; }
+.fg-kriterium-text { min-width: 0; }
+.fg-nr { flex: 0 0 auto; width: 1.5rem; height: 1.5rem; border-radius: 50%;
+  background: #1a2b3c; color: #fff; display: inline-flex; align-items: center;
+  justify-content: center; font-size: 0.85rem; font-weight: bold; }
+.fg-beschreibung { margin: 0.2rem 0 0; font-size: 0.78rem; font-style: italic;
+  color: #555; font-weight: normal; overflow-wrap: anywhere; }
+
+/* Protokoll-Textfeld füllt die Zelle */
+td.fg-protokoll-zelle { padding: 0.3rem; }
+.fg-protokoll { width: 100%; box-sizing: border-box; font: inherit; resize: vertical;
+  border: 1px solid #ccc; border-radius: 4px; padding: 0.3rem 0.4rem; }
+.fg-protokoll:focus { outline: 2px solid #7c5cff; outline-offset: -1px; }
+
+/* Gesamt-/Statuszeile des Fachgespräch-Bogens */
+table.fg-tabelle .fg-gesamt { text-align: right; font-weight: bold; }
+table.fg-tabelle .fg-status { white-space: normal; }
+.fg-status-text { display: block; }
+.fg-note { display: block; margin-top: 0.2rem; font-size: 0.72rem; font-weight: normal;
+  text-transform: none; letter-spacing: 0; }

@@ -1,0 +1,33 @@
+<!-- src/views/fachgespraech/uebersicht.ejs -->
+<h1>Fachgespräch</h1>
+
+<% if (!termin) { %>
+  <p>Kein aktiver Prüfungstermin.
+    <% if (user.role === 'admin') { %><a href="/admin">Jetzt anlegen</a><% } %>
+  </p>
+<% } else if (uebersicht.length === 0) { %>
+  <p><strong><%= termin.name %></strong> hat noch keine Prüflinge.
+    <% if (user.role === 'admin') { %>
+      <a href="/admin/termine/<%= termin.id %>">Prüflinge anlegen</a>
+    <% } %>
+  </p>
+<% } else { %>
+  <p class="hinweis"><strong><%= termin.name %></strong> · Pro Prüfling ein Bewertungsbogen.</p>
+
+  <table class="bogen">
+    <thead>
+      <tr><th class="feld-name">Prüfling</th><th>Gesamtpunkte</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <% uebersicht.forEach(u => { %>
+        <tr>
+          <td class="feld-name"><a href="/fachgespraech/<%= u.pruefling.id %>"><%= u.pruefling.name %></a></td>
+          <td class="punkte-status <%= u.bestanden ? 'bestanden' : 'durchgefallen' %>"><%= u.gesamtpunkte %></td>
+          <td class="gesamt-status <%= u.bestanden ? 'bestanden' : 'durchgefallen' %>">
+            <%= u.bestanden ? 'bestanden' : 'nicht bestanden' %>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } %>

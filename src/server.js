@@ -10,6 +10,7 @@ const authRoutes = require('./routes/auth.routes');
 const adminRoutes = require('./routes/admin.routes');
 const schriftlichRoutes = require('./routes/schriftlich.routes');
 const schriftlichbogenRoutes = require('./routes/schriftlichbogen.routes');
+const fachgespraechRoutes = require('./routes/fachgespraech.routes');
 const projektRoutes = require('./routes/projekt.routes');
 const ergebnisRoutes = require('./routes/ergebnis.routes');
 const { requireAuth } = require('./middleware');
@@ -79,6 +80,8 @@ app.use('/', authRoutes);
 app.use('/', adminRoutes);
 
 app.use('/', schriftlichbogenRoutes);
+
+app.use('/', fachgespraechRoutes);
 
 app.use('/', schriftlichRoutes);
 
