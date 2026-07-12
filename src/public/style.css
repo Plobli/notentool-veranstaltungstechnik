@@ -127,10 +127,12 @@ td.zelle-gestrichen .feld-input { text-decoration: line-through; opacity: 0.5; }
 
 .fg-bereich { margin: 1.75rem 0; }
 .fg-bereich:first-of-type { margin-top: 0.5rem; }
-.fg-bereich-header h2 { margin: 0 0 0.15rem; font-size: 1.15rem;
+.fg-bereich-header h2 { margin: 0 0 0.4rem; font-size: 1.15rem;
   display: inline-flex; align-items: center; gap: 0.5rem; }
-.fg-bereich-header .fg-beschreibung { margin: 0 0 0.5rem; font-size: 0.82rem;
-  font-style: italic; color: #555; }
+.fg-info { width: 1.4rem; height: 1.4rem; border-radius: 50%; cursor: help;
+  border: 1px solid #b7c2d0; background: #f4f7fa; color: #567; font-size: 0.8rem;
+  font-weight: bold; line-height: 1; padding: 0; }
+.fg-info:hover { border-color: #7c5cff; color: #1a2b3c; }
 .fg-nr { flex: 0 0 auto; width: 1.6rem; height: 1.6rem; border-radius: 50%;
   background: #1a2b3c; color: #fff; display: inline-flex; align-items: center;
   justify-content: center; font-size: 0.85rem; font-weight: bold; }
