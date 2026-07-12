@@ -7,7 +7,13 @@
 const express = require('express');
 const { getDb } = require('../db');
 const { requireAuth } = require('../middleware');
-const { TEILGEBIETE, TEILGEBIET_BY_KEY } = require('../lib/schriftlich-struktur');
+const {
+  TEILGEBIETE,
+  TEILGEBIET_BY_KEY,
+  KONFIGURIERBARE_TEILGEBIETE,
+  DEFAULT_ANZAHL,
+  uFelder,
+} = require('../lib/schriftlich-struktur');
 const { berechneTeilgebiet } = require('../lib/schriftlich-scoring');
 
 const router = express.Router();
@@ -17,6 +23,34 @@ function aktiverTermin(db) {
   return db
     .prepare('SELECT * FROM pruefungstermin WHERE ist_aktiv = 1 ORDER BY id DESC LIMIT 1')
     .get();
+}
+
+// Liefert die effektive Fragenanzahl je konfigurierbarem Teilgebiet für einen
+// Termin: gespeicherter Wert aus schriftlich_config oder Default.
+function ladeAnzahlMap(db, terminId) {
+  const map = { ...DEFAULT_ANZAHL };
+  if (!terminId) return map;
+  const rows = db
+    .prepare('SELECT teilgebiet, anzahl_fragen FROM schriftlich_config WHERE pruefungstermin_id = ?')
+    .all(terminId);
+  for (const r of rows) {
+    if (KONFIGURIERBARE_TEILGEBIETE.includes(r.teilgebiet)) {
+      map[r.teilgebiet] = r.anzahl_fragen;
+    }
+  }
+  return map;
+}
+
+// Effektive Feldliste je Teilgebiet: konfigurierbare bekommen u1..u<anzahl>,
+// WISO behält seine feste Feldliste.
+function ladeFelderMap(anzahlMap) {
+  const felder = {};
+  for (const t of TEILGEBIETE) {
+    felder[t.key] = KONFIGURIERBARE_TEILGEBIETE.includes(t.key)
+      ? uFelder(anzahlMap[t.key])
+      : t.felder;
+  }
+  return felder;
 }
 
 // Lädt alle gespeicherten Punkte eines Termins und baut je Prüfling eine
@@ -56,11 +90,12 @@ function ladeBogen(db, terminId) {
 }
 
 // Berechnet für einen Prüfling alle Teilgebiete + Gesamt.
-function ergebnisFuer(teilgebietMaps) {
+function ergebnisFuer(teilgebietMaps, anzahlMap) {
   const teilgebiete = {};
   let gesamt = 0;
   for (const t of TEILGEBIETE) {
-    const erg = berechneTeilgebiet(t.key, teilgebietMaps[t.key] || new Map());
+    const anzahl = anzahlMap ? anzahlMap[t.key] : undefined;
+    const erg = berechneTeilgebiet(t.key, teilgebietMaps[t.key] || new Map(), anzahl);
     teilgebiete[t.key] = erg;
     gesamt += erg.punkte;
   }
@@ -103,16 +138,20 @@ router.get('/schriftlich', requireAuth, (req, res) => {
       user: req.user,
       termin: null,
       teilgebiete: TEILGEBIETE,
+      anzahlMap: { ...DEFAULT_ANZAHL },
+      felderMap: ladeFelderMap({ ...DEFAULT_ANZAHL }),
       pruefliche: [],
       daten: new Map(),
       ergebnisse: new Map(),
     });
   }
 
+  const anzahlMap = ladeAnzahlMap(db, termin.id);
+  const felderMap = ladeFelderMap(anzahlMap);
   const { pruefliche, byPruefling } = ladeBogen(db, termin.id);
   const ergebnisse = new Map();
   for (const p of pruefliche) {
-    ergebnisse.set(p.id, ergebnisFuer(byPruefling.get(p.id)));
+    ergebnisse.set(p.id, ergebnisFuer(byPruefling.get(p.id), anzahlMap));
   }
 
   res.render('schriftlichbogen/matrix', {
@@ -120,6 +159,8 @@ router.get('/schriftlich', requireAuth, (req, res) => {
     user: req.user,
     termin,
     teilgebiete: TEILGEBIETE,
+    anzahlMap,
+    felderMap,
     pruefliche,
     daten: byPruefling,
     ergebnisse,
@@ -138,50 +179,34 @@ router.post('/schriftlich', requireAuth, (req, res) => {
       .map((r) => r.id)
   );
 
+  speichereAnzahl(db, termin.id, req.body);
+
   const felder = parseMatrixBody(req.body, prueflingIds);
   speichereFelder(db, felder);
   res.redirect('/schriftlich');
 });
 
-// --- Pro-Prüfling-Ansicht ---
-
-router.get('/schriftlich/pruefling/:prueflingId', requireAuth, (req, res) => {
-  const db = getDb();
-  const pruefling = db
-    .prepare('SELECT * FROM pruefling WHERE id = ?')
-    .get(req.params.prueflingId);
-  if (!pruefling) return res.status(404).send('Prüfling nicht gefunden.');
-
-  const geschwister = db
-    .prepare('SELECT id, name FROM pruefling WHERE pruefungstermin_id = ? ORDER BY name')
-    .all(pruefling.pruefungstermin_id);
-
-  const { byPruefling } = ladeBogen(db, pruefling.pruefungstermin_id);
-  const teilgebietMaps = byPruefling.get(pruefling.id);
-  const ergebnis = ergebnisFuer(teilgebietMaps);
-
-  res.render('schriftlichbogen/pruefling', {
-    title: `Schriftlich – ${pruefling.name}`,
-    user: req.user,
-    pruefling,
-    geschwister,
-    teilgebiete: TEILGEBIETE,
-    daten: teilgebietMaps,
-    ergebnis,
+// Liest Felder anzahl_<teilgebiet> aus dem Body und speichert sie je Termin.
+// Gültige Teilgebiete: KONFIGURIERBARE_TEILGEBIETE. Wert wird auf [1,20] geklemmt.
+function speichereAnzahl(db, terminId, body) {
+  const upsert = db.prepare(
+    `INSERT INTO schriftlich_config (pruefungstermin_id, teilgebiet, anzahl_fragen)
+     VALUES (?, ?, ?)
+     ON CONFLICT(pruefungstermin_id, teilgebiet)
+     DO UPDATE SET anzahl_fragen = excluded.anzahl_fragen`
+  );
+  const tx = db.transaction(() => {
+    for (const key of KONFIGURIERBARE_TEILGEBIETE) {
+      const raw = body[`anzahl_${key}`];
+      if (raw === undefined || raw === '') continue;
+      let n = Number(raw);
+      if (!Number.isFinite(n)) continue;
+      n = Math.max(1, Math.min(20, Math.round(n)));
+      upsert.run(terminId, key, n);
+    }
   });
-});
-
-router.post('/schriftlich/pruefling/:prueflingId', requireAuth, (req, res) => {
-  const db = getDb();
-  const pruefling = db
-    .prepare('SELECT * FROM pruefling WHERE id = ?')
-    .get(req.params.prueflingId);
-  if (!pruefling) return res.status(404).send('Prüfling nicht gefunden.');
-
-  const felder = parseEinzelBody(req.body, pruefling.id);
-  speichereFelder(db, felder);
-  res.redirect(`/schriftlich/pruefling/${pruefling.id}`);
-});
+  tx();
+}
 
 // --- Body-Parser ---
 
@@ -206,23 +231,6 @@ function parseMatrixBody(body, gueltigePrueflingIds) {
     if (!TEILGEBIET_BY_KEY.has(teilgebiet)) continue;
     const gestrichen =
       teilgebiet === 'wiso' && strich.get(prueflingId) === feld ? 1 : 0;
-    felder.push({ prueflingId, teilgebiet, feld, punkte: value, gestrichen });
-  }
-  return felder;
-}
-
-// Einzel-Feldnamen: <teilgebiet>_<feld>, strich_wiso = <feldKey>
-function parseEinzelBody(body, prueflingId) {
-  const felder = [];
-  const strichWiso = body.strich_wiso;
-  for (const [key, value] of Object.entries(body)) {
-    const m = key.match(/^([a-z]+)_([a-z0-9]+)$/);
-    if (!m) continue;
-    const teilgebiet = m[1];
-    const feld = m[2];
-    if (!TEILGEBIET_BY_KEY.has(teilgebiet)) continue;
-    const gestrichen =
-      teilgebiet === 'wiso' && strichWiso === feld ? 1 : 0;
     felder.push({ prueflingId, teilgebiet, feld, punkte: value, gestrichen });
   }
   return felder;
