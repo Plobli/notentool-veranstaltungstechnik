@@ -136,9 +136,6 @@ td.zelle-gestrichen .feld-input { text-decoration: line-through; opacity: 0.5; }
   border: 1px solid #b7c2d0; background: #f4f7fa; color: #567; font-size: 0.72rem;
   font-weight: bold; line-height: 1; padding: 0; }
 .fg-info:hover, .fg-info[aria-expanded="true"] { border-color: #7c5cff; color: #1a2b3c; }
-.fg-nr { flex: 0 0 auto; width: 1.35rem; height: 1.35rem; border-radius: 50%;
-  background: #5b6b7f; color: #fff; display: inline-flex; align-items: center;
-  justify-content: center; font-size: 0.78rem; font-weight: bold; }
 .fg-faktor-badge { font-size: 0.72rem; font-weight: normal; color: #667;
   background: #eef2f7; border-radius: 4px; padding: 0.05rem 0.4rem; }
 
