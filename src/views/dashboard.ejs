@@ -1,18 +1,20 @@
 <h1>Dashboard</h1>
 
-<% if (!termin) { %>
+<% if (!aktiv) { %>
   <p>Kein aktiver Prüfungstermin. <% if (user.role === 'admin') { %><a href="/admin">Jetzt anlegen</a><% } %></p>
 <% } else { %>
-  <h2><%= termin.name %></h2>
-  <table>
-    <thead><tr><th>Prüfling</th><th>Deine Fächer</th></tr></thead>
-    <tbody>
-      <% pruefliche.forEach(s => { %>
-        <tr>
-          <td><%= s.pruefling.name %></td>
-          <td><%= s.abgeschlossen %> von <%= s.gesamt %></td>
-        </tr>
+  <h2><%= aktiv.termin.name %></h2>
+  <%- include('_ergebnis-tabelle', { zeilen: aktiv.zeilen }) %>
+
+  <% if (vergangene.length) { %>
+    <section class="vergangene">
+      <h2>Vergangene Prüfungen</h2>
+      <% vergangene.forEach(v => { %>
+        <details>
+          <summary><%= v.termin.name %></summary>
+          <%- include('_ergebnis-tabelle', { zeilen: v.zeilen }) %>
+        </details>
       <% }) %>
-    </tbody>
-  </table>
+    </section>
+  <% } %>
 <% } %>

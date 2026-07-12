@@ -11,6 +11,8 @@ const adminRoutes = require('./routes/admin.routes');
 const schriftlichbogenRoutes = require('./routes/schriftlichbogen.routes');
 const fachgespraechRoutes = require('./routes/fachgespraech.routes');
 const { requireAuth } = require('./middleware');
+const { ladeTerminErgebnisse } = require('./lib/termin-ergebnisse');
+const { TEILGEBIETE } = require('./lib/schriftlich-struktur');
 
 function fsExistsEnvFile() {
   return require('node:fs').existsSync('.env');
@@ -82,36 +84,32 @@ app.use('/', fachgespraechRoutes);
 
 app.get('/', requireAuth, (req, res) => {
   const db = getDb();
-  const termin = db.prepare('SELECT * FROM pruefungstermin WHERE ist_aktiv = 1 ORDER BY id DESC LIMIT 1').get();
 
-  if (!termin) {
-    return res.render('dashboard', { title: 'Dashboard', user: req.user, termin: null, pruefliche: [] });
-  }
+  const aktiverTermin = db
+    .prepare('SELECT * FROM pruefungstermin WHERE ist_aktiv = 1 ORDER BY id DESC LIMIT 1')
+    .get();
 
-  const pruefliche = db
-    .prepare('SELECT * FROM pruefling WHERE pruefungstermin_id = ? ORDER BY name')
-    .all(termin.id);
-  const faecher = db
-    .prepare('SELECT * FROM fach WHERE pruefungstermin_id = ? ORDER BY sortierung')
-    .all(termin.id);
+  // Die letzten 2 vergangenen (inaktiven) Termine, neueste zuerst.
+  const vergangeneTermine = db
+    .prepare('SELECT * FROM pruefungstermin WHERE ist_aktiv = 0 ORDER BY id DESC LIMIT 2')
+    .all();
 
-  const status = pruefliche.map((p) => {
-    const abgeschlosseneFaecher = faecher.filter((f) => {
-      const eintrag = db
-        .prepare(
-          "SELECT 1 FROM korrektureintrag WHERE pruefling_id = ? AND fach_id = ? AND pruefer_id = ? AND status = 'abgeschlossen'"
-        )
-        .get(p.id, f.id, req.user.id);
-      return Boolean(eintrag);
-    });
-    return {
-      pruefling: p,
-      abgeschlossen: abgeschlosseneFaecher.length,
-      gesamt: faecher.length,
-    };
+  const aktiv = aktiverTermin
+    ? { termin: aktiverTermin, zeilen: ladeTerminErgebnisse(db, aktiverTermin.id) }
+    : null;
+
+  const vergangene = vergangeneTermine.map((t) => ({
+    termin: t,
+    zeilen: ladeTerminErgebnisse(db, t.id),
+  }));
+
+  res.render('dashboard', {
+    title: 'Dashboard',
+    user: req.user,
+    aktiv,
+    vergangene,
+    teilgebiete: TEILGEBIETE,
   });
-
-  res.render('dashboard', { title: 'Dashboard', user: req.user, termin, pruefliche: status, faecher });
 });
 
 if (require.main === module) {

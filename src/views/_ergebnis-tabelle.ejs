@@ -1,0 +1,45 @@
+<%
+  // Helfer: Bereichswert anzeigen ("–" für null).
+  function zeig(v) { return v === null || v === undefined ? '–' : v; }
+%>
+<table class="ergebnis-tabelle">
+  <thead>
+    <tr>
+      <th>Prüfling</th>
+      <th>WISO</th>
+      <th>Planung</th>
+      <th>Durchf.</th>
+      <th>Energie ⊘</th>
+      <th>Fachgespräch</th>
+      <th>Gesamt (schr.)</th>
+      <th>Gesamt (alles)</th>
+      <th>MEP</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% zeilen.forEach(z => { %>
+      <tr>
+        <td><%= z.pruefling.name %></td>
+        <td><%= zeig(z.bereiche.wiso) %></td>
+        <td><%= zeig(z.bereiche.planung) %></td>
+        <td><%= zeig(z.bereiche.durchfuehrung) %></td>
+        <td><%= zeig(z.bereiche.energie) %></td>
+        <td><%= zeig(z.bereiche.fachgespraech) %></td>
+        <td><%= z.schriftlich.gesamt %></td>
+        <td><%= z.gesamtAlles %></td>
+        <td>
+          <% if (z.schriftlich.mepMoeglich) { %>
+            <span class="mep-moeglich" title="<%= z.schriftlich.mepBereiche.join(', ') %>">möglich</span>
+          <% } else { %>–<% } %>
+        </td>
+        <td class="<%= z.schriftlich.bestanden ? 'ok' : 'error' %>">
+          <%= z.schriftlich.bestanden ? 'bestanden' : 'nicht bestanden' %>
+        </td>
+      </tr>
+    <% }) %>
+    <% if (zeilen.length === 0) { %>
+      <tr><td colspan="10">Keine Prüflinge in diesem Termin.</td></tr>
+    <% } %>
+  </tbody>
+</table>
