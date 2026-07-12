@@ -176,9 +176,9 @@ td.fg-skala-zelle { vertical-align: top; }
   background: #f8d7d7; border-color: #b00020; color: #8a0016; font-weight: bold; }
 
 /* +Zeile und Bereichs-Ergebniszeile. */
-.fg-zeile-add { font-size: 0.78rem; padding: 0.15rem 0.6rem; background: transparent;
-  color: #567; border: 1px solid #b7c2d0; border-radius: 4px; cursor: pointer; }
-.fg-zeile-add:hover { background: #e7edf3; color: #1a2b3c; }
+.fg-zeile-add { font-size: 0.75rem; padding: 0.1rem 0.2rem; background: transparent;
+  color: #99a3ad; border: none; cursor: pointer; }
+.fg-zeile-add:hover { color: #5b6b7f; text-decoration: underline; }
 /* Bereichsergebnis-Zeile: links "+ Zeile", rechts "Ergebnis <Punkte>". */
 table.fg-tabelle .fg-bereich-ergebnis td { background: #f7f9fb; }
 table.fg-tabelle td.fg-bereich-punkte { text-align: right; white-space: nowrap; }
