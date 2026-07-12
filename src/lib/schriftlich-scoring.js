@@ -3,7 +3,11 @@
 // Reine Rechenfunktionen für die schriftliche Prüfung. Ohne DB-Abhängigkeit,
 // damit sie direkt gegen die Excel-Sollwerte testbar sind.
 
-const { TEILGEBIET_BY_KEY } = require('./schriftlich-struktur');
+const {
+  TEILGEBIET_BY_KEY,
+  KONFIGURIERBARE_TEILGEBIETE,
+  uFelder,
+} = require('./schriftlich-struktur');
 
 // Wert eines Feldes als Zahl; null/undefined -> 0.
 function zahl(eintrag) {
@@ -25,17 +29,25 @@ function ermittleStreichung(teilgebiet, felderMap) {
 
 // Berechnet Summe und Endpunkte eines Teilgebiets.
 // felderMap: Map<feldKey, { punkte, gestrichen }>
-function berechneTeilgebiet(key, felderMap) {
+// anzahl: optionale Fragenanzahl für konfigurierbare Teilgebiete
+//         (Planung/Durchführung/Energie). Ohne Angabe gilt die Default-Struktur.
+function berechneTeilgebiet(key, felderMap, anzahl) {
   const tg = TEILGEBIET_BY_KEY.get(key);
   if (!tg) throw new Error(`Unbekanntes Teilgebiet: ${key}`);
 
+  const konfigurierbar =
+    KONFIGURIERBARE_TEILGEBIETE.includes(key) &&
+    Number.isFinite(anzahl) &&
+    anzahl >= 1;
+  const felder = konfigurierbar ? uFelder(anzahl) : tg.felder;
+
   let gestrichenesFeld = null;
   if (tg.streichung) {
-    gestrichenesFeld = ermittleStreichung(tg, felderMap);
+    gestrichenesFeld = ermittleStreichung({ ...tg, felder }, felderMap);
   }
 
   let summe = 0;
-  for (const feld of tg.felder) {
+  for (const feld of felder) {
     if (feld === gestrichenesFeld) continue;
     summe += zahl(felderMap.get(feld));
   }
@@ -47,6 +59,10 @@ function berechneTeilgebiet(key, felderMap) {
     const gebundenTeilpunkte = Math.round(gebundenRoh / tg.gebundenDivisor);
     const uTeilpunkte = Math.round(summe * tg.uFaktor);
     punkte = gebundenTeilpunkte + uTeilpunkte;
+  } else if (konfigurierbar) {
+    // Normierung auf 100: divisor = anzahl * 10 / 100.
+    const divisor = (anzahl * 10) / 100;
+    punkte = Math.round(summe / divisor);
   } else if (tg.divisor) {
     punkte = Math.round(summe / tg.divisor);
   } else {

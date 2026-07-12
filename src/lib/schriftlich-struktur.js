@@ -61,8 +61,17 @@ const TEILGEBIET_BY_KEY = new Map(TEILGEBIETE.map((t) => [t.key, t]));
 // Höchstpunktzahl je Unterpunkt (Rohwert).
 const MAX_PUNKTE_PRO_FELD = 10;
 
+// Teilgebiete mit frei konfigurierbarer Fragenanzahl (WISO ausgenommen).
+const KONFIGURIERBARE_TEILGEBIETE = ['planung', 'durchfuehrung', 'energie'];
+
+// Default-Fragenanzahl je konfigurierbarem Teilgebiet (entspricht der Excel-Vorlage).
+const DEFAULT_ANZAHL = { planung: 10, durchfuehrung: 11, energie: 5 };
+
 module.exports = {
   TEILGEBIETE,
   TEILGEBIET_BY_KEY,
   MAX_PUNKTE_PRO_FELD,
+  KONFIGURIERBARE_TEILGEBIETE,
+  DEFAULT_ANZAHL,
+  uFelder,
 };
