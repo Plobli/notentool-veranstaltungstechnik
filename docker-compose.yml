@@ -1,3 +1,8 @@
+# Fester Projektname: hält Container-/Volume-Namen (prfungskommission_app-data
+# mit den produktiven Daten) stabil, unabhängig davon, wie der Verzeichnisname
+# "Prüfungskommission" (ü) transliteriert wird. Nicht ändern.
+name: prfungskommission
+
 services:
   app:
     build: .
