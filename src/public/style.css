@@ -180,8 +180,10 @@ td.fg-skala-zelle { vertical-align: top; }
   color: #567; border: 1px solid #b7c2d0; border-radius: 4px; cursor: pointer; }
 .fg-zeile-add:hover { background: #e7edf3; color: #1a2b3c; }
 /* Bereichsergebnis dezent: neutraler Hintergrund, normale Schriftstärke. */
-table.fg-tabelle .fg-bereich-ergebnis td { background: #f7f9fb; color: #445; font-weight: normal; }
-table.fg-tabelle td.fg-bereich-punkte { text-align: right; font-weight: 600; color: #1a2b3c; }
+table.fg-tabelle .fg-bereich-ergebnis td { background: #f7f9fb; color: #778;
+  font-weight: normal; font-size: 0.8rem; }
+table.fg-tabelle td.fg-bereich-punkte { text-align: right; font-weight: 600;
+  font-size: 1rem; color: #1a2b3c; }
 
 /* Gesamt-/Statuszeile. */
 table.fg-gesamt-tabelle { max-width: 40rem; }
