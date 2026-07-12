@@ -17,11 +17,7 @@
   <form method="post" action="/schriftlich" id="bogen-form" data-modus="matrix">
     <div class="bogen-actions">
       <button type="submit">Speichern</button>
-      <span class="hinweis">Ansicht wechseln:
-        <% pruefliche.forEach(p => { %>
-          <a href="/schriftlich/pruefling/<%= p.id %>"><%= p.name %></a><%= ' ' %>
-        <% }) %>
-      </span>
+      <span class="hinweis">Fragenanzahl in den Teilbereichs-Überschriften wirkt nach dem Speichern.</span>
     </div>
 
     <div class="bogen-wrap">
@@ -30,14 +26,24 @@
           <tr>
             <th class="feld-name">Aufgabe</th>
             <% pruefliche.forEach(p => { %>
-              <th><a href="/schriftlich/pruefling/<%= p.id %>"><%= p.name %></a></th>
+              <th><%= p.name %></th>
             <% }) %>
           </tr>
         </thead>
         <tbody>
           <% teilgebiete.forEach(tg => { %>
             <tr class="tg-zeile" data-tg="<%= tg.key %>">
-              <td class="feld-name"><%= tg.name %></td>
+              <td class="feld-name">
+                <%= tg.name %>
+                <% if (['planung','durchfuehrung','energie'].includes(tg.key)) { %>
+                  <label class="anzahl-label">Fragen:
+                    <input type="number" min="1" max="20" step="1"
+                      class="anzahl-input"
+                      name="anzahl_<%= tg.key %>"
+                      value="<%= anzahlMap[tg.key] %>">
+                  </label>
+                <% } %>
+              </td>
               <% pruefliche.forEach(p => { %><td></td><% }) %>
             </tr>
 
@@ -56,7 +62,7 @@
               </tr>
             <% } %>
 
-            <% tg.felder.forEach(feld => { %>
+            <% felderMap[tg.key].forEach(feld => { %>
               <tr data-tg="<%= tg.key %>" data-feld="<%= feld %>">
                 <td class="feld-name">
                   <%= feld.toUpperCase() %>
@@ -68,17 +74,18 @@
                      const e = daten.get(p.id)[tg.key].get(feld);
                      const erg = ergebnisse.get(p.id).teilgebiete[tg.key];
                      const istGestrichen = tg.streichung && erg.gestrichenesFeld === feld; %>
-                  <td>
+                  <td class="<%= istGestrichen ? 'zelle-gestrichen' : '' %>">
                     <input type="number" step="1" min="0" max="10"
                       class="feld-input" data-tg="<%= tg.key %>" data-feld="<%= feld %>"
                       name="p<%= p.id %>_<%= tg.key %>_<%= feld %>"
                       value="<%= e && e.punkte !== null ? e.punkte : '' %>">
                     <% if (tg.streichung) { %>
-                      <label class="strich-radio" title="Diese Aufgabe streichen">
+                      <label class="strich-btn <%= istGestrichen ? 'aktiv' : '' %>" title="Diese Aufgabe streichen">
                         <input type="radio" name="strich_p<%= p.id %>_wiso"
                           value="<%= feld %>" class="strich-input"
                           data-pruefling="<%= p.id %>"
-                          <%= istGestrichen ? 'checked' : '' %>>✗
+                          <%= istGestrichen ? 'checked' : '' %>>
+                        <span class="strich-text">✗ <%= istGestrichen ? 'gestrichen' : 'streichen' %></span>
                       </label>
                     <% } %>
                   </td>
