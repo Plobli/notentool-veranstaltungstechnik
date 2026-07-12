@@ -43,8 +43,21 @@
               </div>
             </td>
             <td class="fg-protokoll-zelle">
-              <textarea class="fg-protokoll" data-kriterium="<%= k.key %>"
-                rows="4" placeholder="Notizen zum Gespräch …"><%= b && b.protokoll ? b.protokoll : '' %></textarea>
+              <div class="fg-protokoll" data-kriterium="<%= k.key %>">
+                <div class="fg-eintraege">
+                  <% const eintraege = (b && b.protokoll && b.protokoll.length) ? b.protokoll : [{ text: '', bewertung: '' }]; %>
+                  <% eintraege.forEach(e => { %>
+                    <div class="fg-eintrag" data-bewertung="<%= e.bewertung %>">
+                      <textarea class="fg-eintrag-text" rows="1" placeholder="Frage / Antwort notieren …"><%= e.text %></textarea>
+                      <div class="fg-bewertung" role="group" aria-label="Antwort bewerten">
+                        <button type="button" class="fg-btn-korrekt" title="Antwort korrekt">✓</button>
+                        <button type="button" class="fg-btn-falsch" title="Antwort falsch">✗</button>
+                      </div>
+                    </div>
+                  <% }) %>
+                </div>
+                <button type="button" class="fg-eintrag-add">+ Eintrag</button>
+              </div>
             </td>
             <td class="feld-zelle fg-punkte-zelle">
               <input type="number" min="0" max="100" step="1"

@@ -14,6 +14,10 @@ const {
   FACHGESPRAECH_MAX_PUNKTE,
 } = require('../lib/fachgespraech-struktur');
 const { berechneFachgespraech } = require('../lib/fachgespraech-scoring');
+const {
+  ladeProtokollListe,
+  serialisiereProtokoll,
+} = require('../lib/fachgespraech-protokoll');
 
 const router = express.Router();
 
@@ -23,15 +27,18 @@ function aktiverTermin(db) {
     .get();
 }
 
-// Lädt Protokoll + Punkte je Kriterium für einen Prüfling.
-// Rückgabe: Map<kriterium_key, { protokoll, punkte }>
+// Lädt Protokoll-Liste + Punkte je Kriterium für einen Prüfling.
+// Rückgabe: Map<kriterium_key, { protokoll: [{text,bewertung}], punkte }>
 function ladeBewertung(db, prueflingId) {
   const rows = db
     .prepare('SELECT * FROM fachgespraech_bewertung WHERE pruefling_id = ?')
     .all(prueflingId);
   const map = new Map();
   for (const r of rows) {
-    map.set(r.kriterium_key, { protokoll: r.protokoll, punkte: r.punkte });
+    map.set(r.kriterium_key, {
+      protokoll: ladeProtokollListe(r.protokoll),
+      punkte: r.punkte,
+    });
   }
   return map;
 }
@@ -126,7 +133,8 @@ router.post('/fachgespraech/:prueflingId/feld', requireAuth, express.json(), (re
   let punkte = vorhanden ? vorhanden.punkte : null;
 
   if (feld === 'protokoll') {
-    protokoll = typeof wert === 'string' ? wert : '';
+    // wert ist eine Eintragsliste [{ text, bewertung }]; als JSON speichern.
+    protokoll = serialisiereProtokoll(wert);
   } else {
     // Punkte hart auf 0..MAX klemmen; leer -> null.
     if (wert === '' || wert === null || wert === undefined) {
