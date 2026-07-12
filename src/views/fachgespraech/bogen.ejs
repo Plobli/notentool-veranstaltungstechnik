@@ -60,12 +60,11 @@
             <% }) %>
           </tbody>
           <tfoot>
-            <tr class="fg-add-zeile">
-              <td colspan="4"><button type="button" class="fg-zeile-add">+ Zeile</button></td>
-            </tr>
             <tr class="fg-bereich-ergebnis">
-              <td colspan="3" class="feld-name">Ergebnis</td>
-              <td class="fg-bereich-punkte" data-kriterium="<%= k.key %>"><%= erg ? erg.punkte : 0 %></td>
+              <td colspan="3"><button type="button" class="fg-zeile-add">+ Zeile</button></td>
+              <td class="fg-bereich-punkte" data-kriterium="<%= k.key %>">
+                <span class="fg-ergebnis-label">Ergebnis</span> <span class="fg-ergebnis-wert"><%= erg ? erg.punkte : 0 %></span>
+              </td>
             </tr>
           </tfoot>
         </table>

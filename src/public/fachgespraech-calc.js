@@ -30,8 +30,8 @@
   // Ergebnisse aus der Server-Antwort anwenden.
   function ergebnisseAnwenden(data) {
     for (const [key, k] of Object.entries(data.kriterien)) {
-      const cell = root.querySelector(`.fg-bereich-punkte[data-kriterium="${key}"]`);
-      if (cell) cell.textContent = k.punkte;
+      const wert = root.querySelector(`.fg-bereich-punkte[data-kriterium="${key}"] .fg-ergebnis-wert`);
+      if (wert) wert.textContent = k.punkte;
     }
     const gesamt = root.querySelector('.fg-gesamt');
     if (gesamt) {

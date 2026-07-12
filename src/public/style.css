@@ -179,11 +179,11 @@ td.fg-skala-zelle { vertical-align: top; }
 .fg-zeile-add { font-size: 0.78rem; padding: 0.15rem 0.6rem; background: transparent;
   color: #567; border: 1px solid #b7c2d0; border-radius: 4px; cursor: pointer; }
 .fg-zeile-add:hover { background: #e7edf3; color: #1a2b3c; }
-/* Bereichsergebnis dezent: neutraler Hintergrund, normale Schriftstärke. */
-table.fg-tabelle .fg-bereich-ergebnis td { background: #f7f9fb; color: #778;
-  font-weight: normal; font-size: 0.8rem; }
-table.fg-tabelle td.fg-bereich-punkte { text-align: right; font-weight: 600;
-  font-size: 1rem; color: #1a2b3c; }
+/* Bereichsergebnis-Zeile: links "+ Zeile", rechts "Ergebnis <Punkte>". */
+table.fg-tabelle .fg-bereich-ergebnis td { background: #f7f9fb; }
+table.fg-tabelle td.fg-bereich-punkte { text-align: right; white-space: nowrap; }
+.fg-ergebnis-label { font-size: 0.8rem; color: #778; }
+.fg-ergebnis-wert { font-weight: 600; font-size: 1rem; color: #1a2b3c; margin-left: 0.3rem; }
 
 /* Gesamt-/Statuszeile. */
 table.fg-gesamt-tabelle { max-width: 40rem; }
