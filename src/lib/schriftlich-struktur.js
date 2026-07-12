@@ -67,9 +67,14 @@ const TEILGEBIETE = [
   },
 ];
 
-// Punktegrenze für "mindestens ausreichend" (bestanden) je Bereich und für das
-// gewichtete schriftliche Gesamt, auf der 100-Punkte-Skala.
+// Punktegrenze für "mindestens ausreichend" (Note 4, bestanden) je Bereich und
+// für das gewichtete schriftliche Gesamt, auf der 100-Punkte-Skala.
 const BESTEHENSGRENZE = 50;
+
+// Untergrenze für "mangelhaft" (Note 5). Darunter (< UNGENUEGEND_GRENZE) gilt
+// "ungenügend" (Note 6). Entspricht der offiziellen IHK-Notentabelle:
+//   0–29 = 6, 30–49 = 5, 50–66 = 4, 67–80 = 3, 81–91 = 2, 92–100 = 1.
+const UNGENUEGEND_GRENZE = 30;
 
 const TEILGEBIET_BY_KEY = new Map(TEILGEBIETE.map((t) => [t.key, t]));
 
@@ -89,5 +94,6 @@ module.exports = {
   KONFIGURIERBARE_TEILGEBIETE,
   DEFAULT_ANZAHL,
   BESTEHENSGRENZE,
+  UNGENUEGEND_GRENZE,
   uFelder,
 };

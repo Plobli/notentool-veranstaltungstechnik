@@ -8,6 +8,7 @@ const {
   TEILGEBIET_BY_KEY,
   KONFIGURIERBARE_TEILGEBIETE,
   BESTEHENSGRENZE,
+  UNGENUEGEND_GRENZE,
   uFelder,
 } = require('./schriftlich-struktur');
 
@@ -87,31 +88,38 @@ function berechneSchriftlich(punkteProTeilgebiet) {
   return { teilgebiete, gesamt };
 }
 
-// Wertet die Bestehensbedingungen nach §20 Abs. 2 VfAusbV (auf die
-// schriftlichen Bereiche übertragen) für ein konkretes Punkte-Objekt aus.
+// Wertet die Bestehensbedingungen für ein konkretes Punkte-Objekt aus –
+// entsprechend der offiziellen IHK-Bestehenstabelle (Fachkraft für
+// Veranstaltungstechnik) bzw. §20 Abs. 2 VfAusbV, auf die schriftlichen
+// Bereiche übertragen (Projekt ausgeklammert):
+//   1. Gesamtergebnis (gewichtet) >= BESTEHENSGRENZE
+//   2. jedes Sperrfach (Energieversorgung) >= BESTEHENSGRENZE
+//   3. kein Bereich "ungenügend" (Note 6, < UNGENUEGEND_GRENZE)
+//   4. höchstens EIN Bereich "mangelhaft" (Note 5, UNGENUEGEND_GRENZE..49)
 // Rückgabe: { gewichtet, bestanden }.
 function pruefeBestehen(teilgebietePunkte) {
   let summeGewichtet = 0;
   let summeGewichte = 0;
   let sperrfachErfuellt = true;
-  let weitereBestanden = 0;
+  let anzahlSechser = 0; // Bereiche < UNGENUEGEND_GRENZE (Note 6)
+  let anzahlFuenfer = 0; // Bereiche UNGENUEGEND_GRENZE..49 (Note 5)
 
   for (const tg of TEILGEBIETE) {
     const punkte = Number(teilgebietePunkte[tg.key]) || 0;
     const gewicht = tg.gewicht || 0;
     summeGewichtet += punkte * gewicht;
     summeGewichte += gewicht;
-    const bestanden = punkte >= BESTEHENSGRENZE;
-    if (tg.sperrfach) {
-      if (!bestanden) sperrfachErfuellt = false;
-    } else if (bestanden) {
-      weitereBestanden += 1;
-    }
+    if (tg.sperrfach && punkte < BESTEHENSGRENZE) sperrfachErfuellt = false;
+    if (punkte < UNGENUEGEND_GRENZE) anzahlSechser += 1;
+    else if (punkte < BESTEHENSGRENZE) anzahlFuenfer += 1;
   }
 
   const gewichtet = summeGewichte ? Math.round(summeGewichtet / summeGewichte) : 0;
   const bestanden =
-    gewichtet >= BESTEHENSGRENZE && sperrfachErfuellt && weitereBestanden >= 2;
+    gewichtet >= BESTEHENSGRENZE &&
+    sperrfachErfuellt &&
+    anzahlSechser === 0 &&
+    anzahlFuenfer <= 1;
   return { gewichtet, bestanden };
 }
 
@@ -123,16 +131,14 @@ function maxNachMep(schriftlich) {
 }
 
 // Berechnet aus den bereits ermittelten Teilgebiet-Punkten das gewichtete
-// schriftliche Gesamt (0–100) und die Bestehens-Stati nach §20 Abs. 2 VfAusbV,
-// angewandt auf die schriftlichen Bereiche (das Projekt ist hier ausgeklammert).
+// schriftliche Gesamt (0–100) und die Bestehens-Stati nach der offiziellen
+// IHK-Bestehenstabelle bzw. §20 VfAusbV, angewandt auf die schriftlichen
+// Bereiche (das Projekt ist hier ausgeklammert).
 //
 // teilgebietePunkte: { [key]: number }  (Punkte je Teilgebiet, 0–100)
 //
-// Bestehensregel (auf die schriftlichen Bereiche übertragen):
-//   1. gewichtetes Gesamt >= BESTEHENSGRENZE ("Gesamtergebnis ausreichend")
-//   2. jedes Sperrfach (Energieversorgung) >= BESTEHENSGRENZE
-//   3. mindestens zwei WEITERE Bereiche (alle Nicht-Sperrfächer, hier WISO,
-//      Planung, Durchführung) >= BESTEHENSGRENZE
+// Bestehensregel siehe pruefeBestehen():
+//   Gesamt>=50, Sperrfach(Energie)>=50, kein Bereich <30, höchstens ein 30..49.
 //
 // MEP (§20 Abs. 3): Ist die Prüfung nicht bestanden, wird geprüft, ob eine
 // mündliche Ergänzungsprüfung in EINEM schriftlichen Bereich (der <
