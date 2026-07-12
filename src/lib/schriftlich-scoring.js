@@ -123,11 +123,26 @@ function pruefeBestehen(teilgebietePunkte) {
   return { gewichtet, bestanden };
 }
 
-// Bestmöglicher Bereichswert nach mündlicher Ergänzungsprüfung (§20 Abs. 3):
-// bisheriges (schriftliches) Ergebnis und mündliches Ergebnis im Verhältnis 2:1.
-// Beste mögliche mündliche Leistung = 100.
+// Bereichswert nach mündlicher Ergänzungsprüfung (§20 Abs. 3): bisheriges
+// (schriftliches) Ergebnis und mündliches Ergebnis im Verhältnis 2:1.
+function nachMep(schriftlich, muendlich) {
+  return Math.round((2 * schriftlich + muendlich) / 3);
+}
+
+// Bestmöglicher Bereichswert (beste mündliche Leistung = 100).
 function maxNachMep(schriftlich) {
-  return Math.round((2 * schriftlich + 100) / 3);
+  return nachMep(schriftlich, 100);
+}
+
+// Kleinste mündliche Punktzahl (0..100), mit der eine MEP im Bereich `key` die
+// Gesamtprüfung bestehen lässt. null, wenn selbst 100 nicht reicht.
+function noetigeMepPunkte(key, teilgebietePunkte) {
+  const schriftlich = Number(teilgebietePunkte[key]) || 0;
+  for (let m = 0; m <= 100; m++) {
+    const hyp = { ...teilgebietePunkte, [key]: nachMep(schriftlich, m) };
+    if (pruefeBestehen(hyp).bestanden) return m;
+  }
+  return null;
 }
 
 // Berechnet aus den bereits ermittelten Teilgebiet-Punkten das gewichtete
@@ -152,7 +167,9 @@ function maxNachMep(schriftlich) {
 //   mepMoeglich: true, wenn nicht bestanden, aber eine MEP das Bestehen
 //                erreichen kann
 //   mepBereiche: Keys der Bereiche, in denen eine MEP den Ausschlag geben kann
-//   bereiche:   { [key]: { punkte, bestanden, sperrfach, mepMoeglich } }
+//   mepDetails:  [{ key, noetigeMuendlich }] – nötige mündliche Punkte je Bereich
+//   bereiche:   { [key]: { punkte, bestanden, sperrfach, mepMoeglich,
+//                          noetigeMuendlich? } }
 function berechneSchriftlichGesamt(teilgebietePunkte) {
   const bereiche = {};
   for (const tg of TEILGEBIETE) {
@@ -169,6 +186,7 @@ function berechneSchriftlichGesamt(teilgebietePunkte) {
 
   let mepMoeglich = false;
   const mepBereiche = [];
+  const mepDetails = []; // { key, noetigeMuendlich } je möglichem MEP-Bereich
   if (!bestanden) {
     // Für jeden schriftlichen Bereich < 50 prüfen, ob eine bestmögliche MEP in
     // GENAU diesem Bereich (alle anderen unverändert) zum Bestehen führt.
@@ -177,14 +195,17 @@ function berechneSchriftlichGesamt(teilgebietePunkte) {
       if (punkte >= BESTEHENSGRENZE) continue;
       const hypothetisch = { ...teilgebietePunkte, [tg.key]: maxNachMep(punkte) };
       if (pruefeBestehen(hypothetisch).bestanden) {
+        const noetigeMuendlich = noetigeMepPunkte(tg.key, teilgebietePunkte);
         mepMoeglich = true;
         mepBereiche.push(tg.key);
+        mepDetails.push({ key: tg.key, noetigeMuendlich });
         bereiche[tg.key].mepMoeglich = true;
+        bereiche[tg.key].noetigeMuendlich = noetigeMuendlich;
       }
     }
   }
 
-  return { gewichtet, bestanden, mepMoeglich, mepBereiche, bereiche };
+  return { gewichtet, bestanden, mepMoeglich, mepBereiche, mepDetails, bereiche };
 }
 
 module.exports = {

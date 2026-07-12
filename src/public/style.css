@@ -49,6 +49,9 @@ table.bogen td.gesamt-status { font-weight: bold; text-transform: uppercase; fon
 table.bogen td.gesamt-status.bestanden { background: #b8ebc0; color: #0a5d1e; }
 table.bogen td.gesamt-status.durchgefallen { background: #f4bcbc; color: #8a0016; }
 table.bogen td.gesamt-status.mep { background: #ffe4a3; color: #7a5200; }
+.gesamt-status-text { display: block; }
+.mep-hinweis:not(:empty) { display: block; margin-top: 0.2rem; font-size: 0.72rem;
+  font-weight: normal; text-transform: none; letter-spacing: 0; }
 
 /* Punkt-Zelle: kein Padding, Eingabefeld füllt die ganze Zelle klickbar aus.
    Bei WISO liegt der Streich-Button absolut in der linken Ecke. */

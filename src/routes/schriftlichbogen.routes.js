@@ -111,8 +111,24 @@ function ergebnisFuer(teilgebietMaps, anzahlMap) {
     bestanden: gesamtInfo.bestanden,
     mepMoeglich: gesamtInfo.mepMoeglich,
     mepBereiche: gesamtInfo.mepBereiche,
+    mepDetails: gesamtInfo.mepDetails,
+    mepText: mepTextVon(gesamtInfo.mepDetails),
     bereiche: gesamtInfo.bereiche,
   };
+}
+
+// Baut einen lesbaren Hinweis aus den MEP-Details, z. B.
+// "MEP: WISO mind. 69 oder Planung mind. 53 Punkte mündlich".
+function mepTextVon(mepDetails) {
+  if (!mepDetails || mepDetails.length === 0) return '';
+  const teile = mepDetails.map((d) => {
+    const tg = TEILGEBIET_BY_KEY.get(d.key);
+    const name = tg ? tg.name : d.key;
+    return d.noetigeMuendlich !== null
+      ? `${name} mind. ${d.noetigeMuendlich}`
+      : name;
+  });
+  return `MEP: ${teile.join(' oder ')} Punkte mündlich`;
 }
 
 // Speichert die übermittelten Felder. `felder` ist ein Array von
@@ -270,6 +286,7 @@ router.post('/schriftlich/feld', requireAuth, express.json(), (req, res) => {
     bestanden: ergebnis.bestanden,
     mepMoeglich: ergebnis.mepMoeglich,
     mepBereiche: ergebnis.mepBereiche,
+    mepText: ergebnis.mepText,
   });
 });
 

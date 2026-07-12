@@ -54,16 +54,22 @@
     );
     if (statusZelle) {
       statusZelle.classList.remove('bestanden', 'durchgefallen', 'mep');
+      const textEl = statusZelle.querySelector('.gesamt-status-text');
+      const mepEl = statusZelle.querySelector('.mep-hinweis');
+      let statusText;
       if (data.bestanden) {
-        statusZelle.textContent = 'bestanden';
+        statusText = 'bestanden';
         statusZelle.classList.add('bestanden');
       } else if (data.mepMoeglich) {
-        statusZelle.textContent = 'nicht bestanden · MEP möglich';
+        statusText = 'nicht bestanden · MEP möglich';
         statusZelle.classList.add('mep');
       } else {
-        statusZelle.textContent = 'nicht bestanden';
+        statusText = 'nicht bestanden';
         statusZelle.classList.add('durchgefallen');
       }
+      if (textEl) textEl.textContent = statusText;
+      else statusZelle.textContent = statusText;
+      if (mepEl) mepEl.textContent = data.mepMoeglich ? (data.mepText || '') : '';
     }
   }
 
