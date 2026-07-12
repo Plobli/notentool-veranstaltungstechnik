@@ -1,120 +1,108 @@
 // src/public/schriftlich-calc.js
-// Live-Neuberechnung des Auswertungsbogens (Matrix) beim Tippen. Spiegelt die
-// serverseitige Logik aus src/lib/schriftlich-scoring.js. Verbindlich bleibt die
-// Berechnung beim Speichern. Die Fragenanzahl je Teilgebiet ergibt sich aus den
-// tatsächlich gerenderten Feldern; sie wirkt erst nach dem Speichern auf die
-// Zeilenanzahl.
+// Auto-Save des Auswertungsbogens (Matrix): Punkte werden beim Verlassen eines
+// Feldes bzw. bei Enter gespeichert, Streichungen beim Anklicken. Der Server
+// berechnet die Teilgebiet- und Gesamtpunkte und liefert sie zurück; damit
+// werden die Ergebniszeilen verbindlich aktualisiert. Die Fragenanzahl je
+// Bereich wird separat über ihr eigenes kleines Formular gespeichert.
 (function () {
-  const form = document.getElementById('bogen-form');
-  if (!form) return;
+  const root = document.getElementById('bogen-form');
+  if (!root) return;
+  const statusEl = document.getElementById('autosave-status');
 
-  // WISO-Parameter fest (siehe src/lib/schriftlich-struktur.js).
-  const WISO = { gebundenDivisor: 0.375, uFaktor: 1.2 };
-
-  function feldWert(tgKey, feld, pruefling) {
-    const input = form.querySelector(
-      `.feld-input[data-tg="${tgKey}"][data-feld="${feld}"][name^="p${pruefling}_"]`
-    );
-    if (!input) return 0;
-    const n = parseFloat(input.value);
-    return Number.isFinite(n) ? n : 0;
-  }
-
-  // Ermittelt je (Prüfling, Teilgebiet) die tatsächlich vorhandenen U-Felder.
-  function uFelderVon(tgKey, pruefling) {
-    const inputs = form.querySelectorAll(
-      `.feld-input[data-tg="${tgKey}"][name^="p${pruefling}_"]`
-    );
-    const felder = [];
-    inputs.forEach((inp) => {
-      const feld = inp.dataset.feld;
-      if (feld && feld !== 'gebunden') felder.push(feld);
-    });
-    return felder;
-  }
-
-  // Gestrichenes WISO-Feld: markiertes Radio oder automatisch das letzte Feld.
-  function gestrichenesFeld(tgKey, pruefling) {
-    const checked = form.querySelector(
-      `input[name="strich_p${pruefling}_wiso"]:checked`
-    );
-    if (checked) return checked.value;
-    const felder = uFelderVon(tgKey, pruefling);
-    return felder[felder.length - 1] || null;
-  }
-
-  function berechneTeilgebiet(tgKey, pruefling) {
-    const felder = uFelderVon(tgKey, pruefling);
-    const istWiso = tgKey === 'wiso';
-    const strich = istWiso ? gestrichenesFeld(tgKey, pruefling) : null;
-
-    let summe = 0;
-    for (const feld of felder) {
-      if (feld === strich) continue;
-      summe += feldWert(tgKey, feld, pruefling);
+  let statusTimer = null;
+  function zeigeStatus(text, fehler) {
+    if (!statusEl) return;
+    statusEl.textContent = text;
+    statusEl.classList.toggle('autosave-fehler', Boolean(fehler));
+    if (statusTimer) clearTimeout(statusTimer);
+    if (!fehler) {
+      statusTimer = setTimeout(() => {
+        statusEl.textContent = 'Eingaben werden automatisch gespeichert.';
+      }, 2000);
     }
-
-    if (istWiso) {
-      const geb = feldWert(tgKey, 'gebunden', pruefling);
-      return Math.round(geb / WISO.gebundenDivisor) + Math.round(summe * WISO.uFaktor);
-    }
-    // Konfigurierbare Teilgebiete: Normierung auf 100 -> divisor = anzahl*10/100.
-    const anzahl = felder.length || 1;
-    const divisor = (anzahl * 10) / 100;
-    return Math.round(summe / divisor);
   }
 
-  // Aktualisiert die Durchstreich-Darstellung der WISO-Zellen einer Spalte.
-  function aktualisiereStreichung(pruefling) {
-    const strich = gestrichenesFeld('wiso', pruefling);
-    const inputs = form.querySelectorAll(
-      `.feld-input[data-tg="wiso"][name^="p${pruefling}_"]`
+  // Aktualisiert die Ergebniszeilen eines Prüflings aus der Server-Antwort.
+  function ergebnisseAnwenden(prueflingId, data) {
+    for (const [tgKey, erg] of Object.entries(data.teilgebiete)) {
+      const cell = root.querySelector(
+        `.tg-ergebnis[data-tg="${tgKey}"][data-pruefling="${prueflingId}"]`
+      );
+      if (cell) cell.textContent = erg.punkte;
+      // WISO-Durchstreichung an die Server-Wahrheit angleichen.
+      if (erg.gestrichenesFeld !== undefined && erg.gestrichenesFeld !== null) {
+        aktualisiereStreichungAnzeige(prueflingId, tgKey, erg.gestrichenesFeld);
+      }
+    }
+    const g = root.querySelector(`.gesamt-ergebnis[data-pruefling="${prueflingId}"]`);
+    if (g) g.textContent = data.gesamt;
+  }
+
+  // Setzt die Durchstreich-Optik der Zellen eines Teilgebiets/Prüflings.
+  function aktualisiereStreichungAnzeige(prueflingId, tgKey, gestrichenesFeld) {
+    const inputs = root.querySelectorAll(
+      `.feld-input[data-tg="${tgKey}"][data-pruefling="${prueflingId}"]`
     );
     inputs.forEach((inp) => {
       if (inp.dataset.feld === 'gebunden') return;
       const td = inp.closest('td');
       if (!td) return;
-      const gestrichen = inp.dataset.feld === strich;
-      td.classList.toggle('zelle-gestrichen', gestrichen);
+      td.classList.toggle('zelle-gestrichen', inp.dataset.feld === gestrichenesFeld);
+      const radio = td.querySelector('.strich-input');
       const label = td.querySelector('.strich-btn');
-      if (label) {
-        label.classList.toggle('aktiv', gestrichen);
-        const text = label.querySelector('.strich-text');
-        if (text) text.textContent = gestrichen ? '✗ gestrichen' : '✗ streichen';
-      }
+      const aktiv = inp.dataset.feld === gestrichenesFeld;
+      if (radio) radio.checked = aktiv;
+      if (label) label.classList.toggle('aktiv', aktiv);
     });
   }
 
-  function tgKeys() {
-    const keys = new Set();
-    form.querySelectorAll('.feld-input').forEach((inp) => {
-      if (inp.dataset.tg) keys.add(inp.dataset.tg);
-    });
-    return keys;
-  }
-
-  function neuBerechnen() {
-    const ids = new Set();
-    form.querySelectorAll('.feld-input').forEach((inp) => {
-      const m = inp.name.match(/^p(\d+)_/);
-      if (m) ids.add(m[1]);
-    });
-    ids.forEach((id) => {
-      aktualisiereStreichung(id);
-      let gesamt = 0;
-      tgKeys().forEach((tgKey) => {
-        const punkte = berechneTeilgebiet(tgKey, id);
-        gesamt += punkte;
-        const cell = form.querySelector(
-          `.tg-ergebnis[data-tg="${tgKey}"][data-pruefling="${id}"]`
-        );
-        if (cell) cell.textContent = punkte;
+  async function speichere(payload) {
+    zeigeStatus('Speichern …');
+    try {
+      const res = await fetch('/schriftlich/feld', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
-      const g = form.querySelector(`.gesamt-ergebnis[data-pruefling="${id}"]`);
-      if (g) g.textContent = gesamt;
-    });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      ergebnisseAnwenden(payload.prueflingId, data);
+      zeigeStatus('Gespeichert.');
+    } catch (err) {
+      zeigeStatus('Nicht gespeichert – bitte erneut versuchen.', true);
+    }
   }
 
-  form.addEventListener('input', neuBerechnen);
-  form.addEventListener('change', neuBerechnen);
+  // Punktefeld: speichern beim Verlassen (change deckt blur+Enter-Wertänderung ab).
+  root.addEventListener('change', (ev) => {
+    const inp = ev.target;
+    if (!inp.classList || !inp.classList.contains('feld-input')) return;
+    speichere({
+      prueflingId: Number(inp.dataset.pruefling),
+      teilgebiet: inp.dataset.tg,
+      feld: inp.dataset.feld,
+      punkte: inp.value,
+    });
+  });
+
+  // Enter im Punktefeld: Speichern auslösen und Reload verhindern.
+  root.addEventListener('keydown', (ev) => {
+    const inp = ev.target;
+    if (ev.key !== 'Enter') return;
+    if (!inp.classList || !inp.classList.contains('feld-input')) return;
+    ev.preventDefault();
+    inp.blur();
+  });
+
+  // Streichung: Radio-Klick speichert sofort.
+  root.addEventListener('change', (ev) => {
+    const radio = ev.target;
+    if (!radio.classList || !radio.classList.contains('strich-input')) return;
+    speichere({
+      prueflingId: Number(radio.dataset.pruefling),
+      teilgebiet: 'wiso',
+      feld: radio.value,
+      streichung: true,
+    });
+  });
 })();

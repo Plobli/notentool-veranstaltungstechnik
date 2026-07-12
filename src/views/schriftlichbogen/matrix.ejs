@@ -13,13 +13,9 @@
   </p>
 <% } else { %>
   <p class="hinweis"><strong><%= termin.name %></strong> · Ansicht: Matrix (alle Prüflinge nebeneinander)</p>
+  <p class="hinweis" id="autosave-status" role="status" aria-live="polite">Eingaben werden automatisch gespeichert.</p>
 
-  <form method="post" action="/schriftlich" id="bogen-form" data-modus="matrix">
-    <div class="bogen-actions">
-      <button type="submit">Speichern</button>
-      <span class="hinweis">Fragenanzahl in den Teilbereichs-Überschriften wirkt nach dem Speichern.</span>
-    </div>
-
+  <div id="bogen-form" data-modus="matrix">
     <div class="bogen-wrap">
       <table class="bogen">
         <thead>
@@ -31,17 +27,20 @@
           </tr>
         </thead>
         <tbody>
-          <% teilgebiete.forEach(tg => { %>
-            <tr class="tg-zeile" data-tg="<%= tg.key %>">
+          <% teilgebiete.forEach((tg, tgIndex) => { %>
+            <tr class="tg-zeile <%= tgIndex > 0 ? 'tg-trenner' : '' %>" data-tg="<%= tg.key %>">
               <td class="feld-name">
                 <%= tg.name %>
                 <% if (['planung','durchfuehrung','energie'].includes(tg.key)) { %>
-                  <label class="anzahl-label">Fragen:
-                    <input type="number" min="1" max="20" step="1"
-                      class="anzahl-input"
-                      name="anzahl_<%= tg.key %>"
-                      value="<%= anzahlMap[tg.key] %>">
-                  </label>
+                  <form method="post" action="/schriftlich/anzahl" class="anzahl-form">
+                    <label class="anzahl-label">Fragen:
+                      <input type="number" min="1" max="20" step="1"
+                        class="anzahl-input"
+                        name="anzahl_<%= tg.key %>"
+                        value="<%= anzahlMap[tg.key] %>">
+                    </label>
+                    <button type="submit" class="anzahl-speichern">Speichern</button>
+                  </form>
                 <% } %>
               </td>
               <% pruefliche.forEach(p => { %><td></td><% }) %>
@@ -52,9 +51,10 @@
                 <td class="feld-name">Gebunden</td>
                 <% pruefliche.forEach(p => {
                      const e = daten.get(p.id)[tg.key].get('gebunden'); %>
-                  <td>
+                  <td class="feld-zelle">
                     <input type="number" step="1" min="0" max="<%= tg.gebundenMax %>"
                       class="feld-input" data-tg="<%= tg.key %>" data-feld="gebunden"
+                      data-pruefling="<%= p.id %>"
                       name="p<%= p.id %>_<%= tg.key %>_gebunden"
                       value="<%= e && e.punkte !== null ? e.punkte : '' %>">
                   </td>
@@ -74,9 +74,10 @@
                      const e = daten.get(p.id)[tg.key].get(feld);
                      const erg = ergebnisse.get(p.id).teilgebiete[tg.key];
                      const istGestrichen = tg.streichung && erg.gestrichenesFeld === feld; %>
-                  <td class="<%= istGestrichen ? 'zelle-gestrichen' : '' %>">
+                  <td class="feld-zelle <%= istGestrichen ? 'zelle-gestrichen' : '' %>">
                     <input type="number" step="1" min="0" max="10"
                       class="feld-input" data-tg="<%= tg.key %>" data-feld="<%= feld %>"
+                      data-pruefling="<%= p.id %>"
                       name="p<%= p.id %>_<%= tg.key %>_<%= feld %>"
                       value="<%= e && e.punkte !== null ? e.punkte : '' %>">
                     <% if (tg.streichung) { %>
@@ -85,7 +86,7 @@
                           value="<%= feld %>" class="strich-input"
                           data-pruefling="<%= p.id %>"
                           <%= istGestrichen ? 'checked' : '' %>>
-                        <span class="strich-text">✗ <%= istGestrichen ? 'gestrichen' : 'streichen' %></span>
+                        <span class="strich-text" aria-label="streichen">✗</span>
                       </label>
                     <% } %>
                   </td>
@@ -115,11 +116,8 @@
       </table>
     </div>
 
-    <div class="bogen-actions">
-      <button type="submit">Speichern</button>
-    </div>
     <p class="hinweis">Bei WISO wird genau eine Aufgabe gestrichen (✗). Ohne Auswahl fällt automatisch U6 weg.</p>
-  </form>
+  </div>
 
   <script src="/schriftlich-calc.js"></script>
 <% } %>

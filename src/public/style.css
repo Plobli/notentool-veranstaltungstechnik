@@ -23,18 +23,29 @@ table.bogen .gebunden td:first-child { font-style: italic; }
 table.bogen .ergebnis-zeile td { background: #d7f5d7; font-weight: bold; }
 table.bogen .gesamt-zeile td { background: #cfe3ff; font-weight: bold; }
 
-/* Inline-Eingabe: Punktefelder ohne Kästchen-Optik */
+/* Abstand zwischen den Aufgabenbereichen: kräftige Trennlinie über der
+   Überschrift jedes weiteren Teilgebiets. */
+table.bogen .tg-trenner td { border-top: 3px solid #b7c2d0; }
+
+/* Punkt-Zelle: kein Padding, Eingabefeld füllt die ganze Zelle klickbar aus.
+   Bei WISO liegt der Streich-Button absolut in der linken Ecke. */
+table.bogen td.feld-zelle { padding: 0; position: relative; }
 table.bogen .feld-input {
-  width: 3rem;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
   border: none;
   background: transparent;
   text-align: right;
   font: inherit;
   color: inherit;
-  padding: 0.1rem 0.2rem;
+  padding: 0.4rem 0.6rem;
   -moz-appearance: textfield;
   appearance: textfield;
+  cursor: text;
 }
+/* Platz für den Streich-Button links schaffen (nur WISO-Zellen). */
+table.bogen td.feld-zelle:has(.strich-btn) .feld-input { padding-left: 2rem; }
 table.bogen .feld-input::-webkit-outer-spin-button,
 table.bogen .feld-input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -42,25 +53,31 @@ table.bogen .feld-input::-webkit-inner-spin-button {
 }
 table.bogen .feld-input:focus {
   outline: 2px solid #7c5cff;
-  outline-offset: -1px;
+  outline-offset: -2px;
   background: #f3f0ff;
-  border-radius: 3px;
 }
 
-/* Anzahl-Feld in der Teilgebiets-Überschrift */
-.anzahl-label { font-weight: normal; font-size: 0.85em; margin-left: 0.6rem; }
-.anzahl-input { width: 3rem; }
+/* Anzahl-Feld in der Teilgebiets-Überschrift, mit eigenem Speichern-Button */
+.anzahl-form { display: inline-flex; align-items: center; gap: 0.4rem; margin-left: 0.6rem; }
+.anzahl-label { font-weight: normal; font-size: 0.85em; }
+.anzahl-input { width: 3.5rem; }
+.anzahl-speichern { font-size: 0.8rem; padding: 0.15rem 0.55rem; }
 
-/* Streich-Button (Radio versteckt, Label als Chip) */
-.strich-btn { display: inline-flex; align-items: center; cursor: pointer; margin-left: 0.35rem;
-  padding: 0.1rem 0.4rem; border: 1px solid #ccc; border-radius: 999px;
-  font-size: 0.75rem; color: #888; background: #fafafa; user-select: none; }
+/* Streich-Button: nur ✗, kompakt, absolut in der linken Zellenecke */
+.strich-btn { position: absolute; left: 0.35rem; top: 50%; transform: translateY(-50%);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  width: 1.4rem; height: 1.4rem; border: 1px solid #ccc; border-radius: 50%;
+  font-size: 0.8rem; line-height: 1; color: #aaa; background: #fafafa; user-select: none; }
 .strich-btn:hover { border-color: #b00020; color: #b00020; }
 .strich-input { position: absolute; opacity: 0; width: 0; height: 0; }
 .strich-btn.aktiv { background: #f8d7d7; border-color: #b00020; color: #b00020; font-weight: bold; }
 
 /* Sichtbare Streichung einer Aufgabe (Zelle) */
 td.zelle-gestrichen .feld-input { text-decoration: line-through; opacity: 0.5; }
+
+/* Auto-Save-Status */
+#autosave-status { min-height: 1.2em; }
+#autosave-status.autosave-fehler { color: #b00020; font-weight: bold; }
 .hinweis { color: #555; font-size: 0.9rem; }
 .pruefling-nav { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0.5rem 0 1rem; }
 .pruefling-nav a { padding: 0.2rem 0.6rem; border: 1px solid #ccc; border-radius: 4px; text-decoration: none; color: #1a2b3c; }

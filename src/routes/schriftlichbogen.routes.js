@@ -1,9 +1,10 @@
 // src/routes/schriftlichbogen.routes.js
 //
-// Feste Auswertungsbogen-Ansicht der schriftlichen Prüfung.
-// Zwei Ansichten auf denselben Daten: Matrix (alle Prüflinge nebeneinander)
-// und Pro Prüfling (eine Seite je Prüfling). Beide schreiben in
-// schriftlich_punkt.
+// Feste Auswertungsbogen-Ansicht der schriftlichen Prüfung (Matrix, alle
+// Prüflinge nebeneinander). Punkte und Streichung werden per Auto-Save einzeln
+// gespeichert (POST /schriftlich/feld, JSON); die Fragenanzahl je Bereich per
+// eigenem Button (POST /schriftlich/anzahl). Alles schreibt in schriftlich_punkt
+// bzw. schriftlich_config.
 const express = require('express');
 const { getDb } = require('../db');
 const { requireAuth } = require('../middleware');
@@ -167,23 +168,82 @@ router.get('/schriftlich', requireAuth, (req, res) => {
   });
 });
 
-router.post('/schriftlich', requireAuth, (req, res) => {
+// Speichert nur die Fragenanzahl eines Bereichs (eigener Speichern-Button je
+// Teilgebiet bzw. Enter). Danach Reload, damit die U-Zeilen neu gerendert werden.
+router.post('/schriftlich/anzahl', requireAuth, (req, res) => {
   const db = getDb();
   const termin = aktiverTermin(db);
   if (!termin) return res.redirect('/schriftlich');
-
-  const prueflingIds = new Set(
-    db
-      .prepare('SELECT id FROM pruefling WHERE pruefungstermin_id = ?')
-      .all(termin.id)
-      .map((r) => r.id)
-  );
-
   speichereAnzahl(db, termin.id, req.body);
-
-  const felder = parseMatrixBody(req.body, prueflingIds);
-  speichereFelder(db, felder);
   res.redirect('/schriftlich');
+});
+
+// Auto-Save eines einzelnen Feldes (JSON). Speichert entweder einen Punktewert
+// oder verschiebt die WISO-Streichung und liefert die neu berechneten
+// Teilgebiet-Punkte + Gesamt des betroffenen Prüflings zurück.
+router.post('/schriftlich/feld', requireAuth, express.json(), (req, res) => {
+  const db = getDb();
+  const termin = aktiverTermin(db);
+  if (!termin) return res.status(400).json({ error: 'Kein aktiver Termin.' });
+
+  const { prueflingId, teilgebiet, feld, punkte } = req.body || {};
+  const pId = Number(prueflingId);
+
+  const pruefling = db
+    .prepare('SELECT id FROM pruefling WHERE id = ? AND pruefungstermin_id = ?')
+    .get(pId, termin.id);
+  if (!pruefling) return res.status(404).json({ error: 'Prüfling nicht gefunden.' });
+  if (!TEILGEBIET_BY_KEY.has(teilgebiet)) {
+    return res.status(400).json({ error: 'Unbekanntes Teilgebiet.' });
+  }
+
+  const anzahlMap = ladeAnzahlMap(db, termin.id);
+  const felderMap = ladeFelderMap(anzahlMap);
+  const erlaubteFelder = new Set(felderMap[teilgebiet]);
+  const tg = TEILGEBIET_BY_KEY.get(teilgebiet);
+  if (tg.gebunden) erlaubteFelder.add('gebunden');
+
+  if (req.body.streichung) {
+    // WISO: übergebenes Feld wird das gestrichene; alle anderen zurücksetzen.
+    if (!tg.streichung || !erlaubteFelder.has(feld)) {
+      return res.status(400).json({ error: 'Streichung nicht möglich.' });
+    }
+    // Alle vorhandenen Felder dieses Teilgebiets auf gestrichen=0 setzen,
+    // dann das gewählte Feld (Eintrag anlegen, falls nötig) auf gestrichen=1.
+    const clearAlle = db.prepare(
+      'UPDATE schriftlich_punkt SET gestrichen = 0 WHERE pruefling_id = ? AND teilgebiet = ?'
+    );
+    const setStrich = db.prepare(
+      `INSERT INTO schriftlich_punkt (pruefling_id, teilgebiet, feld, punkte, gestrichen)
+       VALUES (?, ?, ?, NULL, 1)
+       ON CONFLICT(pruefling_id, teilgebiet, feld) DO UPDATE SET gestrichen = 1`
+    );
+    const tx = db.transaction(() => {
+      clearAlle.run(pId, teilgebiet);
+      setStrich.run(pId, teilgebiet, feld);
+    });
+    tx();
+  } else {
+    if (!erlaubteFelder.has(feld)) {
+      return res.status(400).json({ error: 'Unbekanntes Feld.' });
+    }
+    speichereFelder(db, [
+      { prueflingId: pId, teilgebiet, feld, punkte, gestrichen: 0 },
+    ]);
+  }
+
+  // Neu berechnen und zurückgeben.
+  const { byPruefling } = ladeBogen(db, termin.id);
+  const ergebnis = ergebnisFuer(byPruefling.get(pId), anzahlMap);
+  res.json({
+    teilgebiete: Object.fromEntries(
+      Object.entries(ergebnis.teilgebiete).map(([k, v]) => [
+        k,
+        { punkte: v.punkte, gestrichenesFeld: v.gestrichenesFeld },
+      ])
+    ),
+    gesamt: ergebnis.gesamt,
+  });
 });
 
 // Liest Felder anzahl_<teilgebiet> aus dem Body und speichert sie je Termin.
@@ -206,34 +266,6 @@ function speichereAnzahl(db, terminId, body) {
     }
   });
   tx();
-}
-
-// --- Body-Parser ---
-
-// Matrix-Feldnamen: p<prueflingId>_<teilgebiet>_<feld>
-//                   strich_p<prueflingId>_wiso = <feldKey>
-function parseMatrixBody(body, gueltigePrueflingIds) {
-  const felder = [];
-  // Streichungen je Prüfling einsammeln.
-  const strich = new Map(); // `${prueflingId}` -> feldKey
-  for (const [key, value] of Object.entries(body)) {
-    const m = key.match(/^strich_p(\d+)_wiso$/);
-    if (m) strich.set(Number(m[1]), value);
-  }
-
-  for (const [key, value] of Object.entries(body)) {
-    const m = key.match(/^p(\d+)_([a-z]+)_([a-z0-9]+)$/);
-    if (!m) continue;
-    const prueflingId = Number(m[1]);
-    const teilgebiet = m[2];
-    const feld = m[3];
-    if (!gueltigePrueflingIds.has(prueflingId)) continue;
-    if (!TEILGEBIET_BY_KEY.has(teilgebiet)) continue;
-    const gestrichen =
-      teilgebiet === 'wiso' && strich.get(prueflingId) === feld ? 1 : 0;
-    felder.push({ prueflingId, teilgebiet, feld, punkte: value, gestrichen });
-  }
-  return felder;
 }
 
 module.exports = router;
