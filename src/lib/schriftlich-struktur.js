@@ -27,6 +27,9 @@ const TEILGEBIETE = [
     // Rechnung: round(gebunden / gebundenDivisor) + round(summe(behalten) * uFaktor)
     gebundenDivisor: 0.375,
     uFaktor: 1.2,
+    // Gewicht innerhalb der schriftlichen Prüfung (§20 VfAusbV: WISO 10% des
+    // Gesamten = 20% der schriftlichen 50%). Summe aller vier ergibt 100.
+    gewicht: 20,
   },
   {
     key: 'planung',
@@ -36,6 +39,8 @@ const TEILGEBIETE = [
     streichung: false,
     // Rechnung: round(summe) -- Faktor 1
     faktor: 1,
+    // §20: Planung 15% des Gesamten = 30% der schriftlichen.
+    gewicht: 30,
   },
   {
     key: 'durchfuehrung',
@@ -45,6 +50,8 @@ const TEILGEBIETE = [
     streichung: false,
     // Rechnung: round(summe / divisor)
     divisor: 1.1,
+    // §20: Durchführung 15% des Gesamten = 30% der schriftlichen.
+    gewicht: 30,
   },
   {
     key: 'energie',
@@ -53,8 +60,16 @@ const TEILGEBIETE = [
     felder: uFelder(5),
     streichung: false,
     divisor: 0.5,
+    // §20: Energieversorgung 10% des Gesamten = 20% der schriftlichen.
+    // Zugleich Sperrfach (muss mind. ausreichend sein).
+    gewicht: 20,
+    sperrfach: true,
   },
 ];
+
+// Punktegrenze für "mindestens ausreichend" (bestanden) je Bereich und für das
+// gewichtete schriftliche Gesamt, auf der 100-Punkte-Skala.
+const BESTEHENSGRENZE = 50;
 
 const TEILGEBIET_BY_KEY = new Map(TEILGEBIETE.map((t) => [t.key, t]));
 
@@ -73,5 +88,6 @@ module.exports = {
   MAX_PUNKTE_PRO_FELD,
   KONFIGURIERBARE_TEILGEBIETE,
   DEFAULT_ANZAHL,
+  BESTEHENSGRENZE,
   uFelder,
 };

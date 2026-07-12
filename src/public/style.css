@@ -24,18 +24,30 @@ table.bogen col.col-feldname { width: 16rem; }
 table.bogen col.col-pruefling { width: auto; }
 table.bogen .feld-name { text-align: left; white-space: nowrap; }
 table.bogen .gebunden td:first-child { font-style: italic; }
-table.bogen .ergebnis-zeile td { background: #d7f5d7; font-weight: bold; }
-table.bogen .gesamt-zeile td { background: #cfe3ff; font-weight: bold; }
-
-/* Kopf-Tabelle nur mit den Prüflingsnamen. */
-table.bogen-kopf { margin-bottom: 0.25rem; }
-table.bogen-kopf th { background: #f4f7fa; }
+table.bogen thead th { background: #f4f7fa; }
+table.bogen .ergebnis-zeile td.feld-name { font-weight: bold; }
+table.bogen .gesamt-zeile td.feld-name,
+table.bogen .gesamt-status-zeile td.feld-name { font-weight: bold; }
 
 /* Bereichsblock: echter Abstand zwischen den Bereichen + Header mit h2. */
 .tg-block { margin-top: 1.75rem; }
 .tg-block:first-of-type { margin-top: 0.5rem; }
 .tg-header { display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.35rem; }
-.tg-header h2 { margin: 0; font-size: 1.15rem; }
+.tg-header h2 { margin: 0; font-size: 1.15rem; display: inline-flex; align-items: baseline; gap: 0.5rem; }
+
+/* Gewichtung und Sperrfach für die Prüfer sichtbar machen. */
+.tg-gewicht { font-size: 0.8rem; font-weight: normal; color: #fff; background: #5b6b7f;
+  border-radius: 4px; padding: 0.05rem 0.4rem; }
+.tg-sperrfach { font-size: 0.75rem; font-weight: bold; color: #b00020; background: #f8d7d7;
+  border: 1px solid #e6a2a2; border-radius: 4px; padding: 0.05rem 0.4rem; letter-spacing: 0.02em; }
+
+/* Bestehens-Färbung der Punkte-/Gesamt-Zellen (50%-Grenze je Bereich). */
+table.bogen td.punkte-status { font-weight: bold; }
+table.bogen td.punkte-status.bestanden { background: #d7f5d7; color: #0a5d1e; }
+table.bogen td.punkte-status.durchgefallen { background: #f8d7d7; color: #8a0016; }
+table.bogen td.gesamt-status { font-weight: bold; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.03em; }
+table.bogen td.gesamt-status.bestanden { background: #b8ebc0; color: #0a5d1e; }
+table.bogen td.gesamt-status.durchgefallen { background: #f4bcbc; color: #8a0016; }
 
 /* Punkt-Zelle: kein Padding, Eingabefeld füllt die ganze Zelle klickbar aus.
    Bei WISO liegt der Streich-Button absolut in der linken Ecke. */

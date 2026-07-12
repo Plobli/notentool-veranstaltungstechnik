@@ -15,7 +15,10 @@ const {
   DEFAULT_ANZAHL,
   uFelder,
 } = require('../lib/schriftlich-struktur');
-const { berechneTeilgebiet } = require('../lib/schriftlich-scoring');
+const {
+  berechneTeilgebiet,
+  berechneSchriftlichGesamt,
+} = require('../lib/schriftlich-scoring');
 
 const router = express.Router();
 
@@ -90,17 +93,24 @@ function ladeBogen(db, terminId) {
   return { pruefliche, byPruefling };
 }
 
-// Berechnet für einen Prüfling alle Teilgebiete + Gesamt.
+// Berechnet für einen Prüfling alle Teilgebiete, das gewichtete schriftliche
+// Gesamt (§20 VfAusbV) und die Bestehens-Stati.
 function ergebnisFuer(teilgebietMaps, anzahlMap) {
   const teilgebiete = {};
-  let gesamt = 0;
+  const punkteJeBereich = {};
   for (const t of TEILGEBIETE) {
     const anzahl = anzahlMap ? anzahlMap[t.key] : undefined;
     const erg = berechneTeilgebiet(t.key, teilgebietMaps[t.key] || new Map(), anzahl);
     teilgebiete[t.key] = erg;
-    gesamt += erg.punkte;
+    punkteJeBereich[t.key] = erg.punkte;
   }
-  return { teilgebiete, gesamt };
+  const gesamtInfo = berechneSchriftlichGesamt(punkteJeBereich);
+  return {
+    teilgebiete,
+    gesamt: gesamtInfo.gewichtet,
+    bestanden: gesamtInfo.bestanden,
+    bereiche: gesamtInfo.bereiche,
+  };
 }
 
 // Speichert die übermittelten Felder. `felder` ist ein Array von
@@ -227,8 +237,16 @@ router.post('/schriftlich/feld', requireAuth, express.json(), (req, res) => {
     if (!erlaubteFelder.has(feld)) {
       return res.status(400).json({ error: 'Unbekanntes Feld.' });
     }
+    // Punktewert hart auf den erlaubten Bereich klemmen: U-Felder 0–10,
+    // Gebunden 0–gebundenMax. Leerwert bleibt leer (null).
+    const max = feld === 'gebunden' ? tg.gebundenMax : 10;
+    let wert = punkte;
+    if (wert !== '' && wert !== null && wert !== undefined) {
+      const n = Number(wert);
+      if (Number.isFinite(n)) wert = Math.max(0, Math.min(max, n));
+    }
     speichereFelder(db, [
-      { prueflingId: pId, teilgebiet, feld, punkte, gestrichen: 0 },
+      { prueflingId: pId, teilgebiet, feld, punkte: wert, gestrichen: 0 },
     ]);
   }
 
@@ -239,10 +257,15 @@ router.post('/schriftlich/feld', requireAuth, express.json(), (req, res) => {
     teilgebiete: Object.fromEntries(
       Object.entries(ergebnis.teilgebiete).map(([k, v]) => [
         k,
-        { punkte: v.punkte, gestrichenesFeld: v.gestrichenesFeld },
+        {
+          punkte: v.punkte,
+          gestrichenesFeld: v.gestrichenesFeld,
+          bestanden: ergebnis.bereiche[k].bestanden,
+        },
       ])
     ),
     gesamt: ergebnis.gesamt,
+    bestanden: ergebnis.bestanden,
   });
 });
 

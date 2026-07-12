@@ -22,20 +22,40 @@
     }
   }
 
+  // Setzt die Bestanden-/Durchgefallen-Klassen einer Ergebniszelle.
+  function statusKlassen(el, bestanden) {
+    if (!el) return;
+    el.classList.toggle('bestanden', Boolean(bestanden));
+    el.classList.toggle('durchgefallen', !bestanden);
+  }
+
   // Aktualisiert die Ergebniszeilen eines Prüflings aus der Server-Antwort.
   function ergebnisseAnwenden(prueflingId, data) {
     for (const [tgKey, erg] of Object.entries(data.teilgebiete)) {
       const cell = root.querySelector(
         `.tg-ergebnis[data-tg="${tgKey}"][data-pruefling="${prueflingId}"]`
       );
-      if (cell) cell.textContent = erg.punkte;
+      if (cell) {
+        cell.textContent = erg.punkte;
+        statusKlassen(cell, erg.bestanden);
+      }
       // WISO-Durchstreichung an die Server-Wahrheit angleichen.
       if (erg.gestrichenesFeld !== undefined && erg.gestrichenesFeld !== null) {
         aktualisiereStreichungAnzeige(prueflingId, tgKey, erg.gestrichenesFeld);
       }
     }
     const g = root.querySelector(`.gesamt-ergebnis[data-pruefling="${prueflingId}"]`);
-    if (g) g.textContent = data.gesamt;
+    if (g) {
+      g.textContent = data.gesamt;
+      statusKlassen(g, data.bestanden);
+    }
+    const statusZelle = root.querySelector(
+      `.gesamt-status[data-pruefling="${prueflingId}"]`
+    );
+    if (statusZelle) {
+      statusZelle.textContent = data.bestanden ? 'bestanden' : 'nicht bestanden';
+      statusKlassen(statusZelle, data.bestanden);
+    }
   }
 
   // Setzt die Durchstreich-Optik der Zellen eines Teilgebiets/Prüflings.
@@ -72,6 +92,20 @@
       zeigeStatus('Nicht gespeichert – bitte erneut versuchen.', true);
     }
   }
+
+  // Harte Wertbegrenzung beim Tippen: nie über max (10 bzw. gebundenMax) und
+  // nie unter min (0). Werte außerhalb werden sofort auf die Grenze gesetzt.
+  root.addEventListener('input', (ev) => {
+    const inp = ev.target;
+    if (!inp.classList || !inp.classList.contains('feld-input')) return;
+    if (inp.value === '') return;
+    const n = parseFloat(inp.value);
+    if (!Number.isFinite(n)) return;
+    const max = inp.max !== '' ? Number(inp.max) : Infinity;
+    const min = inp.min !== '' ? Number(inp.min) : -Infinity;
+    if (n > max) inp.value = String(max);
+    else if (n < min) inp.value = String(min);
+  });
 
   // Punktefeld: speichern beim Verlassen (change deckt blur+Enter-Wertänderung ab).
   root.addEventListener('change', (ev) => {

@@ -4,8 +4,10 @@
 // damit sie direkt gegen die Excel-Sollwerte testbar sind.
 
 const {
+  TEILGEBIETE,
   TEILGEBIET_BY_KEY,
   KONFIGURIERBARE_TEILGEBIETE,
+  BESTEHENSGRENZE,
   uFelder,
 } = require('./schriftlich-struktur');
 
@@ -85,4 +87,42 @@ function berechneSchriftlich(punkteProTeilgebiet) {
   return { teilgebiete, gesamt };
 }
 
-module.exports = { berechneTeilgebiet, berechneSchriftlich };
+// Berechnet aus den bereits ermittelten Teilgebiet-Punkten das gewichtete
+// schriftliche Gesamt (0–100) nach §20 VfAusbV sowie die Bestehens-Stati.
+//
+// teilgebietePunkte: { [key]: number }  (Punkte je Teilgebiet, 0–100)
+//
+// Rückgabe:
+//   gewichtet:  gewichteter Gesamtwert 0–100 (Math.round)
+//   bestanden:  true, wenn gewichtet >= BESTEHENSGRENZE UND alle Sperrfächer
+//               (Energie) >= BESTEHENSGRENZE
+//   bereiche:   { [key]: { punkte, bestanden, sperrfach } }
+function berechneSchriftlichGesamt(teilgebietePunkte) {
+  let summeGewichtet = 0;
+  let summeGewichte = 0;
+  const bereiche = {};
+  let sperrfachErfuellt = true;
+
+  for (const tg of TEILGEBIETE) {
+    const punkte = Number(teilgebietePunkte[tg.key]) || 0;
+    const gewicht = tg.gewicht || 0;
+    summeGewichtet += punkte * gewicht;
+    summeGewichte += gewicht;
+    const bestanden = punkte >= BESTEHENSGRENZE;
+    if (tg.sperrfach && !bestanden) sperrfachErfuellt = false;
+    bereiche[tg.key] = { punkte, bestanden, sperrfach: Boolean(tg.sperrfach) };
+  }
+
+  const gewichtet = summeGewichte
+    ? Math.round(summeGewichtet / summeGewichte)
+    : 0;
+  const bestanden = gewichtet >= BESTEHENSGRENZE && sperrfachErfuellt;
+
+  return { gewichtet, bestanden, bereiche };
+}
+
+module.exports = {
+  berechneTeilgebiet,
+  berechneSchriftlich,
+  berechneSchriftlichGesamt,
+};
