@@ -20,7 +20,7 @@ const {
   serialisiereZeilen,
 } = require('../lib/fachgespraech-protokoll');
 
-const { terminBySlug } = require('../lib/pruefung');
+const { terminBySlug, bereicheFuer } = require('../lib/pruefung');
 
 const router = express.Router();
 
@@ -74,6 +74,8 @@ router.get('/pruefung/:slug/fachgespraech', requireAuth, ladeTermin, (req, res) 
     user: req.user,
     termin,
     uebersicht,
+    bereiche: bereicheFuer(termin.art),
+    aktiverBereich: 'fachgespraech',
   });
 });
 
@@ -104,6 +106,8 @@ router.get('/pruefung/:slug/fachgespraech/:prueflingId', requireAuth, ladeTermin
     skala: FACHGESPRAECH_SKALA,
     zeilen: zeilenMap,
     ergebnis,
+    bereiche: bereicheFuer(termin.art),
+    aktiverBereich: 'fachgespraech',
   });
 });
 

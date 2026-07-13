@@ -2,6 +2,7 @@
 <nav class="brotkrumen">
   <a href="/">Dashboard</a> › <a href="/pruefung/<%= termin.slug %>"><%= termin.name %></a> › Schriftliche Prüfung
 </nav>
+<%- include('../_bereich-nav', { termin, bereiche, aktiverBereich }) %>
 <h1>Schriftliche Prüfung</h1>
 
 <% if (pruefliche.length === 0) { %>

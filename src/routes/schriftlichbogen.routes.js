@@ -20,7 +20,7 @@ const {
   berechneSchriftlichGesamt,
 } = require('../lib/schriftlich-scoring');
 
-const { terminBySlug } = require('../lib/pruefung');
+const { terminBySlug, bereicheFuer } = require('../lib/pruefung');
 
 const router = express.Router();
 
@@ -37,6 +37,8 @@ function ladeTermin(req, res, next) {
       user: req.user,
       termin,
       bereichName: 'Schriftliche Prüfung',
+      bereiche: bereicheFuer(termin.art),
+      aktiverBereich: 'schriftlich',
     });
   }
   req.termin = termin;
@@ -224,6 +226,8 @@ router.get('/pruefung/:slug/schriftlich', requireAuth, ladeTermin, (req, res) =>
     daten: byPruefling,
     ergebnisse,
     fremdWerte,
+    bereiche: bereicheFuer(termin.art),
+    aktiverBereich: 'schriftlich',
   });
 });
 
@@ -466,6 +470,8 @@ router.get('/pruefung/:slug/schriftlich/final', requireAuth, ladeTermin, (req, r
     prueferListe,
     boegen,
     finalDaten,
+    bereiche: bereicheFuer(termin.art),
+    aktiverBereich: 'schriftlich-final',
   });
 });
 

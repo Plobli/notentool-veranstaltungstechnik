@@ -244,6 +244,16 @@ table.fg-gesamt-tabelle .fg-status { white-space: normal; text-align: right; }
 /* Finalisierung: abhängiger Schritt der schriftlichen Prüfung – eingerückt. */
 .bereich-karte--unter { margin-left: 0.5rem; }
 
+/* Kompakte Bereichs-Navigation (schlanke Reiter) auf den Arbeitsseiten. */
+.bereich-nav { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.5rem 0 1.25rem; }
+.bereich-tab { padding: 0.35rem 0.85rem; border-radius: 6px;
+  background: #e7ecf2; color: #1a2b3c; text-decoration: none;
+  font-size: 0.9rem; font-weight: 600; transition: background-color 0.08s ease; }
+.bereich-tab:hover { background: #d4dce6; }
+.bereich-tab.aktiv { background: #1a2b3c; color: #fff; }
+.bereich-tab.aktiv:hover { background: #2c4360; }
+.bereich-tab--offen { color: #7a8694; }
+
 /* Prüfung-anlegen-Formular */
 .pruefung-neu { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.6rem; margin: 0.5rem 0; }
 .pruefung-neu label { display: flex; flex-direction: column; font-size: 0.85rem; gap: 0.15rem; }
