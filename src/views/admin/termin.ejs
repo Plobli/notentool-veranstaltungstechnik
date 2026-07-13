@@ -1,25 +1,30 @@
 <!-- src/views/admin/termin.ejs -->
+<nav class="brotkrumen">
+  <a href="/">Dashboard</a> › <a href="/admin">Verwaltung</a> › <%= termin.name %>
+</nav>
 <h1><%= termin.name %></h1>
 
-<h2>Prüflinge</h2>
-<ul>
-  <% pruefliche.forEach(p => { %>
-    <li><%= p.name %><%= p.betrieb ? ' – ' + p.betrieb : '' %></li>
-  <% }) %>
-</ul>
-<form method="post" action="/admin/termine/<%= termin.id %>/pruefling">
-  <input type="text" name="name" placeholder="Name" required>
-  <input type="text" name="betrieb" placeholder="Betrieb (optional)">
-  <button type="submit">Prüfling hinzufügen</button>
-</form>
+<section class="admin-block">
+  <h2>Prüflinge</h2>
 
-<h2>Fächer</h2>
-<ul>
-  <% faecher.forEach(f => { %>
-    <li>
-      <a href="/admin/faecher/<%= f.id %>"><%= f.name %></a>
-      (<%= f.gewichtung_prozent %>%<%= f.ist_sperrfach ? ', Sperrfach' : '' %>)
-    </li>
-  <% }) %>
-</ul>
-<a href="/admin/termine/<%= termin.id %>/fach/neu">Fach anlegen</a>
+  <% if (!pruefliche.length) { %>
+    <p class="hinweis">Noch keine Prüflinge angelegt.</p>
+  <% } else { %>
+    <ul class="admin-liste">
+      <% pruefliche.forEach(p => { %>
+        <li class="admin-karte">
+          <span class="admin-karte-titel"><%= p.name %></span>
+          <% if (p.betrieb) { %><span class="pruefer-meta"><%= p.betrieb %></span><% } %>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+
+  <form method="post" action="/admin/termine/<%= termin.id %>/pruefling" class="stamm-neu">
+    <input type="text" name="name" placeholder="Name" required>
+    <input type="text" name="betrieb" placeholder="Betrieb (optional)">
+    <button type="submit" class="btn btn-primary">Prüfling hinzufügen</button>
+  </form>
+</section>
+
+<p class="hinweis"><a href="/pruefung/<%= termin.slug %>">← zur Prüfungs-Übersicht</a></p>

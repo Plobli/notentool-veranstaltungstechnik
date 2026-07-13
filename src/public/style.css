@@ -293,3 +293,58 @@ th.final-spalte { border-bottom: 2px solid #1a2b3c; }
 .final-badge--zu { background: #fde9c8; color: #8a5a00; border: 1px solid #e6c78a; }
 .feld-input.gesperrt { background: #f0f0f0; color: #888; }
 .final-abschliessen { background: #1a2b3c; color: #fff; }
+
+/* Wiederverwendbare Buttons (passend zur dunkelblauen Design-Sprache). */
+.btn { display: inline-block; font: inherit; font-weight: 600; font-size: 0.9rem;
+  padding: 0.45rem 0.9rem; border-radius: 6px; cursor: pointer;
+  border: 1px solid #c3cdd8; background: #fff; color: #1a2b3c;
+  text-decoration: none; transition: background-color 0.08s ease, border-color 0.08s ease; }
+.btn:hover { background: #eef2f7; border-color: #1a2b3c; }
+.btn-primary { background: #1a2b3c; border-color: #1a2b3c; color: #fff; }
+.btn-primary:hover { background: #2c4360; border-color: #2c4360; }
+
+/* Verwaltungsseite (admin/index) */
+.admin-block { margin-bottom: 2rem; }
+.admin-liste { list-style: none; padding: 0; margin: 0.75rem 0 1rem;
+  display: flex; flex-direction: column; gap: 0.5rem; }
+.admin-karte { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
+  padding: 0.7rem 1rem; border: 1px solid #d7dde4; border-radius: 8px; background: #fff; }
+.admin-karte-titel { font-weight: 600; color: #1a2b3c; text-decoration: none; }
+a.admin-karte-titel:hover { text-decoration: underline; }
+.admin-karte .status-aktiv { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em;
+  color: #0a5d1e; background: #d7f5d7; border: 1px solid #a9dbb4; border-radius: 4px; padding: 0.05rem 0.4rem; }
+.admin-karte .admin-aktion { margin-left: auto; font-size: 0.88rem; font-weight: 600;
+  color: #1a2b3c; text-decoration: none; white-space: nowrap; }
+.admin-karte .admin-aktion:hover { text-decoration: underline; }
+.pruefer-meta { color: #667; font-size: 0.88rem; }
+.rolle-badge { margin-left: auto; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em;
+  border-radius: 4px; padding: 0.05rem 0.45rem; }
+.rolle-admin { background: #e3ecf6; color: #1a2b3c; border: 1px solid #b9cde3; }
+.rolle-pruefer { background: #eef2f7; color: #556; border: 1px solid #cdd6e0; }
+
+/* Prüfung-anlegen-Formular: Karten-Optik */
+.pruefung-neu { align-items: flex-end; padding: 0.9rem 1rem; border: 1px solid #d7dde4;
+  border-radius: 8px; background: #fafbfc; }
+.pruefung-neu select, .pruefung-neu input[type="text"] {
+  font: inherit; height: 2.25rem; box-sizing: border-box;
+  padding: 0 0.55rem; border: 1px solid #c3cdd8; border-radius: 6px; background: #fff; }
+.pruefung-neu .btn { height: 2.25rem; box-sizing: border-box;
+  display: inline-flex; align-items: center; }
+
+/* Vertikales Formular (Login, Prüfer anlegen) */
+.stack-form { display: flex; flex-direction: column; gap: 0.85rem; max-width: 22rem; margin: 1rem 0; }
+.stack-form label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.9rem; font-weight: 600; }
+.stack-form input, .stack-form select {
+  font: inherit; font-weight: normal; height: 2.4rem; box-sizing: border-box;
+  padding: 0 0.6rem; border: 1px solid #c3cdd8; border-radius: 6px; background: #fff; }
+.stack-form input:focus, .stack-form select:focus {
+  outline: 2px solid #7c5cff; outline-offset: -1px; }
+.stack-form .btn { align-self: flex-start; margin-top: 0.25rem; }
+
+/* Stammdaten-Formular (Prüfling anlegen) */
+.stamm-neu { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin: 0.75rem 0; }
+.stamm-neu input[type="text"] {
+  font: inherit; height: 2.25rem; box-sizing: border-box;
+  padding: 0 0.55rem; border: 1px solid #c3cdd8; border-radius: 6px; min-width: 12rem; }
+.stamm-neu .btn { height: 2.25rem; box-sizing: border-box;
+  display: inline-flex; align-items: center; }

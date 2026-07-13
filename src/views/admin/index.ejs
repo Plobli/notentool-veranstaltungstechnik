@@ -1,30 +1,40 @@
 <h1>Verwaltung</h1>
 
-<h2>Prüfungen</h2>
-<ul>
-  <% termine.forEach(t => { %>
-    <li>
-      <a href="/pruefung/<%= t.slug %>"><%= t.name %></a>
-      <span class="art-badge art-<%= t.art %>"><%= artLabel[t.art] || t.art %></span>
-      <%= t.ist_aktiv ? '(aktiv)' : '' %>
-    </li>
-  <% }) %>
-</ul>
-<form method="post" action="/admin/pruefungstermine" class="pruefung-neu"
-      data-vorschlag-abschluss="<%= vorschlaege.abschluss %>"
-      data-vorschlag-zwischen="<%= vorschlaege.zwischen %>">
-  <label>Art:
-    <select name="art" id="pruefung-art">
-      <option value="abschluss">Abschlussprüfung</option>
-      <option value="zwischen">Zwischenprüfung</option>
-    </select>
-  </label>
-  <label>Name:
-    <input type="text" name="name" id="pruefung-name"
-      value="<%= vorschlaege.abschluss %>" required>
-  </label>
-  <button type="submit">Prüfung anlegen</button>
-</form>
+<section class="admin-block">
+  <h2>Prüfungen</h2>
+
+  <% if (!termine.length) { %>
+    <p class="hinweis">Noch keine Prüfung angelegt.</p>
+  <% } else { %>
+    <ul class="admin-liste">
+      <% termine.forEach(t => { %>
+        <li class="admin-karte">
+          <a class="admin-karte-titel" href="/pruefung/<%= t.slug %>"><%= t.name %></a>
+          <span class="art-badge art-<%= t.art %>"><%= artLabel[t.art] || t.art %></span>
+          <% if (t.ist_aktiv) { %><span class="status-aktiv">aktiv</span><% } %>
+          <a href="/admin/termine/<%= t.id %>" class="admin-aktion">Prüflinge verwalten →</a>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
+
+  <form method="post" action="/admin/pruefungstermine" class="pruefung-neu"
+        data-vorschlag-abschluss="<%= vorschlaege.abschluss %>"
+        data-vorschlag-zwischen="<%= vorschlaege.zwischen %>">
+    <label>Art:
+      <select name="art" id="pruefung-art">
+        <option value="abschluss">Abschlussprüfung</option>
+        <option value="zwischen">Zwischenprüfung</option>
+      </select>
+    </label>
+    <label>Name:
+      <input type="text" name="name" id="pruefung-name"
+        value="<%= vorschlaege.abschluss %>" required>
+    </label>
+    <button type="submit" class="btn btn-primary">Prüfung anlegen</button>
+  </form>
+</section>
+
 <script>
   (function () {
     const form = document.querySelector('.pruefung-neu');
@@ -46,10 +56,16 @@
   })();
 </script>
 
-<h2>Prüfer</h2>
-<ul>
-  <% pruefer.forEach(p => { %>
-    <li><%= p.name %> (<%= p.email %>, <%= p.role %>)</li>
-  <% }) %>
-</ul>
-<a href="/admin/pruefer/neu">Prüfer anlegen</a>
+<section class="admin-block">
+  <h2>Prüfer</h2>
+  <ul class="admin-liste">
+    <% pruefer.forEach(p => { %>
+      <li class="admin-karte">
+        <span class="admin-karte-titel"><%= p.name %></span>
+        <span class="pruefer-meta"><%= p.email %></span>
+        <span class="rolle-badge rolle-<%= p.role %>"><%= p.role === 'admin' ? 'Admin' : 'Prüfer' %></span>
+      </li>
+    <% }) %>
+  </ul>
+  <a href="/admin/pruefer/neu" class="btn">Prüfer anlegen</a>
+</section>
