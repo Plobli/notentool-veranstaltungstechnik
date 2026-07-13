@@ -4,18 +4,16 @@
 
 <section class="bereich-links">
   <% bereiche.forEach(b => { %>
-    <a class="bereich-karte<%= b.fertig ? '' : ' bereich-karte--offen' %>"
-       href="/pruefung/<%= termin.slug %>/<%= b.slug %>">
+    <a class="bereich-karte<%= b.fertig ? '' : ' bereich-karte--offen' %><%= b.unterpunkt ? ' bereich-karte--unter' : '' %>"
+       href="/pruefung/<%= termin.slug %>/<%= b.pfad || b.slug %>">
       <span class="bereich-karte-name"><%= b.name %></span>
-      <% if (!b.fertig) { %><span class="bereich-karte-hinweis">in Vorbereitung</span><% } %>
+      <% if (!b.fertig) { %>
+        <span class="bereich-karte-hinweis">in Vorbereitung</span>
+      <% } else if (b.hinweis) { %>
+        <span class="bereich-karte-hinweis"><%= b.hinweis %></span>
+      <% } %>
     </a>
   <% }) %>
-  <% if (termin.art === 'abschluss') { %>
-    <a class="bereich-karte" href="/pruefung/<%= termin.slug %>/schriftlich/final">
-      <span class="bereich-karte-name">Schriftlich: Finalisierung</span>
-      <span class="bereich-karte-hinweis">Einzelbewertungen zusammenführen</span>
-    </a>
-  <% } %>
 </section>
 
 <% if (termin.art === 'abschluss') { %>
