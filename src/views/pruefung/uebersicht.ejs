@@ -2,6 +2,10 @@
 
 <h1><%= termin.name %> <span class="art-badge art-<%= termin.art %>"><%= artLabel %></span></h1>
 
+<% if (user.role === 'admin') { %>
+  <p class="hinweis"><a href="/admin/termine/<%= termin.id %>">Prüflinge &amp; Stammdaten verwalten</a></p>
+<% } %>
+
 <section class="bereich-links">
   <% bereiche.forEach(b => { %>
     <a class="bereich-karte<%= b.fertig ? '' : ' bereich-karte--offen' %><%= b.unterpunkt ? ' bereich-karte--unter' : '' %>"

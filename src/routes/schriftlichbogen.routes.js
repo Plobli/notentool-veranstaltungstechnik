@@ -483,9 +483,13 @@ router.post('/pruefung/:slug/schriftlich/final/feld', requireAuth, ladeTermin, e
   const pId = Number(prueflingId);
 
   const pruefling = db
-    .prepare('SELECT id FROM pruefling WHERE id = ? AND pruefungstermin_id = ?')
+    .prepare('SELECT id, schriftlich_finalisiert FROM pruefling WHERE id = ? AND pruefungstermin_id = ?')
     .get(pId, termin.id);
   if (!pruefling) return res.status(404).json({ error: 'Prüfling nicht gefunden.' });
+  // Nach dem Finalisieren ist auch der finale Bogen gesperrt (erst entsperren).
+  if (pruefling.schriftlich_finalisiert) {
+    return res.status(409).json({ error: 'Prüfling ist finalisiert – finaler Bogen gesperrt.' });
+  }
   if (!TEILGEBIET_BY_KEY.has(teilgebiet)) {
     return res.status(400).json({ error: 'Unbekanntes Teilgebiet.' });
   }
