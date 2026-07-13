@@ -12,11 +12,6 @@ const {
   uFelder,
 } = require('./schriftlich-struktur');
 
-// Ein Bereich ist per MEP ergänzbar, wenn er schlechter als "ausreichend"
-// bewertet wurde. Fachgespräch/Projekt sind ausgenommen (nur schriftliche
-// Teilgebiete, §20 Abs. 3 VfAusbV).
-const MEP_MOEGLICHER_BEREICH = (punkte) => punkte < BESTEHENSGRENZE;
-
 // Wert eines Feldes als Zahl; null/undefined -> 0.
 function zahl(eintrag) {
   if (!eintrag || eintrag.punkte === null || eintrag.punkte === undefined) return 0;
@@ -269,5 +264,4 @@ module.exports = {
   berechneSchriftlichGesamt,
   berechneMep,
   nachMep,
-  MEP_MOEGLICHER_BEREICH,
 };

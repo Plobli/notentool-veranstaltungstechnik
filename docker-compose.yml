@@ -10,7 +10,6 @@ services:
     environment:
       - PORT=3000
       - DB_PATH=/app/data/pruefung.sqlite
-      - SESSION_SECRET=${SESSION_SECRET}
       - NODE_ENV=production
     volumes:
       - app-data:/app/data

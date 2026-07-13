@@ -5,12 +5,22 @@
 // Anzahl bewerteter Zeilen). Das gewichtete Gesamt nutzt die Kriterien-Faktoren;
 // bestanden ab FACHGESPRAECH_BESTEHENSGRENZE.
 
-const { note } = require('./scoring');
 const {
   FACHGESPRAECH_KRITERIEN,
   FACHGESPRAECH_BESTEHENSGRENZE,
 } = require('./fachgespraech-struktur');
 const { bereichPunkte } = require('./fachgespraech-protokoll');
+
+// IHK-Notentext zu einer Punktzahl (0–100) nach offizieller Notentabelle
+// (Fachkraft für Veranstaltungstechnik).
+function note(punkte) {
+  if (punkte >= 92) return 'sehr gut';
+  if (punkte >= 81) return 'gut';
+  if (punkte >= 67) return 'befriedigend';
+  if (punkte >= 50) return 'ausreichend';
+  if (punkte >= 30) return 'mangelhaft';
+  return 'ungenügend';
+}
 
 // zeilenJeKriterium: { [key]: [{ thema, begruendung, skala }] }
 // Rückgabe:

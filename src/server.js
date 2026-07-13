@@ -1,6 +1,5 @@
-if (fsExistsEnvFile()) {
-  // Node >=20 lädt .env selbst über --env-file beim Start (siehe package.json/README)
-}
+// Umgebungsvariablen kommen aus der Prozessumgebung bzw. .env, das Node >=20
+// selbst über --env-file lädt (siehe package.json/README). Kein Lade-Code nötig.
 
 const express = require('express');
 const path = require('node:path');
@@ -14,10 +13,6 @@ const fachgespraechRoutes = require('./routes/fachgespraech.routes');
 const mepRoutes = require('./routes/mep.routes');
 const { requireAuth } = require('./middleware');
 const { ART_LABEL } = require('./lib/pruefung');
-
-function fsExistsEnvFile() {
-  return require('node:fs').existsSync('.env');
-}
 
 const app = express();
 

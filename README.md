@@ -23,15 +23,14 @@ Danach unter http://localhost:3000/login einloggen.
 
 ## Deployment (Docker)
 
-1. `.env`-Datei mit einem echten `SESSION_SECRET` anlegen (langer Zufallsstring).
-2. In `Caddyfile` `:80` durch eure echte Domain ersetzen.
-3. Starten:
+1. In `Caddyfile` `:80` durch eure echte Domain ersetzen.
+2. Starten:
 
 ```bash
 docker compose up -d --build
 ```
 
-4. Admin-Nutzer im laufenden Container anlegen:
+3. Admin-Nutzer im laufenden Container anlegen:
 
 ```bash
 docker compose exec app node scripts/create-admin.js "Dein Name" deine@email.de dein-passwort
