@@ -12,6 +12,11 @@ const {
   uFelder,
 } = require('./schriftlich-struktur');
 
+// Ein Bereich ist per MEP ergänzbar, wenn er schlechter als "ausreichend"
+// bewertet wurde. Fachgespräch/Projekt sind ausgenommen (nur schriftliche
+// Teilgebiete, §20 Abs. 3 VfAusbV).
+const MEP_MOEGLICHER_BEREICH = (punkte) => punkte < BESTEHENSGRENZE;
+
 // Wert eines Feldes als Zahl; null/undefined -> 0.
 function zahl(eintrag) {
   if (!eintrag || eintrag.punkte === null || eintrag.punkte === undefined) return 0;
@@ -208,8 +213,61 @@ function berechneSchriftlichGesamt(teilgebietePunkte) {
   return { gewichtet, bestanden, mepMoeglich, mepBereiche, mepDetails, bereiche };
 }
 
+// Rechnet eine tatsächlich durchgeführte mündliche Ergänzungsprüfung (MEP) ein.
+//
+// teilgebietePunkte: { [key]: number } – die schriftlichen Bereichspunkte.
+// mepTeilgebiet:     Key des ergänzten Bereichs (oder null/undefined = keine MEP).
+// mepPunkte:         mündliche Punkte 0–100 (oder null = noch nicht bewertet).
+//
+// Der ergänzte Bereich wird nach §20 Abs. 3 im Verhältnis 2:1 (schriftlich :
+// mündlich) neu gewichtet; anschließend werden Gesamtwert und Bestehen mit
+// diesem angehobenen Wert bestimmt. Ist keine (gültige) MEP vorhanden, ist das
+// Ergebnis identisch zum reinen schriftlichen Stand.
+//
+// Rückgabe:
+//   teilgebiet:      der ergänzte Bereich (null, wenn keiner)
+//   schriftlich:     bisheriger Bereichswert (vor MEP)
+//   muendlich:       eingesetzter mündlicher Wert (null, wenn keine Bewertung)
+//   bereichNachMep:  neuer Bereichswert (2:1) bzw. der schriftliche, wenn keine MEP
+//   punkteNachMep:   { [key]: number } mit ersetztem Bereichswert
+//   gewichtet:       gewichtetes Gesamt nach MEP
+//   bestanden:       Bestehen nach MEP
+//   wirksam:         true, wenn eine MEP mit bewerteten Punkten eingerechnet wurde
+function berechneMep(teilgebietePunkte, mepTeilgebiet, mepPunkte) {
+  const gueltigerBereich =
+    mepTeilgebiet && TEILGEBIET_BY_KEY.has(mepTeilgebiet);
+  const schriftlich = gueltigerBereich
+    ? Number(teilgebietePunkte[mepTeilgebiet]) || 0
+    : null;
+  const muendlich =
+    mepPunkte === null || mepPunkte === undefined || !Number.isFinite(Number(mepPunkte))
+      ? null
+      : Number(mepPunkte);
+  const wirksam = Boolean(gueltigerBereich) && muendlich !== null;
+
+  const bereichNachMep = wirksam ? nachMep(schriftlich, muendlich) : schriftlich;
+  const punkteNachMep = { ...teilgebietePunkte };
+  if (wirksam) punkteNachMep[mepTeilgebiet] = bereichNachMep;
+
+  const { gewichtet, bestanden } = pruefeBestehen(punkteNachMep);
+
+  return {
+    teilgebiet: gueltigerBereich ? mepTeilgebiet : null,
+    schriftlich,
+    muendlich,
+    bereichNachMep,
+    punkteNachMep,
+    gewichtet,
+    bestanden,
+    wirksam,
+  };
+}
+
 module.exports = {
   berechneTeilgebiet,
   berechneSchriftlich,
   berechneSchriftlichGesamt,
+  berechneMep,
+  nachMep,
+  MEP_MOEGLICHER_BEREICH,
 };

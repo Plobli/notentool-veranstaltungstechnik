@@ -17,7 +17,8 @@ const BEREICHE = {
       pfad: 'schriftlich/final', hinweis: 'Einzelbewertungen zusammenführen',
       fertig: true, unterpunkt: true },
     { slug: 'fachgespraech', name: 'Fachgespräch', fertig: true },
-    { slug: 'mep', name: 'Mündliche Ergänzungsprüfung', fertig: false },
+    { slug: 'mep', name: 'Mündliche Ergänzungsprüfung',
+      hinweis: 'nur bei ausschlaggebendem Bereich (§20 Abs. 3)', fertig: true },
   ],
   zwischen: [
     { slug: 'schriftlich', name: 'Schriftliche Prüfung', fertig: false },

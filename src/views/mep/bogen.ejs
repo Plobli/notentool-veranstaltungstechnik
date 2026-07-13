@@ -1,0 +1,141 @@
+<!-- src/views/mep/bogen.ejs -->
+<nav class="brotkrumen">
+  <a href="/">Dashboard</a> › <a href="/pruefung/<%= termin.slug %>"><%= termin.name %></a> ›
+  <a href="/pruefung/<%= termin.slug %>/mep">Mündliche Ergänzungsprüfung</a> › <%= pruefling.name %>
+</nav>
+<%- include('../_bereich-nav', { termin, bereiche, aktiverBereich }) %>
+<h1>Mündliche Ergänzungsprüfung – <%= pruefling.name %></h1>
+<p class="hinweis"><a href="/pruefung/<%= termin.slug %>/mep">← zur Übersicht</a></p>
+
+<div class="pruefling-nav">
+  <% geschwister.forEach(g => { %>
+    <a href="/pruefung/<%= termin.slug %>/mep/<%= g.id %>" class="<%= g.id === pruefling.id ? 'aktiv' : '' %>"><%= g.name %></a>
+  <% }) %>
+</div>
+
+<% if (auswahl.length === 0) { %>
+  <p class="hinweis">
+    Für <strong><%= pruefling.name %></strong> ist derzeit <strong>keine</strong> mündliche
+    Ergänzungsprüfung möglich: Es gibt keinen schriftlichen Bereich, der schlechter als
+    „ausreichend“ bewertet ist und in dem die MEP für das Bestehen den Ausschlag geben kann.
+  </p>
+<% } else { %>
+
+  <p class="hinweis" id="autosave-status" role="status" aria-live="polite">Eingaben werden automatisch gespeichert.</p>
+
+  <div id="mep-form"
+       data-pruefling="<%= pruefling.id %>"
+       data-termin-slug="<%= termin.slug %>">
+
+    <!-- Bereichswahl: nur ausschlaggebende Bereiche (genau einer). -->
+    <section class="mep-bereichswahl">
+      <h3>Zu ergänzender Prüfungsbereich</h3>
+      <p class="hinweis">Es kann genau <strong>ein</strong> Bereich mündlich ergänzt werden.</p>
+      <div class="mep-bereich-optionen">
+        <% auswahl.forEach(a => { %>
+          <label class="mep-bereich-option">
+            <input type="radio" name="mep-teilgebiet" value="<%= a.key %>"
+                   <%= a.key === gewaehltesTeilgebiet ? 'checked' : '' %>>
+            <span class="mep-bereich-name"><%= a.name %></span>
+            <span class="hinweis">schriftlich <%= a.schriftlich %><%=
+              a.noetigeMuendlich !== null && a.noetigeMuendlich !== undefined
+                ? ' · mündlich mind. ' + a.noetigeMuendlich + ' nötig'
+                : '' %></span>
+          </label>
+        <% }) %>
+      </div>
+    </section>
+
+    <!-- Protokoll-Zeilen (Thema / Begründung / Bewertung), wie Fachgespräch. -->
+    <section class="fg-bereich mep-protokoll" data-kriterium="mep">
+      <div class="fg-bereich-header">
+        <h3><span class="fg-bereich-name">Protokoll der mündlichen Ergänzungsprüfung</span></h3>
+      </div>
+
+      <div class="bogen-wrap">
+        <table class="bogen fg-tabelle">
+          <colgroup>
+            <col class="fg-col-nr">
+            <col class="fg-col-thema">
+            <col class="fg-col-begruendung">
+            <col class="fg-col-skala">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="fg-th-nr">Nr.</th>
+              <th>Thema in Stichpunkten</th>
+              <th>Begründung der Punktevergabe</th>
+              <th>Bewertung</th>
+            </tr>
+          </thead>
+          <tbody class="fg-zeilen">
+            <% const anzuzeigen = zeilen.length ? zeilen : [{ thema: '', begruendung: '', skala: '' }]; %>
+            <% anzuzeigen.forEach((z, i) => { %>
+              <tr class="fg-zeile" data-skala="<%= z.skala %>">
+                <td class="fg-zeile-nr"><%= i + 1 %></td>
+                <td class="fg-zelle"><textarea class="fg-thema" rows="1"><%= z.thema %></textarea></td>
+                <td class="fg-zelle"><textarea class="fg-begruendung" rows="1"><%= z.begruendung %></textarea></td>
+                <td class="fg-skala-zelle">
+                  <div class="fg-skala-wahl" role="group" aria-label="Bewertung">
+                    <% skala.forEach(s => { %>
+                      <button type="button" class="fg-skala-btn" data-skala="<%= s.key %>"
+                        title="<%= s.label %> (<%= s.wert.toLocaleString('de-DE') %>)"><%= s.symbol %></button>
+                    <% }) %>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+          <tfoot>
+            <tr class="fg-bereich-ergebnis">
+              <td colspan="3"><button type="button" class="fg-zeile-add">+ Zeile</button></td>
+              <td class="fg-bereich-punkte">
+                <span class="fg-ergebnis-label">Mündlich</span>
+                <span class="mep-muendlich-wert"><%= muendlich === null ? '–' : muendlich %></span>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- Ergebnis nach 2:1-Gewichtung. -->
+    <table class="bogen fg-tabelle fg-gesamt-tabelle">
+      <colgroup>
+        <col class="fg-col-nr">
+        <col class="fg-col-thema">
+        <col class="fg-col-begruendung">
+        <col class="fg-col-skala">
+      </colgroup>
+      <tbody>
+        <tr class="gesamt-zeile">
+          <td colspan="3" class="feld-name">
+            Bereichsergebnis nach MEP
+            <span class="hinweis">(bisher <span class="mep-schriftlich-wert"><%= mepInfo.schriftlich === null ? '–' : mepInfo.schriftlich %></span> + mündlich, 2:1)</span>
+          </td>
+          <td class="mep-bereich-nach punkte-status <%= mepInfo.wirksam ? (mepInfo.bereichNachMep >= 50 ? 'bestanden' : 'durchgefallen') : '' %>">
+            <%= mepInfo.wirksam ? mepInfo.bereichNachMep : '–' %>
+          </td>
+        </tr>
+        <tr class="gesamt-status-zeile">
+          <td colspan="3" class="feld-name">Gesamtergebnis nach MEP</td>
+          <td class="mep-status gesamt-status <%= mepInfo.wirksam ? (mepInfo.bestanden ? 'bestanden' : 'durchgefallen') : '' %>">
+            <span class="mep-status-text">
+              <% if (!mepInfo.wirksam) { %>–<% } else { %><%= mepInfo.bestanden ? 'bestanden' : 'nicht bestanden' %><% } %>
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="hinweis fg-skala-legende">
+    Bewertung je Zeile:
+    <% skala.forEach(s => { %>
+      <span class="fg-skala-legende-item"><strong><%= s.symbol %></strong> <%= s.label %> (<%= s.wert.toLocaleString('de-DE') %>)</span>
+    <% }) %>
+    · Mündlich = Summe × 10 / Anzahl bewerteter Zeilen (max. 100) · Bereich nach MEP = (2 × schriftlich + mündlich) / 3
+  </p>
+
+  <script src="/mep-calc.js"></script>
+<% } %>

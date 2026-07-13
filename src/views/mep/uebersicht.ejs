@@ -1,0 +1,65 @@
+<!-- src/views/mep/uebersicht.ejs -->
+<nav class="brotkrumen">
+  <a href="/">Dashboard</a> › <a href="/pruefung/<%= termin.slug %>"><%= termin.name %></a> › Mündliche Ergänzungsprüfung
+</nav>
+<%- include('../_bereich-nav', { termin, bereiche, aktiverBereich }) %>
+<h1>Mündliche Ergänzungsprüfung</h1>
+
+<p class="hinweis">
+  Nach §20 Abs. 3 kann auf Antrag <strong>ein</strong> schriftlicher Prüfungsbereich mündlich
+  ergänzt werden, wenn er schlechter als „ausreichend“ bewertet wurde <em>und</em> die MEP
+  für das Bestehen den Ausschlag geben kann. Bisheriges und mündliches Ergebnis werden 2:1 gewichtet.
+</p>
+
+<% if (uebersicht.length === 0) { %>
+  <p><strong><%= termin.name %></strong> hat noch keine Prüflinge.
+    <% if (user.role === 'admin') { %>
+      <a href="/admin/termine/<%= termin.id %>">Prüflinge anlegen</a>
+    <% } %>
+  </p>
+<% } else { %>
+  <table class="bogen">
+    <thead>
+      <tr>
+        <th class="feld-name">Prüfling</th>
+        <th>MEP möglich in</th>
+        <th>Ergebnis nach MEP</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% uebersicht.forEach(u => { %>
+        <tr>
+          <td class="feld-name">
+            <% if (u.mepMoeglich || u.hatEingabe) { %>
+              <a href="/pruefung/<%= termin.slug %>/mep/<%= u.pruefling.id %>"><%= u.pruefling.name %></a>
+            <% } else { %>
+              <%= u.pruefling.name %>
+            <% } %>
+          </td>
+          <td>
+            <% if (u.mepBereiche.length) { %>
+              <%= u.mepBereiche.map(b => b.name).join(', ') %>
+            <% } else { %>
+              <span class="hinweis">keine MEP möglich</span>
+            <% } %>
+          </td>
+          <td class="<%= u.mep ? (u.mep.bestanden ? 'ok' : 'error') : '' %>">
+            <% if (u.mep) { %>
+              <%= u.mep.bereichNachMep %> <span class="hinweis">(<%= u.mep.schriftlich %> schr. + <%= u.mep.muendlich %> mündl., 2:1)</span>
+            <% } else { %>
+              –
+            <% } %>
+          </td>
+          <td class="<%= u.mep ? (u.mep.bestanden ? 'ok' : 'error') : '' %>">
+            <% if (u.mep) { %>
+              <%= u.mep.bestanden ? 'bestanden' : 'nicht bestanden' %>
+            <% } else { %>
+              –
+            <% } %>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } %>

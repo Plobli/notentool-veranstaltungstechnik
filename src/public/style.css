@@ -202,6 +202,19 @@ table.fg-gesamt-tabelle .fg-status { white-space: normal; text-align: right; }
 .ergebnis-tabelle td.ok, .ergebnis-tabelle td.error { font-weight: 600; }
 .mep-moeglich { color: #8a6d00; font-weight: 600; cursor: help; }
 
+/* Mündliche Ergänzungsprüfung: Bereichswahl */
+.mep-bereichswahl { margin: 1rem 0; }
+.mep-bereich-optionen { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.mep-bereich-option {
+  display: flex; flex-direction: column; gap: 0.15rem;
+  border: 1px solid #ccd; border-radius: 6px; padding: 0.5rem 0.8rem;
+  cursor: pointer; min-width: 12rem;
+}
+.mep-bereich-option:hover { border-color: #7c5cff; }
+.mep-bereich-option:has(input:checked) { border-color: #7c5cff; background: #f4f1ff; }
+.mep-bereich-option .mep-bereich-name { font-weight: 600; }
+.mep-muendlich-wert, .mep-bereich-nach { font-weight: 600; }
+
 .vergangene { margin-top: 2rem; }
 .vergangene details { margin: 0.5rem 0; }
 .vergangene summary { cursor: pointer; font-weight: 600; padding: 0.3rem 0; }

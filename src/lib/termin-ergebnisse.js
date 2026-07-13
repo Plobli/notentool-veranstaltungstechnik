@@ -13,9 +13,13 @@ const {
   DEFAULT_ANZAHL,
   KONFIGURIERBARE_TEILGEBIETE,
 } = require('./schriftlich-struktur');
-const { berechneTeilgebiet, berechneSchriftlichGesamt } = require('./schriftlich-scoring');
+const {
+  berechneTeilgebiet,
+  berechneSchriftlichGesamt,
+  berechneMep,
+} = require('./schriftlich-scoring');
 const { berechneFachgespraech } = require('./fachgespraech-scoring');
-const { ladeZeilenListe } = require('./fachgespraech-protokoll');
+const { ladeZeilenListe, bereichPunkte } = require('./fachgespraech-protokoll');
 const { berechneGesamtAlles } = require('./gesamt-scoring');
 
 // Effektive Fragenanzahl je konfigurierbarem Teilgebiet (gespeichert oder Default).
@@ -85,6 +89,29 @@ function ladeFachgespraech(db, prueflingIds) {
   return byPruefling;
 }
 
+// pruefling_id -> { teilgebiet, muendlich } | null. muendlich = aus den
+// Protokoll-Zeilen berechnete mündliche Punkte (0–100), null ohne bewertete Zeile.
+function ladeMep(db, prueflingIds) {
+  const byPruefling = new Map();
+  for (const id of prueflingIds) byPruefling.set(id, null);
+  if (!prueflingIds.length) return byPruefling;
+  const rows = db
+    .prepare(
+      `SELECT * FROM mep_bewertung
+       WHERE pruefling_id IN (${prueflingIds.map(() => '?').join(',')})`
+    )
+    .all(...prueflingIds);
+  for (const row of rows) {
+    const zeilen = ladeZeilenListe(row.protokoll);
+    const bewertet = zeilen.some((z) => z.skala !== '');
+    byPruefling.set(row.pruefling_id, {
+      teilgebiet: row.teilgebiet,
+      muendlich: bewertet ? bereichPunkte(zeilen) : null,
+    });
+  }
+  return byPruefling;
+}
+
 // Baut je Prüfling die vollständige Ergebniszeile für das Dashboard.
 function ladeTerminErgebnisse(db, terminId) {
   const pruefliche = db
@@ -94,10 +121,12 @@ function ladeTerminErgebnisse(db, terminId) {
   const anzahlMap = ladeAnzahlMap(db, terminId);
   const schriftlich = ladeSchriftlich(db, ids);
   const fachgespraech = ladeFachgespraech(db, ids);
+  const mep = ladeMep(db, ids);
 
   return pruefliche.map((p) => {
     const s = schriftlich.get(p.id);
     const f = fachgespraech.get(p.id);
+    const m = mep.get(p.id);
 
     // Schriftliche Teilgebiete berechnen.
     const punkteJeBereich = {};
@@ -128,6 +157,30 @@ function ladeTerminErgebnisse(db, terminId) {
       fachgespraech: fgPunkte,
     });
 
+    // Mündliche Ergänzungsprüfung einrechnen (§20 Abs. 3, 2:1). Der schriftliche
+    // Stand oben bleibt unangetastet; hier entsteht der Stand NACH MEP.
+    const mepInfo = berechneMep(
+      punkteJeBereich,
+      m && m.teilgebiet,
+      m && m.muendlich
+    );
+    let mepBlock = null;
+    if (mepInfo.wirksam) {
+      const gesamtAllesNachMep = berechneGesamtAlles({
+        ...mepInfo.punkteNachMep,
+        fachgespraech: fgPunkte,
+      });
+      mepBlock = {
+        teilgebiet: mepInfo.teilgebiet,
+        schriftlich: mepInfo.schriftlich,
+        muendlich: mepInfo.muendlich,
+        bereichNachMep: mepInfo.bereichNachMep,
+        gesamt: mepInfo.gewichtet,
+        bestanden: mepInfo.bestanden,
+        gesamtAlles: gesamtAllesNachMep,
+      };
+    }
+
     return {
       pruefling: p,
       bereiche,
@@ -139,9 +192,10 @@ function ladeTerminErgebnisse(db, terminId) {
         mepDetails: gesamtInfo.mepDetails,
         bereiche: gesamtInfo.bereiche,
       },
+      mep: mepBlock,
       gesamtAlles,
     };
   });
 }
 
-module.exports = { ladeAnzahlMap, ladeTerminErgebnisse };
+module.exports = { ladeAnzahlMap, ladeTerminErgebnisse, ladeMep };

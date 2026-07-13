@@ -46,7 +46,7 @@ function platzhalter(bereichName, aktiverBereich) {
   };
 }
 
-router.get('/pruefung/:slug/mep', requireAuth, ladeTermin, platzhalter('Mündliche Ergänzungsprüfung', 'mep'));
+// MEP hat eine eigene Route (mep.routes.js).
 router.get('/pruefung/:slug/muendlich', requireAuth, ladeTermin, platzhalter('Mündliche Prüfung', 'muendlich'));
 
 // Einstellung: dürfen Prüfer fremde Einzelbewertungen (schriftlich) sehen?

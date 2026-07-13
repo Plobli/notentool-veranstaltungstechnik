@@ -29,12 +29,18 @@
         <td><%= z.schriftlich.gesamt %></td>
         <td><%= z.gesamtAlles %></td>
         <td>
-          <% if (z.schriftlich.mepMoeglich) { %>
+          <% if (z.mep) { %>
+            <span class="<%= z.mep.bestanden ? 'ok' : 'error' %>"
+                  title="<%= z.mep.teilgebiet %>: <%= z.mep.schriftlich %> + mündl. <%= z.mep.muendlich %> → <%= z.mep.bereichNachMep %>">
+              <%= z.mep.bereichNachMep %> (2:1)
+            </span>
+          <% } else if (z.schriftlich.mepMoeglich) { %>
             <span class="mep-moeglich" title="<%= z.schriftlich.mepBereiche.join(', ') %>">möglich</span>
           <% } else { %>–<% } %>
         </td>
-        <td class="<%= z.schriftlich.bestanden ? 'ok' : 'error' %>">
-          <%= z.schriftlich.bestanden ? 'bestanden' : 'nicht bestanden' %>
+        <% const bestandenFinal = z.mep ? z.mep.bestanden : z.schriftlich.bestanden; %>
+        <td class="<%= bestandenFinal ? 'ok' : 'error' %>">
+          <%= bestandenFinal ? 'bestanden' : 'nicht bestanden' %><%= z.mep ? ' (nach MEP)' : '' %>
         </td>
       </tr>
     <% }) %>

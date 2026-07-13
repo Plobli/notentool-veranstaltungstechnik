@@ -136,10 +136,20 @@ CREATE TABLE IF NOT EXISTS fachgespraech_bewertung (
   UNIQUE(pruefling_id, kriterium_key)
 );
 
-CREATE TABLE IF NOT EXISTS mep_ergebnis (
+-- Mündliche Ergänzungsprüfung (§20 Abs. 3 VfAusbV). Auf Antrag des Prüflings
+-- kann GENAU EIN schriftlicher Prüfungsbereich (< ausreichend), in dem die MEP
+-- den Ausschlag geben kann, mündlich ergänzt werden. Bewertet wird – wie beim
+-- Fachgespräch – über eine Liste von Protokoll-Zeilen (JSON in `protokoll`);
+-- die mündlichen Punkte (0–100) gehen mit dem schriftlichen Ergebnis dieses
+-- Bereichs im Verhältnis 2:1 in einen neuen Bereichswert ein.
+--
+-- `teilgebiet` ist einer der vier schriftlichen Bereiche
+-- ('wiso' | 'planung' | 'durchfuehrung' | 'energie'). UNIQUE(pruefling_id)
+-- erzwingt technisch, dass pro Prüfling höchstens eine MEP existiert.
+CREATE TABLE IF NOT EXISTS mep_bewertung (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   pruefling_id INTEGER NOT NULL REFERENCES pruefling(id) ON DELETE CASCADE,
-  fach_id INTEGER NOT NULL REFERENCES fach(id) ON DELETE CASCADE,
-  punkte REAL NOT NULL,
-  UNIQUE(pruefling_id, fach_id)
+  teilgebiet TEXT NOT NULL,
+  protokoll TEXT,
+  UNIQUE(pruefling_id)
 );

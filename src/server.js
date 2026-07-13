@@ -11,6 +11,7 @@ const adminRoutes = require('./routes/admin.routes');
 const pruefungRoutes = require('./routes/pruefung.routes');
 const schriftlichbogenRoutes = require('./routes/schriftlichbogen.routes');
 const fachgespraechRoutes = require('./routes/fachgespraech.routes');
+const mepRoutes = require('./routes/mep.routes');
 const { requireAuth } = require('./middleware');
 const { ART_LABEL } = require('./lib/pruefung');
 
@@ -83,6 +84,8 @@ app.use('/', pruefungRoutes);
 app.use('/', schriftlichbogenRoutes);
 
 app.use('/', fachgespraechRoutes);
+
+app.use('/', mepRoutes);
 
 app.get('/', requireAuth, (req, res) => {
   const db = getDb();
