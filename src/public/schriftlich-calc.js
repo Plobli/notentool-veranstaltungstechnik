@@ -5,11 +5,14 @@
 // werden die Ergebniszeilen verbindlich aktualisiert. Die Fragenanzahl je
 // Bereich wird separat über ihr eigenes kleines Formular gespeichert.
 (function () {
-  const root = document.getElementById('bogen-form');
+  // Deckt sowohl den Erfassungs-Bogen (#bogen-form) als auch die
+  // Finalisierung (#final-form) ab. Die Ziel-URL kommt aus data-feld-url,
+  // sonst wird sie aus dem Termin-Slug gebildet.
+  const root = document.getElementById('bogen-form') || document.getElementById('final-form');
   if (!root) return;
   const statusEl = document.getElementById('autosave-status');
   const terminSlug = root.dataset.terminSlug;
-  const feldUrl = `/pruefung/${terminSlug}/schriftlich/feld`;
+  const feldUrl = root.dataset.feldUrl || `/pruefung/${terminSlug}/schriftlich/feld`;
 
   let statusTimer = null;
   function zeigeStatus(text, fehler) {

@@ -1,6 +1,7 @@
 <nav class="brotkrumen">
   <a href="/">Dashboard</a> › <a href="/pruefung/<%= termin.slug %>"><%= termin.name %></a> › <%= bereichName %>
 </nav>
+<%- include('../_bereich-nav', { termin, bereiche, aktiverBereich }) %>
 
 <h1><%= bereichName %></h1>
 <p class="hinweis"><strong><%= termin.name %></strong></p>

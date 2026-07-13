@@ -1,0 +1,10 @@
+<!-- Kompakte Bereichs-Navigation zum schnellen Wechseln zwischen den
+     Prüfungsbereichen. Erwartet: termin, bereiche (Array), aktiverBereich (slug). -->
+<nav class="bereich-nav">
+  <% bereiche.forEach(b => { %>
+    <a class="bereich-tab<%= b.slug === aktiverBereich ? ' aktiv' : '' %><%= b.fertig ? '' : ' bereich-tab--offen' %>"
+       href="/pruefung/<%= termin.slug %>/<%= b.pfad || b.slug %>">
+      <%= b.name %>
+    </a>
+  <% }) %>
+</nav>

@@ -42,6 +42,51 @@ function migriere(db) {
       setzeSlug.run(slug, t.id);
     }
   }
+
+  // Sichtbarkeits-Schalter für fremde Einzelbewertungen.
+  if (!spalten.includes('einsicht_fremd')) {
+    db.exec('ALTER TABLE pruefungstermin ADD COLUMN einsicht_fremd INTEGER NOT NULL DEFAULT 0');
+  }
+
+  // Finalisierungs-Flag je Prüfling.
+  const prSpalten = db.prepare('PRAGMA table_info(pruefling)').all().map((c) => c.name);
+  if (!prSpalten.includes('schriftlich_finalisiert')) {
+    db.exec('ALTER TABLE pruefling ADD COLUMN schriftlich_finalisiert INTEGER NOT NULL DEFAULT 0');
+  }
+
+  // schriftlich_punkt prüfer-getrennt machen: alte Zeilen (gemeinsamer Bogen)
+  // werden zum finalen Bogen (pruefer_id = NULL). Nur nötig, solange die
+  // pruefer_id-Spalte fehlt.
+  const spSpalten = db.prepare('PRAGMA table_info(schriftlich_punkt)').all().map((c) => c.name);
+  if (spSpalten.length && !spSpalten.includes('pruefer_id')) {
+    db.exec(`
+      CREATE TABLE schriftlich_punkt_neu (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        pruefling_id INTEGER NOT NULL REFERENCES pruefling(id) ON DELETE CASCADE,
+        pruefer_id INTEGER REFERENCES user(id) ON DELETE CASCADE,
+        teilgebiet TEXT NOT NULL,
+        feld TEXT NOT NULL,
+        punkte REAL,
+        gestrichen INTEGER NOT NULL DEFAULT 0,
+        UNIQUE(pruefling_id, pruefer_id, teilgebiet, feld)
+      );
+      INSERT INTO schriftlich_punkt_neu (id, pruefling_id, pruefer_id, teilgebiet, feld, punkte, gestrichen)
+        SELECT id, pruefling_id, NULL, teilgebiet, feld, punkte, gestrichen FROM schriftlich_punkt;
+      DROP TABLE schriftlich_punkt;
+      ALTER TABLE schriftlich_punkt_neu RENAME TO schriftlich_punkt;
+    `);
+  }
+
+  // Partieller Unique-Index für den finalen Bogen: garantiert genau eine
+  // finale Zeile je (Prüfling, Teilgebiet, Feld) trotz NULL-Semantik von UNIQUE,
+  // und macht ON CONFLICT beim finalen Upsert nutzbar.
+  db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_schriftlich_final
+           ON schriftlich_punkt(pruefling_id, teilgebiet, feld)
+           WHERE pruefer_id IS NULL`);
+  // Analog für Einzelbögen (pruefer_id gesetzt).
+  db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_schriftlich_pruefer
+           ON schriftlich_punkt(pruefling_id, pruefer_id, teilgebiet, feld)
+           WHERE pruefer_id IS NOT NULL`);
 }
 
 function closeDb() {

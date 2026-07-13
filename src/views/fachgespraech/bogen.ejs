@@ -3,6 +3,7 @@
   <a href="/">Dashboard</a> › <a href="/pruefung/<%= termin.slug %>"><%= termin.name %></a> ›
   <a href="/pruefung/<%= termin.slug %>/fachgespraech">Fachgespräch</a> › <%= pruefling.name %>
 </nav>
+<%- include('../_bereich-nav', { termin, bereiche, aktiverBereich }) %>
 <h1>Fachgespräch – <%= pruefling.name %></h1>
 <p class="hinweis"><a href="/pruefung/<%= termin.slug %>/fachgespraech">← zur Übersicht</a></p>
 <p class="hinweis" id="autosave-status" role="status" aria-live="polite">Eingaben werden automatisch gespeichert.</p>

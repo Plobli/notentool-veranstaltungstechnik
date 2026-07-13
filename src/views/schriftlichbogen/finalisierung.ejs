@@ -1,0 +1,158 @@
+<!-- src/views/schriftlichbogen/finalisierung.ejs -->
+<nav class="brotkrumen">
+  <a href="/">Dashboard</a> › <a href="/pruefung/<%= termin.slug %>"><%= termin.name %></a> ›
+  <a href="/pruefung/<%= termin.slug %>/schriftlich">Schriftliche Prüfung</a> › Finalisierung
+</nav>
+<%- include('../_bereich-nav', { termin, bereiche, aktiverBereich }) %>
+<h1>Finalisierung – Schriftliche Prüfung</h1>
+
+<% if (!pruefliche.length) { %>
+  <p><strong><%= termin.name %></strong> hat noch keine Prüflinge.</p>
+<% } else { %>
+  <p class="hinweis">
+    Die Einzelbewertungen aller Prüfer stehen nebeneinander. Der <strong>finale Wert</strong>
+    (erste Spalte) ist das maßgebliche Ergebnis für Dashboard und §-20-Berechnung.
+  </p>
+
+  <div class="pruefling-nav">
+    <% pruefliche.forEach(p => { %>
+      <a href="/pruefung/<%= termin.slug %>/schriftlich/final?p=<%= p.id %>"
+         class="<%= gewaehlt && p.id === gewaehlt.id ? 'aktiv' : '' %>">
+        <%= p.name %><%= p.schriftlich_finalisiert ? ' ✓' : '' %>
+      </a>
+    <% }) %>
+  </div>
+
+  <% if (gewaehlt) { %>
+    <div class="final-kopf">
+      <h2><%= gewaehlt.name %></h2>
+      <form method="post" action="/pruefung/<%= termin.slug %>/schriftlich/final/status">
+        <input type="hidden" name="prueflingId" value="<%= gewaehlt.id %>">
+        <% if (gewaehlt.schriftlich_finalisiert) { %>
+          <span class="final-badge final-badge--zu">finalisiert – Einzelbögen gesperrt</span>
+          <input type="hidden" name="finalisiert" value="0">
+          <button type="submit" class="final-entsperren">Entsperren</button>
+        <% } else { %>
+          <input type="hidden" name="finalisiert" value="1">
+          <button type="submit" class="final-abschliessen">Finalisieren &amp; sperren</button>
+        <% } %>
+      </form>
+    </div>
+
+    <p class="hinweis" id="autosave-status" role="status" aria-live="polite">Änderungen am finalen Bogen werden automatisch gespeichert.</p>
+
+    <%
+      // Liest den eingetragenen Punktwert eines Bogens für ein Feld (oder null).
+      function ladeFeldwert(bogen, tgKey, feld) {
+        const m = bogen.roh[tgKey];
+        if (!m) return null;
+        const e = m.get(feld);
+        return e && e.punkte !== null && e.punkte !== undefined ? e.punkte : null;
+      }
+    %>
+    <div id="final-form" data-termin-slug="<%= termin.slug %>" data-pruefling="<%= gewaehlt.id %>"
+         data-feld-url="/pruefung/<%= termin.slug %>/schriftlich/final/feld">
+      <% teilgebiete.forEach(tg => {
+           const finalErg = boegen[0].ergebnis; %>
+        <section class="tg-block" data-tg="<%= tg.key %>">
+          <h3><%= tg.name %> <span class="tg-gewicht"><%= tg.gewicht %> %</span></h3>
+          <div class="bogen-wrap">
+            <table class="bogen">
+              <thead>
+                <tr>
+                  <th class="feld-name">Aufgabe</th>
+                  <% boegen.forEach(b => { %>
+                    <th class="<%= b.prueferId === null ? 'final-spalte' : '' %>"><%= b.name %></th>
+                  <% }) %>
+                </tr>
+              </thead>
+              <tbody>
+                <%
+                  const felder = [];
+                  if (tg.gebunden) felder.push('gebunden');
+                  for (const f of felderMap[tg.key]) felder.push(f);
+                %>
+                <% felder.forEach(feld => { %>
+                  <tr data-tg="<%= tg.key %>" data-feld="<%= feld %>">
+                    <td class="feld-name"><%= feld === 'gebunden' ? 'Gebunden' : feld.toUpperCase() %></td>
+                    <% boegen.forEach(b => { %>
+                      <% if (b.prueferId === null) { %>
+                        <%
+                          const fe = finalDaten[tg.key].get(feld);
+                          const max = feld === 'gebunden' ? tg.gebundenMax : 10;
+                          const erg = finalErg.teilgebiete[tg.key];
+                          const istGestrichen = tg.streichung && erg.gestrichenesFeld === feld;
+                        %>
+                        <td class="feld-zelle final-spalte <%= istGestrichen ? 'zelle-gestrichen' : '' %>">
+                          <input type="number" step="1" min="0" max="<%= max %>"
+                            class="feld-input <%= gewaehlt.schriftlich_finalisiert ? 'gesperrt' : '' %>"
+                            data-tg="<%= tg.key %>" data-feld="<%= feld %>"
+                            data-pruefling="<%= gewaehlt.id %>"
+                            <%= gewaehlt.schriftlich_finalisiert ? 'disabled' : '' %>
+                            value="<%= fe && fe.punkte !== null ? fe.punkte : '' %>">
+                          <% if (tg.streichung) { %>
+                            <label class="strich-btn <%= istGestrichen ? 'aktiv' : '' %>" title="streichen">
+                              <input type="radio" name="fstrich_<%= tg.key %>" value="<%= feld %>"
+                                class="strich-input" data-pruefling="<%= gewaehlt.id %>"
+                                <%= istGestrichen ? 'checked' : '' %>
+                                <%= gewaehlt.schriftlich_finalisiert ? 'disabled' : '' %>>
+                              <span class="strich-text">✗</span>
+                            </label>
+                          <% } %>
+                        </td>
+                      <% } else {
+                           const fe = ladeFeldwert(b, tg.key, feld); %>
+                        <td class="feld-zelle read-only"><%= fe === null ? '–' : fe %></td>
+                      <% } %>
+                    <% }) %>
+                  </tr>
+                <% }) %>
+                <tr class="ergebnis-zeile">
+                  <td class="feld-name">Punkte</td>
+                  <% boegen.forEach(b => {
+                       const bereich = b.ergebnis.bereiche[tg.key]; %>
+                    <td class="tg-ergebnis punkte-status <%= bereich.bestanden ? 'bestanden' : 'durchgefallen' %>"
+                        <%= b.prueferId === null ? 'data-tg="'+tg.key+'" data-pruefling="'+gewaehlt.id+'"' : '' %>>
+                      <%= b.ergebnis.teilgebiete[tg.key].punkte %>
+                    </td>
+                  <% }) %>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      <% }) %>
+
+      <section class="tg-block">
+        <table class="bogen">
+          <tbody>
+            <tr class="gesamt-zeile">
+              <td class="feld-name">Gesamt schriftlich (gewichtet)</td>
+              <% boegen.forEach(b => { %>
+                <td class="gesamt-ergebnis punkte-status <%= b.ergebnis.bestanden ? 'bestanden' : 'durchgefallen' %>"
+                    <%= b.prueferId === null ? 'data-pruefling="'+gewaehlt.id+'"' : '' %>>
+                  <%= b.ergebnis.gesamt %>
+                </td>
+              <% }) %>
+            </tr>
+            <tr class="gesamt-status-zeile">
+              <td class="feld-name">Ergebnis</td>
+              <% boegen.forEach(b => {
+                   let t, k;
+                   if (b.ergebnis.bestanden) { t='bestanden'; k='bestanden'; }
+                   else if (b.ergebnis.mepMoeglich) { t='nicht bestanden · MEP möglich'; k='mep'; }
+                   else { t='nicht bestanden'; k='durchgefallen'; } %>
+                <td class="gesamt-status <%= k %>" <%= b.prueferId === null ? 'data-pruefling="'+gewaehlt.id+'"' : '' %>>
+                  <span class="gesamt-status-text"><%= t %></span>
+                  <span class="mep-hinweis" data-pruefling="<%= gewaehlt.id %>"><%= b.ergebnis.mepMoeglich ? b.ergebnis.mepText : '' %></span>
+                </td>
+              <% }) %>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <script src="/schriftlich-calc.js"></script>
+  <% } %>
+<% } %>

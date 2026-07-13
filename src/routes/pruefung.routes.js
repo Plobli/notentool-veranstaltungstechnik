@@ -33,19 +33,29 @@ router.get('/pruefung/:slug', requireAuth, ladeTermin, (req, res) => {
 
 // Platzhalter für strukturell vorbereitete, aber noch nicht umgesetzte Bereiche
 // (MEP; Zwischenprüfung Schriftlich/Mündlich).
-function platzhalter(bereichName) {
+function platzhalter(bereichName, aktiverBereich) {
   return (req, res) => {
     res.render('pruefung/platzhalter', {
       title: bereichName,
       user: req.user,
       termin: req.termin,
       bereichName,
+      bereiche: bereicheFuer(req.termin.art),
+      aktiverBereich,
     });
   };
 }
 
-router.get('/pruefung/:slug/mep', requireAuth, ladeTermin, platzhalter('Mündliche Ergänzungsprüfung'));
-router.get('/pruefung/:slug/muendlich', requireAuth, ladeTermin, platzhalter('Mündliche Prüfung'));
+// MEP hat eine eigene Route (mep.routes.js).
+router.get('/pruefung/:slug/muendlich', requireAuth, ladeTermin, platzhalter('Mündliche Prüfung', 'muendlich'));
+
+// Einstellung: dürfen Prüfer fremde Einzelbewertungen (schriftlich) sehen?
+router.post('/pruefung/:slug/einstellungen/einsicht', requireAuth, ladeTermin, (req, res) => {
+  const db = getDb();
+  const wert = req.body.einsicht_fremd === '1' ? 1 : 0;
+  db.prepare('UPDATE pruefungstermin SET einsicht_fremd = ? WHERE id = ?').run(wert, req.termin.id);
+  res.redirect(`/pruefung/${req.termin.slug}`);
+});
 
 module.exports = router;
 module.exports.ladeTermin = ladeTermin;

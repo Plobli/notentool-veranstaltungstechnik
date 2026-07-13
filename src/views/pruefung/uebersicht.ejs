@@ -4,13 +4,30 @@
 
 <section class="bereich-links">
   <% bereiche.forEach(b => { %>
-    <a class="bereich-karte<%= b.fertig ? '' : ' bereich-karte--offen' %>"
-       href="/pruefung/<%= termin.slug %>/<%= b.slug %>">
+    <a class="bereich-karte<%= b.fertig ? '' : ' bereich-karte--offen' %><%= b.unterpunkt ? ' bereich-karte--unter' : '' %>"
+       href="/pruefung/<%= termin.slug %>/<%= b.pfad || b.slug %>">
       <span class="bereich-karte-name"><%= b.name %></span>
-      <% if (!b.fertig) { %><span class="bereich-karte-hinweis">in Vorbereitung</span><% } %>
+      <% if (!b.fertig) { %>
+        <span class="bereich-karte-hinweis">in Vorbereitung</span>
+      <% } else if (b.hinweis) { %>
+        <span class="bereich-karte-hinweis"><%= b.hinweis %></span>
+      <% } %>
     </a>
   <% }) %>
 </section>
+
+<% if (termin.art === 'abschluss') { %>
+  <section class="einstellungen">
+    <form method="post" action="/pruefung/<%= termin.slug %>/einstellungen/einsicht">
+      <input type="hidden" name="einsicht_fremd" value="<%= termin.einsicht_fremd ? '0' : '1' %>">
+      <label class="toggle-label">
+        Schriftlich: Prüfer sehen fremde Einzelbewertungen —
+        <strong><%= termin.einsicht_fremd ? 'an' : 'aus' %></strong>
+      </label>
+      <button type="submit"><%= termin.einsicht_fremd ? 'Ausschalten' : 'Einschalten' %></button>
+    </form>
+  </section>
+<% } %>
 
 <h2>Ergebnisübersicht</h2>
 <%- include('../_ergebnis-tabelle', { zeilen }) %>

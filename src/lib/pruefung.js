@@ -7,11 +7,18 @@
 // Bereiche je Prüfungstyp, in Anzeigereihenfolge.
 // `fertig: false` markiert Bereiche, die aktuell nur strukturell vorbereitet
 // sind (Platzhalterseite) und noch keine Bewertung haben.
+// `pfad` überschreibt den Standard-URL-Pfad `<slug>` (z. B. Unterseiten).
+// `unterpunkt: true` kennzeichnet abhängige Schritte (z. B. Finalisierung),
+// die optisch enger an den vorherigen Bereich gehängt werden.
 const BEREICHE = {
   abschluss: [
     { slug: 'schriftlich', name: 'Schriftliche Prüfung', fertig: true },
+    { slug: 'schriftlich-final', name: 'Schriftlich: Finalisierung',
+      pfad: 'schriftlich/final', hinweis: 'Einzelbewertungen zusammenführen',
+      fertig: true, unterpunkt: true },
     { slug: 'fachgespraech', name: 'Fachgespräch', fertig: true },
-    { slug: 'mep', name: 'Mündliche Ergänzungsprüfung', fertig: false },
+    { slug: 'mep', name: 'Mündliche Ergänzungsprüfung',
+      hinweis: 'nur bei ausschlaggebendem Bereich (§20 Abs. 3)', fertig: true },
   ],
   zwischen: [
     { slug: 'schriftlich', name: 'Schriftliche Prüfung', fertig: false },

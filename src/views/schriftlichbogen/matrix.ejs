@@ -2,6 +2,7 @@
 <nav class="brotkrumen">
   <a href="/">Dashboard</a> › <a href="/pruefung/<%= termin.slug %>"><%= termin.name %></a> › Schriftliche Prüfung
 </nav>
+<%- include('../_bereich-nav', { termin, bereiche, aktiverBereich }) %>
 <h1>Schriftliche Prüfung</h1>
 
 <% if (pruefliche.length === 0) { %>
@@ -11,7 +12,28 @@
     <% } %>
   </p>
 <% } else { %>
+  <%
+    // Rendert die fremden Bewertungen einer Zelle (grau, read-only), falls
+    // Einsicht aktiv ist und fremde Werte vorliegen.
+    function fremdZelle(prueflingId, tgKey, feld) {
+      if (!fremdWerte) return '';
+      const proPruefling = fremdWerte.get(prueflingId);
+      if (!proPruefling || !proPruefling[tgKey] || !proPruefling[tgKey][feld]) return '';
+      const eintraege = proPruefling[tgKey][feld]
+        .map(e => `<span class="fremd-wert" title="${e.prueferName}">${e.punkte}</span>`)
+        .join(' ');
+      return `<div class="fremd-werte">${eintraege}</div>`;
+    }
+  %>
   <p class="hinweis"><strong><%= termin.name %></strong> · Ansicht: Matrix (alle Prüflinge nebeneinander)</p>
+  <p class="eigene-bewertung-hinweis">
+    Dies ist <strong>Ihre eigene Bewertung</strong> (<%= user.name %>). Jeder Prüfer bewertet für sich;
+    am Ende werden die Bewertungen unter
+    <a href="/pruefung/<%= termin.slug %>/schriftlich/final">Finalisierung</a> zusammengeführt.
+    <% if (termin.einsicht_fremd) { %>
+      <br>Die Bewertungen der anderen Prüfer sind eingeblendet (grau).
+    <% } %>
+  </p>
   <p class="hinweis" id="autosave-status" role="status" aria-live="polite">Eingaben werden automatisch gespeichert.</p>
   <p class="hinweis">
     Jeder Bereich ist ab <strong>50 Punkten</strong> bestanden (mindestens „ausreichend").
@@ -68,6 +90,7 @@
                         data-pruefling="<%= p.id %>"
                         name="p<%= p.id %>_<%= tg.key %>_gebunden"
                         value="<%= e && e.punkte !== null ? e.punkte : '' %>">
+                      <%- fremdZelle(p.id, tg.key, 'gebunden') %>
                     </td>
                   <% }) %>
                 </tr>
@@ -100,6 +123,7 @@
                           <span class="strich-text" aria-label="streichen">✗</span>
                         </label>
                       <% } %>
+                      <%- fremdZelle(p.id, tg.key, feld) %>
                     </td>
                   <% }) %>
                 </tr>
