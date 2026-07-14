@@ -13,6 +13,33 @@ CREATE TABLE IF NOT EXISTS session (
   expires_at TEXT NOT NULL
 );
 
+-- Einladung zur Selbstregistrierung. Der Admin erzeugt einen Code; der neue
+-- Prüfer registriert sich damit über /registrieren. Nur der Hash des Codes
+-- wird gespeichert (wie ein Passwort), Klartext existiert nur im Link.
+-- Rolle kommt aus der Einladung (nicht vom Registrierenden wählbar).
+-- Einmalgebrauch: verbraucht_am wird beim Anlegen des Kontos gesetzt.
+CREATE TABLE IF NOT EXISTS einladung (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  code_hash TEXT NOT NULL UNIQUE,
+  role TEXT NOT NULL CHECK (role IN ('admin','pruefer')),
+  erstellt_von INTEGER REFERENCES user(id) ON DELETE SET NULL,
+  erstellt_am TEXT NOT NULL DEFAULT (datetime('now')),
+  ablauf_am TEXT NOT NULL,
+  verbraucht_am TEXT
+);
+
+-- Passwort-Reset ohne E-Mail: Der Admin erzeugt einen einmaligen Token, der
+-- dem Nutzer manuell übergeben wird. Nur der Hash wird gespeichert.
+-- Einmalgebrauch + zeitlicher Ablauf.
+CREATE TABLE IF NOT EXISTS passwort_reset (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  token_hash TEXT NOT NULL UNIQUE,
+  user_id INTEGER NOT NULL REFERENCES user(id) ON DELETE CASCADE,
+  erstellt_am TEXT NOT NULL DEFAULT (datetime('now')),
+  ablauf_am TEXT NOT NULL,
+  verbraucht_am TEXT
+);
+
 CREATE TABLE IF NOT EXISTS pruefungstermin (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,

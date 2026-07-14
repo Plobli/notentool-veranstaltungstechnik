@@ -51,10 +51,23 @@ function destroySession(db, sessionId) {
   db.prepare('DELETE FROM session WHERE id = ?').run(sessionId);
 }
 
+// Einmal-Token für Einladungen und Passwort-Reset. Die Tokens sind bereits
+// hochentropisch (32 Zufallsbytes), daher genügt zum Speichern ein schneller
+// SHA-256-Hash: Klartext liegt nie in der DB, Brute-Force ist chancenlos.
+function erzeugeToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+function hashToken(token) {
+  return crypto.createHash('sha256').update(String(token)).digest('hex');
+}
+
 module.exports = {
   hashPassword,
   verifyPassword,
   createSession,
   getSessionUser,
   destroySession,
+  erzeugeToken,
+  hashToken,
 };

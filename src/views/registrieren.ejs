@@ -1,0 +1,27 @@
+<h1>Registrieren</h1>
+
+<% if (!gueltig) { %>
+  <p class="error">Dieser Einladungslink ist ungültig oder abgelaufen.</p>
+  <p class="hinweis">Bitte wende dich an die Prüfungsleitung für eine neue Einladung.</p>
+  <p class="hinweis"><a href="/login">← zur Anmeldung</a></p>
+<% } else { %>
+  <p class="hinweis">
+    Du wurdest als <strong><%= rolle === 'admin' ? 'Admin' : 'Prüfer' %></strong> eingeladen.
+    Lege hier dein Konto an.
+  </p>
+  <% if (error) { %><p class="error"><%= error %></p><% } %>
+  <form method="post" action="/registrieren" class="stack-form">
+    <input type="hidden" name="code" value="<%= code %>">
+    <label>Name
+      <input type="text" name="name" value="<%= werte.name %>" required autofocus>
+    </label>
+    <label>E-Mail
+      <input type="email" name="email" value="<%= werte.email %>" required>
+    </label>
+    <label>Passwort
+      <input type="password" name="password" required>
+    </label>
+    <p class="hinweis">Mindestens 10 Zeichen, kein leicht zu erratendes Passwort.</p>
+    <button type="submit" class="btn btn-primary">Konto anlegen</button>
+  </form>
+<% } %>

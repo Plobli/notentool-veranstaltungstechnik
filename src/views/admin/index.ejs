@@ -58,14 +58,57 @@
 
 <section class="admin-block">
   <h2>Prüfer</h2>
+
+  <% if (link) { %>
+    <div class="link-box">
+      <% if (link.art === 'einladung') { %>
+        <p><strong>Einladungslink erstellt</strong> (Rolle: <%= link.role === 'admin' ? 'Admin' : 'Prüfer' %>, 7 Tage gültig).
+          Gib ihn der einzuladenden Person weiter:</p>
+      <% } else { %>
+        <p><strong>Reset-Link für <%= link.name %></strong> (24 Stunden gültig). Übergib ihn der Person:</p>
+      <% } %>
+      <input type="text" class="link-feld" readonly value="<%= link.url %>"
+             onclick="this.select()" aria-label="Link zum Kopieren">
+      <p class="hinweis">Der Link wird nur jetzt angezeigt und lässt sich einmal einlösen.</p>
+    </div>
+  <% } %>
+
   <ul class="admin-liste">
     <% pruefer.forEach(p => { %>
       <li class="admin-karte">
         <span class="admin-karte-titel"><%= p.name %></span>
         <span class="pruefer-meta"><%= p.email %></span>
         <span class="rolle-badge rolle-<%= p.role %>"><%= p.role === 'admin' ? 'Admin' : 'Prüfer' %></span>
+        <form method="post" action="/admin/pruefer/<%= p.id %>/reset" class="admin-inline-form">
+          <button type="submit" class="btn btn-klein">Passwort-Reset-Link</button>
+        </form>
       </li>
     <% }) %>
   </ul>
-  <a href="/admin/pruefer/neu" class="btn">Prüfer anlegen</a>
+
+  <form method="post" action="/admin/einladungen" class="stamm-neu">
+    <label class="inline-label">Neuer Zugang als
+      <select name="role">
+        <option value="pruefer">Prüfer</option>
+        <option value="admin">Admin</option>
+      </select>
+    </label>
+    <button type="submit" class="btn btn-primary">Einladungslink erstellen</button>
+  </form>
+
+  <% if (einladungen.length) { %>
+    <h3 class="admin-unter">Offene Einladungen</h3>
+    <ul class="admin-liste">
+      <% einladungen.forEach(e => { %>
+        <li class="admin-karte">
+          <span class="rolle-badge rolle-<%= e.role %>"><%= e.role === 'admin' ? 'Admin' : 'Prüfer' %></span>
+          <span class="pruefer-meta">erstellt <%= new Date(e.erstellt_am + 'Z').toLocaleDateString('de-DE') %>
+            · läuft ab <%= new Date(e.ablauf_am + 'Z').toLocaleDateString('de-DE') %></span>
+          <form method="post" action="/admin/einladungen/<%= e.id %>/loeschen" class="admin-inline-form">
+            <button type="submit" class="btn btn-klein">Zurückziehen</button>
+          </form>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
 </section>

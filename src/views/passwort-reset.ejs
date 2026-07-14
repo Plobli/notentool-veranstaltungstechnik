@@ -1,0 +1,21 @@
+<h1>Passwort zurücksetzen</h1>
+
+<% if (!gueltig) { %>
+  <p class="error">Dieser Reset-Link ist ungültig oder abgelaufen.</p>
+  <p class="hinweis">Bitte wende dich an die Prüfungsleitung für einen neuen Link.</p>
+  <p class="hinweis"><a href="/login">← zur Anmeldung</a></p>
+<% } else { %>
+  <p class="hinweis">Konto: <strong><%= name %></strong>. Lege hier ein neues Passwort fest.</p>
+  <% if (error) { %><p class="error"><%= error %></p><% } %>
+  <form method="post" action="/passwort-reset" class="stack-form">
+    <input type="hidden" name="token" value="<%= token %>">
+    <label>Neues Passwort
+      <input type="password" name="neu" required autofocus>
+    </label>
+    <label>Neues Passwort wiederholen
+      <input type="password" name="neu2" required>
+    </label>
+    <p class="hinweis">Mindestens 10 Zeichen, kein leicht zu erratendes Passwort.</p>
+    <button type="submit" class="btn btn-primary">Passwort setzen</button>
+  </form>
+<% } %>

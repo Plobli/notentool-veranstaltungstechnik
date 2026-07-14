@@ -1,0 +1,19 @@
+<nav class="brotkrumen"><a href="/">Dashboard</a> › Passwort ändern</nav>
+<h1>Passwort ändern</h1>
+
+<% if (erfolg) { %><p class="ok">Passwort erfolgreich geändert.</p><% } %>
+<% if (error) { %><p class="error"><%= error %></p><% } %>
+
+<form method="post" action="/passwort" class="stack-form">
+  <label>Aktuelles Passwort
+    <input type="password" name="aktuell" required autofocus>
+  </label>
+  <label>Neues Passwort
+    <input type="password" name="neu" required>
+  </label>
+  <label>Neues Passwort wiederholen
+    <input type="password" name="neu2" required>
+  </label>
+  <p class="hinweis">Mindestens 10 Zeichen, kein leicht zu erratendes Passwort.</p>
+  <button type="submit" class="btn btn-primary">Passwort ändern</button>
+</form>
