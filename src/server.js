@@ -13,6 +13,7 @@ const fachgespraechRoutes = require('./routes/fachgespraech.routes');
 const mepRoutes = require('./routes/mep.routes');
 const { requireAuth } = require('./middleware');
 const { ART_LABEL } = require('./lib/pruefung');
+const { ladeTerminFortschritt } = require('./lib/termin-ergebnisse');
 
 const app = express();
 
@@ -95,11 +96,19 @@ app.get('/', requireAuth, (req, res) => {
     .prepare('SELECT * FROM pruefungstermin WHERE ist_aktiv = 0 ORDER BY id DESC')
     .all();
 
+  // Fortschritts-Kennzahlen je Termin (nur Abschlussprüfungen tragen die
+  // schriftliche Auswertung; bei Zwischenprüfungen bleiben die Werte 0).
+  const fortschritt = {};
+  for (const t of [...aktive, ...vergangene]) {
+    fortschritt[t.id] = ladeTerminFortschritt(db, t.id);
+  }
+
   res.render('dashboard', {
     title: 'Dashboard',
     user: req.user,
     aktive,
     vergangene,
+    fortschritt,
     artLabel: ART_LABEL,
   });
 });

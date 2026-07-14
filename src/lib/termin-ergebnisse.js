@@ -206,4 +206,50 @@ function ladeTerminErgebnisse(db, terminId) {
   });
 }
 
-module.exports = { ladeAnzahlMap, ladeTerminErgebnisse, ladeMep };
+// Fortschritts-Kennzahlen eines Termins fürs Dashboard – aggregiert, ohne
+// Prüflingsnamen. Rückgabe:
+//   anzahl:          Prüflingszahl
+//   schriftlichFinal:# finalisierte schriftliche Bögen
+//   fachgespraech:   # Prüflinge mit Fachgespräch-Bewertung
+//   mep:             # Prüflinge mit erfasster MEp
+//   bestanden/nichtBestanden/offen: Status-Aggregat (offen = schriftlich noch
+//                    nicht finalisiert)
+//   prozent:         Gesamtfortschritt 0–100 (Anteil finalisierter Bögen)
+function ladeTerminFortschritt(db, terminId) {
+  const pruefliche = db
+    .prepare('SELECT id, schriftlich_finalisiert FROM pruefling WHERE pruefungstermin_id = ?')
+    .all(terminId);
+  const anzahl = pruefliche.length;
+  const zeilen = ladeTerminErgebnisse(db, terminId);
+  const ergById = new Map(zeilen.map((z) => [z.pruefling.id, z]));
+
+  let schriftlichFinal = 0, fachgespraech = 0, mepCount = 0;
+  let bestanden = 0, nichtBestanden = 0, offen = 0;
+  for (const p of pruefliche) {
+    const z = ergById.get(p.id);
+    if (p.schriftlich_finalisiert) {
+      schriftlichFinal += 1;
+      // Maßgeblicher Stand (nach MEp, falls wirksam).
+      const best = z && (z.mep ? z.mep.bestanden : z.schriftlich.bestanden);
+      if (best) bestanden += 1; else nichtBestanden += 1;
+    } else {
+      offen += 1;
+    }
+    if (z && z.bereiche.fachgespraech !== null) fachgespraech += 1;
+    if (z && z.mep) mepCount += 1;
+  }
+  const prozent = anzahl ? Math.round((schriftlichFinal / anzahl) * 100) : 0;
+
+  return {
+    anzahl,
+    schriftlichFinal,
+    fachgespraech,
+    mep: mepCount,
+    bestanden,
+    nichtBestanden,
+    offen,
+    prozent,
+  };
+}
+
+module.exports = { ladeAnzahlMap, ladeTerminErgebnisse, ladeMep, ladeTerminFortschritt };

@@ -1,10 +1,49 @@
 <h1>Dashboard</h1>
 
 <%
-  function terminKarte(t) { %>
-    <a class="pruefung-karte" href="/pruefung/<%= t.slug %>">
-      <span class="pruefung-karte-name"><%= t.name %></span>
-      <span class="art-badge art-<%= t.art %>"><%= artLabel[t.art] || t.art %></span>
+  function terminKarte(t) {
+    const f = fortschritt[t.id] || {};
+    const istAbschluss = t.art === 'abschluss';
+%>
+    <a class="termin-karte" href="/pruefung/<%= t.slug %>">
+      <div class="termin-karte-kopf">
+        <span class="termin-karte-name"><%= t.name %></span>
+        <span class="art-badge art-<%= t.art %>"><%= artLabel[t.art] || t.art %></span>
+        <span class="termin-karte-anzahl"><%= f.anzahl || 0 %> Prüfling<%= (f.anzahl === 1) ? '' : 'e' %></span>
+      </div>
+
+      <% if (!f.anzahl) { %>
+        <p class="termin-karte-leer">Noch keine Prüflinge.</p>
+      <% } else if (istAbschluss) { %>
+        <div class="termin-fortschritt" style="--fortschritt: <%= f.prozent %>%" title="<%= f.prozent %> % der schriftlichen Bögen finalisiert">
+          <span class="termin-fortschritt-text"><%= f.prozent %> %</span>
+        </div>
+
+        <div class="termin-kennzahlen">
+          <span class="kennzahl">
+            <span class="kennzahl-label">Schriftlich finalisiert</span>
+            <span class="kennzahl-wert"><%= f.schriftlichFinal %>/<%= f.anzahl %></span>
+          </span>
+          <span class="kennzahl">
+            <span class="kennzahl-label">Fachgespräch bewertet</span>
+            <span class="kennzahl-wert"><%= f.fachgespraech %>/<%= f.anzahl %></span>
+          </span>
+          <span class="kennzahl">
+            <span class="kennzahl-label">MEp erfasst</span>
+            <span class="kennzahl-wert"><%= f.mep %></span>
+          </span>
+          <span class="kennzahl">
+            <span class="kennzahl-label">Ergebnis (finalisiert)</span>
+            <span class="kennzahl-wert">
+              <span class="pill pill-ok" title="bestanden"><%= f.bestanden %></span>
+              <span class="pill pill-fail" title="nicht bestanden"><%= f.nichtBestanden %></span>
+              <% if (f.offen) { %><span class="pill pill-offen" title="noch offen"><%= f.offen %></span><% } %>
+            </span>
+          </span>
+        </div>
+      <% } else { %>
+        <p class="termin-karte-leer">Zwischenprüfung – Auswertung noch nicht umgesetzt.</p>
+      <% } %>
     </a>
 <% } %>
 
@@ -17,7 +56,7 @@
 <% if (aktive.length) { %>
   <section>
     <h2>Aktuelle Prüfungen</h2>
-    <div class="pruefung-liste">
+    <div class="termin-liste">
       <% aktive.forEach(terminKarte) %>
     </div>
   </section>
@@ -26,7 +65,7 @@
 <% if (vergangene.length) { %>
   <section class="vergangene">
     <h2>Vergangene Prüfungen</h2>
-    <div class="pruefung-liste">
+    <div class="termin-liste">
       <% vergangene.forEach(terminKarte) %>
     </div>
   </section>

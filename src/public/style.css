@@ -246,6 +246,34 @@ table.fg-gesamt-tabelle .fg-status { white-space: normal; text-align: right; }
 .vergangene details { margin: 0.5rem 0; }
 .vergangene summary { cursor: pointer; font-weight: 600; padding: 0.3rem 0; }
 
+/* Dashboard: Prüfungs-Karten über die volle Breite mit Fortschritt. */
+.termin-liste { display: flex; flex-direction: column; gap: 0.75rem; margin: 0.75rem 0 1.5rem; }
+.termin-karte { display: block; text-decoration: none; color: #1a2b3c;
+  border: 1px solid #d7dde4; border-radius: 8px; background: #fff; padding: 1rem 1.25rem;
+  transition: border-color 0.08s ease, box-shadow 0.08s ease; }
+.termin-karte:hover { border-color: #1a2b3c; box-shadow: 0 1px 4px rgba(26,43,60,0.08); }
+.termin-karte-kopf { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
+.termin-karte-name { font-weight: 700; font-size: 1.1rem; }
+.termin-karte-anzahl { margin-left: auto; font-size: 0.85rem; color: #667; }
+.termin-karte-leer { margin: 0.6rem 0 0; font-size: 0.9rem; color: #778; }
+
+.termin-fortschritt { position: relative; display: flex; align-items: center; gap: 0.5rem;
+  margin: 0.7rem 0 0.6rem; }
+.termin-fortschritt::before { content: ''; flex: 1; height: 0.6rem;
+  background: #eef2f7; border-radius: 999px;
+  background-image: linear-gradient(#1a2b3c, #1a2b3c); background-repeat: no-repeat;
+  background-size: var(--fortschritt, 0%) 100%; }
+.termin-fortschritt-text { font-size: 0.78rem; font-weight: 700; color: #1a2b3c; min-width: 2.5rem; text-align: right; }
+
+.termin-kennzahlen { display: flex; flex-wrap: wrap; gap: 0.4rem 1.75rem; margin-top: 0.4rem; }
+.kennzahl { display: flex; flex-direction: column; gap: 0.05rem; }
+.kennzahl-label { font-size: 0.72rem; color: #778; text-transform: uppercase; letter-spacing: 0.02em; }
+.kennzahl-wert { font-size: 1.05rem; font-weight: 700; display: inline-flex; gap: 0.3rem; align-items: center; }
+.pill { font-size: 0.8rem; font-weight: 700; border-radius: 4px; padding: 0.05rem 0.4rem; }
+.pill-ok { background: #d7f5d7; color: #0a5d1e; }
+.pill-fail { background: #f8d7d7; color: #8a0016; }
+.pill-offen { background: #eef2f7; color: #556; }
+
 /* Brotkrumen */
 .brotkrumen { font-size: 0.85rem; color: #667; margin-bottom: 0.5rem; }
 .brotkrumen a { color: #1a2b3c; text-decoration: none; }
