@@ -50,11 +50,13 @@ function platzhalter(bereichName, aktiverBereich) {
 router.get('/pruefung/:slug/muendlich', requireAuth, ladeTermin, platzhalter('Mündliche Prüfung', 'muendlich'));
 
 // Einstellung: dürfen Prüfer fremde Einzelbewertungen (schriftlich) sehen?
+// Der Toggle sitzt in der Matrix – zurück dorthin (bzw. zur aufrufenden Seite).
 router.post('/pruefung/:slug/einstellungen/einsicht', requireAuth, ladeTermin, (req, res) => {
   const db = getDb();
   const wert = req.body.einsicht_fremd === '1' ? 1 : 0;
   db.prepare('UPDATE pruefungstermin SET einsicht_fremd = ? WHERE id = ?').run(wert, req.termin.id);
-  res.redirect(`/pruefung/${req.termin.slug}`);
+  const zurueck = req.get('referer') || `/pruefung/${req.termin.slug}/schriftlich`;
+  res.redirect(zurueck);
 });
 
 module.exports = router;
