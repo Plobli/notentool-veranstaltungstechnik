@@ -217,6 +217,16 @@
 
   // --- Ereignisse ---
 
+  // Klick irgendwo in die Punkt-Zelle fokussiert das Eingabefeld – außer der
+  // Klick galt dem Streich-Button (✗).
+  root.addEventListener('click', (ev) => {
+    if (ev.target.closest('.strich-btn')) return;
+    const zelle = ev.target.closest('td.feld-zelle');
+    if (!zelle) return;
+    const inp = zelle.querySelector('.feld-input');
+    if (inp && !inp.disabled && ev.target !== inp) inp.focus();
+  });
+
   // Werte-Clamping beim Tippen + Live-Neuberechnung.
   root.addEventListener('input', (ev) => {
     const inp = ev.target;

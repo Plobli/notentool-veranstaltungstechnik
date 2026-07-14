@@ -113,6 +113,16 @@
     }
   }
 
+  // Klick irgendwo in die Punkt-Zelle fokussiert das Eingabefeld – außer der
+  // Klick galt dem Streich-Button (✗).
+  root.addEventListener('click', (ev) => {
+    if (ev.target.closest('.strich-btn')) return;
+    const zelle = ev.target.closest('td.feld-zelle');
+    if (!zelle) return;
+    const inp = zelle.querySelector('.feld-input');
+    if (inp && ev.target !== inp) inp.focus();
+  });
+
   // Harte Wertbegrenzung beim Tippen: nie über max (10 bzw. gebundenMax) und
   // nie unter min (0). Werte außerhalb werden sofort auf die Grenze gesetzt.
   root.addEventListener('input', (ev) => {

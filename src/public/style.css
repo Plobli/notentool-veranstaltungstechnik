@@ -60,7 +60,9 @@ table.bogen td.gesamt-status.mep { background: #ffe4a3; color: #7a5200; }
 
 /* Punkt-Zelle: kein Padding, Eingabefeld füllt die ganze Zelle klickbar aus.
    Bei WISO liegt der Streich-Button absolut in der linken Ecke. */
-table.bogen td.feld-zelle { padding: 0; position: relative; }
+/* Klick irgendwo in die Zelle fokussiert das Eingabefeld (JS in den calc-
+   Skripten); die Zelle zeigt daher den Text-Cursor. */
+table.bogen td.feld-zelle { padding: 0; position: relative; cursor: text; }
 table.bogen .feld-input {
   display: block;
   width: 100%;
@@ -77,6 +79,8 @@ table.bogen .feld-input {
   appearance: textfield;
   cursor: text;
 }
+/* Fremd-Werte nur zur Anzeige – Klicks darauf sollen ins Eingabefeld gehen. */
+table.bogen .fremd-werte { pointer-events: none; }
 /* Platz für den Streich-Button links schaffen (nur WISO-Zellen). */
 table.bogen td.feld-zelle:has(.strich-btn) .feld-input { padding-left: 2rem; }
 table.bogen .feld-input::-webkit-outer-spin-button,
@@ -86,7 +90,7 @@ table.bogen .feld-input::-webkit-inner-spin-button {
 }
 table.bogen .feld-input:focus {
   outline: none;
-  background: #f3f0ff;
+  background: transparent;
 }
 
 /* Anzahl-Feld in der Teilgebiets-Überschrift, mit eigenem Speichern-Button */
@@ -317,7 +321,7 @@ th.final-spalte { border-bottom: 2px solid #1a2b3c; }
    gedämpfte Farbe, kursiv, zarter Hintergrund. Wird beim Bestätigen/Ändern
    (Klasse entfernt) zur normalen finalen Optik. */
 table.bogen .feld-input.feld-vorschlag { color: #8a6d00; font-style: italic; background: #fffbe9; }
-table.bogen .feld-input.feld-vorschlag:focus { color: inherit; font-style: normal; background: #f3f0ff; }
+table.bogen .feld-input.feld-vorschlag:focus { color: inherit; font-style: normal; background: transparent; }
 .final-vorschlag-legende { display: flex; align-items: center; gap: 0.4rem; }
 .vorschlag-muster { display: inline-block; color: #8a6d00; font-style: italic;
   background: #fffbe9; border: 1px solid #e6d9a2; border-radius: 4px; padding: 0 0.4rem; font-weight: 600; }
