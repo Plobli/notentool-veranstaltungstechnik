@@ -140,13 +140,51 @@
     const { gewichtet, bestanden } = gesamtRechnen(punkteJeTg);
     const g = root.querySelector(`.gesamt-ergebnis[data-pruefling="${prueflingId}"]`);
     if (g) { g.textContent = gewichtet; statusKlassen(g, bestanden); }
+    // Nur Gesamtpunkte/Bestehen sind clientseitig sicher rechenbar. Die
+    // MEP-Möglichkeit (komplexe §20-Logik) bleibt dem Server überlassen: die
+    // MEP-Anzeige wird hier NICHT überschrieben, sondern erst durch die Antwort
+    // des nächsten Speicherns (mepAnwenden) aktualisiert. Ist der Bogen sicher
+    // bestanden, kann keine MEP mehr nötig sein – dann räumen wir sie weg.
     const st = root.querySelector(`.gesamt-status[data-pruefling="${prueflingId}"]`);
     if (st) {
-      st.classList.remove('bestanden', 'durchgefallen', 'mep');
-      st.classList.add(bestanden ? 'bestanden' : 'durchgefallen');
       const txt = st.querySelector('.gesamt-status-text');
-      if (txt) txt.textContent = bestanden ? 'bestanden' : 'nicht bestanden';
       const mep = st.querySelector('.mep-hinweis');
+      if (bestanden) {
+        st.classList.remove('durchgefallen', 'mep');
+        st.classList.add('bestanden');
+        if (txt) txt.textContent = 'bestanden';
+        if (mep) mep.textContent = '';
+      } else {
+        // Nicht bestanden: Bestanden-Optik entfernen, aber eine bestehende
+        // MEP-Kennzeichnung (Klasse + Hinweis) unangetastet lassen.
+        st.classList.remove('bestanden');
+        const mepAktiv = st.classList.contains('mep');
+        if (!mepAktiv) st.classList.add('durchgefallen');
+        if (txt) txt.textContent = mepAktiv ? 'nicht bestanden · MEP möglich' : 'nicht bestanden';
+      }
+    }
+  }
+
+  // Wendet die MEP-Info aus einer Server-Antwort auf die finale Status-Zelle an.
+  function mepAnwenden(data) {
+    const st = root.querySelector(`.gesamt-status[data-pruefling="${prueflingId}"]`);
+    if (!st) return;
+    const txt = st.querySelector('.gesamt-status-text');
+    const mep = st.querySelector('.mep-hinweis');
+    if (data.bestanden) {
+      st.classList.remove('durchgefallen', 'mep');
+      st.classList.add('bestanden');
+      if (txt) txt.textContent = 'bestanden';
+      if (mep) mep.textContent = '';
+    } else if (data.mepMoeglich) {
+      st.classList.remove('bestanden', 'durchgefallen');
+      st.classList.add('mep');
+      if (txt) txt.textContent = 'nicht bestanden · MEP möglich';
+      if (mep) mep.textContent = data.mepText || '';
+    } else {
+      st.classList.remove('bestanden', 'mep');
+      st.classList.add('durchgefallen');
+      if (txt) txt.textContent = 'nicht bestanden';
       if (mep) mep.textContent = '';
     }
   }
@@ -162,7 +200,9 @@
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
-      await res.json();
+      // Server liefert die maßgebliche MEP-/Bestehens-Info zurück; damit die
+      // finale Status-Zelle inkl. MEP-Möglichkeit auf den Server-Stand bringen.
+      mepAnwenden(await res.json());
       zeigeStatus('Gespeichert.');
     } catch (err) {
       zeigeStatus('Nicht gespeichert – bitte erneut versuchen.', true);
