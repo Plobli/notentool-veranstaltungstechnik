@@ -1,7 +1,12 @@
 /* src/public/style.css */
 body { font-family: system-ui, sans-serif; margin: 0; color: #1a1a1a; }
 header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1.5rem; background: #1a2b3c; color: white; }
-header .logo { color: white; text-decoration: none; font-weight: bold; }
+.header-links { display: flex; align-items: center; gap: 0.6rem; min-width: 0; }
+header .logo { color: white; text-decoration: none; font-weight: bold; white-space: nowrap; }
+.header-sep { color: #8aa0b8; }
+.header-termin { color: #fff; text-decoration: none; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.header-termin:hover { text-decoration: underline; }
 header nav a, header nav span { color: white; margin-left: 1rem; }
 main { padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
 table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
@@ -285,7 +290,10 @@ table.fg-gesamt-tabelle .fg-status { white-space: normal; text-align: right; }
 /* Prüfer-getrennte schriftliche Bewertung */
 .eigene-bewertung-hinweis { background: #eef4fb; border: 1px solid #cdd6e0; border-radius: 6px;
   padding: 0.5rem 0.75rem; font-size: 0.9rem; margin: 0.5rem 0; }
-.fremd-werte { display: flex; flex-wrap: wrap; gap: 0.2rem; margin-top: 0.15rem; }
+/* Bewertungen der anderen Prüfer: rechtsbündig unter dem eigenen Wert, bei
+   mehreren Prüfern direkt nebeneinander. */
+.fremd-werte { display: flex; flex-wrap: wrap; justify-content: flex-end;
+  gap: 0.2rem; margin-top: 0.15rem; padding: 0 0.6rem 0.2rem; }
 .fremd-wert { font-size: 0.72rem; color: #667; background: #f0f0f0; border-radius: 3px;
   padding: 0 0.3rem; cursor: help; }
 

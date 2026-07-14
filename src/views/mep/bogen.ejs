@@ -1,8 +1,4 @@
 <!-- src/views/mep/bogen.ejs -->
-<nav class="brotkrumen">
-  <a href="/">Dashboard</a> › <a href="/pruefung/<%= termin.slug %>"><%= termin.name %></a> ›
-  <a href="/pruefung/<%= termin.slug %>/mep">Mündliche Ergänzungsprüfung</a> › <%= pruefling.name %>
-</nav>
 <%- include('../_bereich-nav', { termin, bereiche, aktiverBereich }) %>
 <h1>Mündliche Ergänzungsprüfung – <%= pruefling.name %></h1>
 <p class="hinweis"><a href="/pruefung/<%= termin.slug %>/mep">← zur Übersicht</a></p>

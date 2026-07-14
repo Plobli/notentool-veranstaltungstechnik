@@ -137,7 +137,7 @@ function bestehensGruende(teilgebietePunkte) {
     // nicht zusätzlich als mangelhaft/ungenügend gezählt (ein Grund je Bereich).
     if (tg.sperrfach && punkte < BESTEHENSGRENZE) {
       const wie = punkte < UNGENUEGEND_GRENZE ? 'ungenügend' : 'unter 50';
-      gruende.push(`${tg.name} (Sperrfach) ${wie}`);
+      gruende.push(`${tg.name} ${wie}`);
       continue;
     }
     if (punkte < UNGENUEGEND_GRENZE) {

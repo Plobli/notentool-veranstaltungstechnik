@@ -1,5 +1,3 @@
-<nav class="brotkrumen"><a href="/">Dashboard</a> › <%= termin.name %></nav>
-
 <h1><%= termin.name %> <span class="art-badge art-<%= termin.art %>"><%= artLabel %></span></h1>
 
 <% if (user.role === 'admin') { %>
@@ -19,19 +17,6 @@
     </a>
   <% }) %>
 </section>
-
-<% if (termin.art === 'abschluss') { %>
-  <section class="einstellungen">
-    <form method="post" action="/pruefung/<%= termin.slug %>/einstellungen/einsicht">
-      <input type="hidden" name="einsicht_fremd" value="<%= termin.einsicht_fremd ? '0' : '1' %>">
-      <label class="toggle-label">
-        Schriftlich: Prüfer sehen fremde Einzelbewertungen —
-        <strong><%= termin.einsicht_fremd ? 'an' : 'aus' %></strong>
-      </label>
-      <button type="submit"><%= termin.einsicht_fremd ? 'Ausschalten' : 'Einschalten' %></button>
-    </form>
-  </section>
-<% } %>
 
 <h2>Ergebnisübersicht</h2>
 <%- include('../_ergebnis-tabelle', { zeilen }) %>

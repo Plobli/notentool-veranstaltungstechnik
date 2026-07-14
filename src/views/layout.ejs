@@ -8,7 +8,13 @@
 </head>
 <body>
   <header>
-    <a href="/" class="logo">Prüfungsverwaltung</a>
+    <div class="header-links">
+      <a href="/" class="logo">Prüfungsverwaltung</a>
+      <% if (typeof termin !== 'undefined' && termin && termin.slug) { %>
+        <span class="header-sep">›</span>
+        <a href="/pruefung/<%= termin.slug %>" class="header-termin"><%= termin.name %></a>
+      <% } %>
+    </div>
     <% if (user) { %>
       <nav>
         <a href="/">Dashboard</a>

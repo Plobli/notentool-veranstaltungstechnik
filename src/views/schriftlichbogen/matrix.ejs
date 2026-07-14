@@ -1,7 +1,4 @@
 <!-- src/views/schriftlichbogen/matrix.ejs -->
-<nav class="brotkrumen">
-  <a href="/">Dashboard</a> › <a href="/pruefung/<%= termin.slug %>"><%= termin.name %></a> › Schriftliche Prüfung
-</nav>
 <%- include('../_bereich-nav', { termin, bereiche, aktiverBereich }) %>
 <h1>Schriftliche Prüfung</h1>
 
@@ -34,6 +31,16 @@
       <br>Die Bewertungen der anderen Prüfer sind eingeblendet (grau).
     <% } %>
   </p>
+  <section class="einstellungen">
+    <form method="post" action="/pruefung/<%= termin.slug %>/einstellungen/einsicht">
+      <input type="hidden" name="einsicht_fremd" value="<%= termin.einsicht_fremd ? '0' : '1' %>">
+      <label class="toggle-label">
+        Prüfer sehen fremde Einzelbewertungen —
+        <strong><%= termin.einsicht_fremd ? 'an' : 'aus' %></strong>
+      </label>
+      <button type="submit" class="btn btn-klein"><%= termin.einsicht_fremd ? 'Ausschalten' : 'Einschalten' %></button>
+    </form>
+  </section>
   <p class="hinweis" id="autosave-status" role="status" aria-live="polite">Eingaben werden automatisch gespeichert.</p>
   <p class="hinweis">
     Jeder Bereich ist ab <strong>50 Punkten</strong> bestanden (mindestens „ausreichend").
