@@ -101,10 +101,32 @@
     el.classList.toggle('durchgefallen', !bestanden);
   }
 
+  // Gleicht die Durchstreich-Optik eines Teilgebiets an das aktuell gestrichene
+  // Feld an: nur dessen Zelle ist durchgestrichen, nur dessen Radio/Label aktiv.
+  function streichungAnzeigen(tg) {
+    if (!tg.streichung) return;
+    const streich = gestrichenesFeld(tg);
+    const inputs = root.querySelectorAll(
+      `.feld-input[data-tg="${tg.key}"][data-pruefling="${prueflingId}"]`
+    );
+    inputs.forEach((inp) => {
+      if (inp.dataset.feld === 'gebunden') return;
+      const td = inp.closest('td');
+      if (!td) return;
+      const aktiv = inp.dataset.feld === streich;
+      td.classList.toggle('zelle-gestrichen', aktiv);
+      const radio = td.querySelector('.strich-input');
+      const label = td.querySelector('.strich-btn');
+      if (radio) radio.checked = aktiv;
+      if (label) label.classList.toggle('aktiv', aktiv);
+    });
+  }
+
   // Aktualisiert die finale Ergebnis-Spalte (Punkte je Teilgebiet + Gesamt).
   function liveAktualisieren() {
     const punkteJeTg = {};
     for (const tg of S.teilgebiete) {
+      streichungAnzeigen(tg);
       const p = teilgebietPunkte(tg);
       punkteJeTg[tg.key] = p;
       const cell = root.querySelector(
