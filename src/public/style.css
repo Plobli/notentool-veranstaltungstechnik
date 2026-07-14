@@ -220,6 +220,9 @@ table.fg-gesamt-tabelle .fg-status { white-space: normal; text-align: right; }
 
 /* Kritischer Bereichswert (< 50) – rot markiert wie in der Matrix. */
 .ergebnis-tabelle td.zelle-krit { background: #f8d7d7; color: #8a0016; font-weight: 600; }
+/* Marker für aus dem Vortermin übernommene Werte (Wiederholer). */
+.ueb-mark { display: inline-block; margin-left: 0.2rem; font-size: 0.65rem; font-weight: 700;
+  color: #556; background: #e7edf3; border-radius: 3px; padding: 0 0.2rem; vertical-align: super; cursor: help; }
 
 /* Status-Spalte: farbige Pille + Kurzbegründung. */
 .status-zelle { text-align: left; }
@@ -408,6 +411,15 @@ a.admin-karte-titel:hover { text-decoration: underline; }
 .inline-label select { font: inherit; height: 2.25rem; box-sizing: border-box;
   padding: 0 0.55rem; border: 1px solid #c3cdd8; border-radius: 6px; background: #fff; }
 .admin-unter { font-size: 1rem; margin: 1.25rem 0 0.5rem; }
+
+/* Wiederholer-Import: Kandidatenliste mit offenen/übernommenen Teilen. */
+.import-karte { flex-wrap: wrap; }
+.import-wahl { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+.import-teile { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; margin-left: auto; font-size: 0.8rem; }
+.teil-gruppe { color: #667; display: inline-flex; flex-wrap: wrap; gap: 0.25rem; align-items: baseline; }
+.teil { font-size: 0.72rem; font-weight: 600; border-radius: 4px; padding: 0.05rem 0.4rem; }
+.teil-offen { background: #f8d7d7; color: #8a0016; }
+.teil-ok { background: #d7f5d7; color: #0a5d1e; }
 
 /* Einmalig angezeigter Einladungs-/Reset-Link */
 .link-box { border: 1px solid #b9cde3; background: #eef4fb; border-radius: 8px;

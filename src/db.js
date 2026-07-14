@@ -53,6 +53,10 @@ function migriere(db) {
   if (!prSpalten.includes('schriftlich_finalisiert')) {
     db.exec('ALTER TABLE pruefling ADD COLUMN schriftlich_finalisiert INTEGER NOT NULL DEFAULT 0');
   }
+  // Wiederholer: Verweis auf den Ursprungs-Prüfling im Vortermin.
+  if (!prSpalten.includes('wiederholt_von')) {
+    db.exec('ALTER TABLE pruefling ADD COLUMN wiederholt_von INTEGER REFERENCES pruefling(id) ON DELETE SET NULL');
+  }
 
   // schriftlich_punkt prüfer-getrennt machen: alte Zeilen (gemeinsamer Bogen)
   // werden zum finalen Bogen (pruefer_id = NULL). Nur nötig, solange die

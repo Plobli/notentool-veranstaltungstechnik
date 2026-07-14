@@ -58,7 +58,11 @@ CREATE TABLE IF NOT EXISTS pruefling (
   betrieb TEXT,
   -- Schriftliche Prüfung finalisiert? Dann sind die Einzelbögen gesperrt und
   -- nur noch der finale Bogen (schriftlich_punkt.pruefer_id IS NULL) zählt.
-  schriftlich_finalisiert INTEGER NOT NULL DEFAULT 0
+  schriftlich_finalisiert INTEGER NOT NULL DEFAULT 0,
+  -- Wiederholer: Verweis auf den Ursprungs-Prüfling im Vortermin. Bestandene
+  -- Teile (schriftliche Bereiche >=50, Fachgespräch >=50) werden von dort
+  -- referenziert und nicht erneut geprüft; NULL = kein Wiederholer.
+  wiederholt_von INTEGER REFERENCES pruefling(id) ON DELETE SET NULL
 );
 
 -- Schriftliche Prüfung als feste Tabelle (Auswertungsbogen).

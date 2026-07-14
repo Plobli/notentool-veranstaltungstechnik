@@ -113,10 +113,33 @@ function ladeMep(db, prueflingIds) {
   return byPruefling;
 }
 
+// Finale schriftliche Bereichspunkte + Fachgespräch eines Prüflings (aus dem
+// finalen Bogen bzw. den Fachgespräch-Zeilen). Für Wiederholer, die aus einem
+// Vortermin übernommene Teile referenzieren. Rückgabe:
+//   { wiso, planung, durchfuehrung, energie, fachgespraech } – je Wert die
+//   berechneten Punkte oder null (keine Eingabe).
+function finaleTeilpunkteVon(db, prueflingId) {
+  const anzahlMap = ladeAnzahlMap(
+    db,
+    db.prepare('SELECT pruefungstermin_id FROM pruefling WHERE id = ?').get(prueflingId)
+      ?.pruefungstermin_id
+  );
+  const s = ladeSchriftlich(db, [prueflingId]).get(prueflingId);
+  const f = ladeFachgespraech(db, [prueflingId]).get(prueflingId);
+  const out = {};
+  for (const t of TEILGEBIETE) {
+    out[t.key] = s.hat[t.key]
+      ? berechneTeilgebiet(t.key, s.tg[t.key], anzahlMap[t.key]).punkte
+      : null;
+  }
+  out.fachgespraech = f.hat ? berechneFachgespraech(f.zeilen).gesamtpunkte : null;
+  return out;
+}
+
 // Baut je Prüfling die vollständige Ergebniszeile für das Dashboard.
 function ladeTerminErgebnisse(db, terminId) {
   const pruefliche = db
-    .prepare('SELECT id, name, betrieb FROM pruefling WHERE pruefungstermin_id = ? ORDER BY name')
+    .prepare('SELECT id, name, betrieb, wiederholt_von FROM pruefling WHERE pruefungstermin_id = ? ORDER BY name')
     .all(terminId);
   const ids = pruefliche.map((p) => p.id);
   const anzahlMap = ladeAnzahlMap(db, terminId);
@@ -129,25 +152,42 @@ function ladeTerminErgebnisse(db, terminId) {
     const f = fachgespraech.get(p.id);
     const m = mep.get(p.id);
 
-    // Schriftliche Teilgebiete berechnen.
+    // Wiederholer: übernommene Teile aus dem Vortermin referenzieren (nicht
+    // kopiert). Genutzt, wo im neuen Termin keine eigene Eingabe existiert.
+    const uebernommen = p.wiederholt_von ? finaleTeilpunkteVon(db, p.wiederholt_von) : null;
+
+    // Schriftliche Teilgebiete berechnen; fehlende (übernommene) Bereiche eines
+    // Wiederholers kommen aus dem Vortermin, damit das §20-Gesamt vollständig ist.
     const punkteJeBereich = {};
+    const uebernommeneBereiche = {}; // key -> true, wenn aus Vortermin referenziert
     for (const t of TEILGEBIETE) {
-      const erg = berechneTeilgebiet(t.key, s.tg[t.key], anzahlMap[t.key]);
-      punkteJeBereich[t.key] = erg.punkte;
+      if (s.hat[t.key]) {
+        punkteJeBereich[t.key] = berechneTeilgebiet(t.key, s.tg[t.key], anzahlMap[t.key]).punkte;
+      } else if (uebernommen && uebernommen[t.key] !== null) {
+        punkteJeBereich[t.key] = uebernommen[t.key];
+        uebernommeneBereiche[t.key] = true;
+      } else {
+        punkteJeBereich[t.key] = 0;
+      }
     }
     const gesamtInfo = berechneSchriftlichGesamt(punkteJeBereich);
 
-    // Fachgespräch berechnen.
+    // Fachgespräch berechnen; für Wiederholer ggf. aus dem Vortermin übernehmen.
     const fgErg = berechneFachgespraech(f.zeilen);
-    const fgPunkte = fgErg.gesamtpunkte;
+    let fgPunkte = fgErg.gesamtpunkte;
+    let fgUebernommen = false;
+    if (!f.hat && uebernommen && uebernommen.fachgespraech !== null) {
+      fgPunkte = uebernommen.fachgespraech;
+      fgUebernommen = true;
+    }
 
     // Bereichswerte: null, wenn keinerlei Eingabe; sonst berechneter Wert.
     const bereiche = {
-      wiso: s.hat.wiso ? punkteJeBereich.wiso : null,
-      planung: s.hat.planung ? punkteJeBereich.planung : null,
-      durchfuehrung: s.hat.durchfuehrung ? punkteJeBereich.durchfuehrung : null,
-      energie: s.hat.energie ? punkteJeBereich.energie : null,
-      fachgespraech: f.hat ? fgPunkte : null,
+      wiso: (s.hat.wiso || uebernommeneBereiche.wiso) ? punkteJeBereich.wiso : null,
+      planung: (s.hat.planung || uebernommeneBereiche.planung) ? punkteJeBereich.planung : null,
+      durchfuehrung: (s.hat.durchfuehrung || uebernommeneBereiche.durchfuehrung) ? punkteJeBereich.durchfuehrung : null,
+      energie: (s.hat.energie || uebernommeneBereiche.energie) ? punkteJeBereich.energie : null,
+      fachgespraech: (f.hat || fgUebernommen) ? fgPunkte : null,
     };
 
     const gesamtAlles = berechneGesamtAlles({
@@ -202,6 +242,14 @@ function ladeTerminErgebnisse(db, terminId) {
       },
       mep: mepBlock,
       gesamtAlles,
+      // Wiederholer-Info: welche Teile aus dem Vortermin übernommen wurden.
+      wiederholer: p.wiederholt_von
+        ? {
+            von: p.wiederholt_von,
+            uebernommeneBereiche: Object.keys(uebernommeneBereiche),
+            fachgespraechUebernommen: fgUebernommen,
+          }
+        : null,
     };
   });
 }

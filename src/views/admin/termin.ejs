@@ -12,6 +12,7 @@
         <li class="admin-karte">
           <span class="admin-karte-titel"><%= p.name %></span>
           <% if (p.betrieb) { %><span class="pruefer-meta"><%= p.betrieb %></span><% } %>
+          <% if (p.wiederholt_von) { %><span class="rolle-badge rolle-pruefer" title="Wiederholer aus einem Vortermin">Wiederholer</span><% } %>
           <% if (p.hatErgebnisse) { %>
             <span class="pruefer-meta admin-inline-form" title="Prüfling hat bereits Bewertungen – Löschen gesperrt">hat Bewertungen</span>
           <% } else { %>
@@ -30,6 +31,12 @@
     <input type="text" name="betrieb" placeholder="Betrieb (optional)">
     <button type="submit" class="btn btn-primary">Prüfling hinzufügen</button>
   </form>
+
+  <% if (termin.art === 'abschluss') { %>
+    <p class="hinweis" style="margin-top:0.75rem">
+      <a class="btn btn-klein" href="/admin/termine/<%= termin.id %>/import">Wiederholer aus Vortermin importieren</a>
+    </p>
+  <% } %>
 </section>
 
 <p class="hinweis"><a href="/pruefung/<%= termin.slug %>">← zur Prüfungs-Übersicht</a></p>

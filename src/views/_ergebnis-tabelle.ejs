@@ -5,6 +5,18 @@
   function kritKlasse(v) {
     return (v !== null && v !== undefined && v < 50) ? 'zelle-krit' : '';
   }
+  // Ist dieser Bereich bei einem Wiederholer aus dem Vortermin übernommen?
+  function istUebernommen(z, key) {
+    if (!z.wiederholer) return false;
+    if (key === 'fachgespraech') return z.wiederholer.fachgespraechUebernommen;
+    return z.wiederholer.uebernommeneBereiche.includes(key);
+  }
+  // Markierung "aus Vortermin" hinter einem übernommenen Wert.
+  function uebMark(z, key) {
+    return istUebernommen(z, key)
+      ? '<span class="ueb-mark" title="aus Vortermin übernommen">ü</span>'
+      : '';
+  }
 %>
 <table class="ergebnis-tabelle">
   <thead>
@@ -25,12 +37,15 @@
     <% zeilen.forEach(z => { %>
       <% const bestandenFinal = z.mep ? z.mep.bestanden : z.schriftlich.bestanden; %>
       <tr>
-        <td><%= z.pruefling.name %></td>
-        <td class="<%= kritKlasse(z.bereiche.wiso) %>"><%= zeig(z.bereiche.wiso) %></td>
-        <td class="<%= kritKlasse(z.bereiche.planung) %>"><%= zeig(z.bereiche.planung) %></td>
-        <td class="<%= kritKlasse(z.bereiche.durchfuehrung) %>"><%= zeig(z.bereiche.durchfuehrung) %></td>
-        <td class="<%= kritKlasse(z.bereiche.energie) %>"><%= zeig(z.bereiche.energie) %></td>
-        <td class="<%= kritKlasse(z.bereiche.fachgespraech) %>"><%= zeig(z.bereiche.fachgespraech) %></td>
+        <td>
+          <%= z.pruefling.name %>
+          <% if (z.wiederholer) { %><span class="rolle-badge rolle-pruefer" title="Wiederholer – übernommene Teile mit „ü“ markiert">W</span><% } %>
+        </td>
+        <td class="<%= kritKlasse(z.bereiche.wiso) %>"><%= zeig(z.bereiche.wiso) %><%- uebMark(z, 'wiso') %></td>
+        <td class="<%= kritKlasse(z.bereiche.planung) %>"><%= zeig(z.bereiche.planung) %><%- uebMark(z, 'planung') %></td>
+        <td class="<%= kritKlasse(z.bereiche.durchfuehrung) %>"><%= zeig(z.bereiche.durchfuehrung) %><%- uebMark(z, 'durchfuehrung') %></td>
+        <td class="<%= kritKlasse(z.bereiche.energie) %>"><%= zeig(z.bereiche.energie) %><%- uebMark(z, 'energie') %></td>
+        <td class="<%= kritKlasse(z.bereiche.fachgespraech) %>"><%= zeig(z.bereiche.fachgespraech) %><%- uebMark(z, 'fachgespraech') %></td>
         <td class="<%= (z.schriftlich.gesamt < 50) ? 'zelle-krit' : '' %>"><%= z.schriftlich.gesamt %></td>
         <td><%= z.gesamtAlles %></td>
         <td>

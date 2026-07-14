@@ -3,6 +3,8 @@ const { getDb } = require('../db');
 const { requireAdmin } = require('../middleware');
 const { ART_LABEL, nameVorschlaege } = require('../lib/pruefung');
 const { slugify, eindeutigerSlug } = require('../lib/slug');
+const { ladeTerminErgebnisse } = require('../lib/termin-ergebnisse');
+const { TEILGEBIETE, BESTEHENSGRENZE } = require('../lib/schriftlich-struktur');
 const {
   erstelleEinladung,
   offeneEinladungen,
@@ -122,6 +124,100 @@ router.post('/admin/termine/:id/pruefling/:prueflingId/loeschen', requireAdmin, 
   }
   db.prepare('DELETE FROM pruefling WHERE id = ?').run(pruefling.id);
   res.redirect(`/admin/termine/${req.params.id}`);
+});
+
+// --- Wiederholer importieren ---
+
+// Bestimmt je Prüfling die offenen (zu wiederholenden) und übernommenen Teile.
+// Teile: die 4 schriftlichen Bereiche + Fachgespräch, jeweils bestanden ab 50.
+// Rückgabe: { pruefling, insgesamtBestanden, offen:[label], uebernommen:[label] }.
+function teileStatus(zeile) {
+  const offen = [];
+  const uebernommen = [];
+  for (const t of TEILGEBIETE) {
+    const b = zeile.schriftlich.bereiche[t.key];
+    // Maßgeblich: nach MEp, falls für genau diesen Bereich wirksam.
+    let bestanden = b.bestanden;
+    if (zeile.mep && zeile.mep.teilgebiet === t.key) bestanden = zeile.mep.bereichNachMep >= BESTEHENSGRENZE;
+    (bestanden ? uebernommen : offen).push(t.name);
+  }
+  const fg = zeile.bereiche.fachgespraech;
+  if (fg !== null && fg >= BESTEHENSGRENZE) uebernommen.push('Fachgespräch');
+  else offen.push('Fachgespräch');
+
+  const insgesamtBestanden =
+    (zeile.mep ? zeile.mep.bestanden : zeile.schriftlich.bestanden) &&
+    fg !== null && fg >= BESTEHENSGRENZE;
+  return { insgesamtBestanden, offen, uebernommen };
+}
+
+router.get('/admin/termine/:id/import', requireAdmin, (req, res) => {
+  const db = getDb();
+  const termin = db.prepare('SELECT * FROM pruefungstermin WHERE id = ?').get(req.params.id);
+  if (!termin) return res.status(404).send('Prüfungstermin nicht gefunden.');
+
+  // Andere Abschluss-Termine als mögliche Vortermine.
+  const vortermine = db
+    .prepare("SELECT * FROM pruefungstermin WHERE id != ? AND art = 'abschluss' ORDER BY id DESC")
+    .all(termin.id);
+
+  const quelleId = Number(req.query.von) || (vortermine[0] && vortermine[0].id);
+  const quelle = vortermine.find((t) => t.id === quelleId) || null;
+
+  // Nicht bestandene Prüflinge des gewählten Vortermins (wiederholungsberechtigt).
+  // Bereits importierte (wiederholt_von zeigt auf einen Prüfling des Vortermins)
+  // werden ausgeblendet.
+  let kandidaten = [];
+  if (quelle) {
+    const bereitsImportiert = new Set(
+      db
+        .prepare('SELECT wiederholt_von FROM pruefling WHERE pruefungstermin_id = ? AND wiederholt_von IS NOT NULL')
+        .all(termin.id)
+        .map((r) => r.wiederholt_von)
+    );
+    kandidaten = ladeTerminErgebnisse(db, quelle.id)
+      .map((z) => ({ pruefling: z.pruefling, ...teileStatus(z) }))
+      .filter((k) => !k.insgesamtBestanden && !bereitsImportiert.has(k.pruefling.id));
+  }
+
+  res.render('admin/import', {
+    title: 'Wiederholer importieren',
+    user: req.user,
+    termin,
+    vortermine,
+    quelle,
+    kandidaten,
+  });
+});
+
+router.post('/admin/termine/:id/import', requireAdmin, (req, res) => {
+  const db = getDb();
+  const termin = db.prepare('SELECT * FROM pruefungstermin WHERE id = ?').get(req.params.id);
+  if (!termin) return res.status(404).send('Prüfungstermin nicht gefunden.');
+
+  // Angehakte Ursprungs-Prüflinge (Checkbox-Namen "pruefling_<id>").
+  const ids = Object.keys(req.body)
+    .filter((k) => k.startsWith('pruefling_'))
+    .map((k) => Number(k.slice('pruefling_'.length)))
+    .filter((n) => Number.isFinite(n));
+
+  const insert = db.prepare(
+    'INSERT INTO pruefling (pruefungstermin_id, name, betrieb, wiederholt_von) VALUES (?, ?, ?, ?)'
+  );
+  const tx = db.transaction((quellIds) => {
+    for (const qid of quellIds) {
+      const q = db.prepare('SELECT name, betrieb FROM pruefling WHERE id = ?').get(qid);
+      if (!q) continue;
+      // Doppel-Import vermeiden.
+      const schonDa = db
+        .prepare('SELECT 1 FROM pruefling WHERE pruefungstermin_id = ? AND wiederholt_von = ?')
+        .get(termin.id, qid);
+      if (schonDa) continue;
+      insert.run(termin.id, q.name, q.betrieb || null, qid);
+    }
+  });
+  tx(ids);
+  res.redirect(`/admin/termine/${termin.id}`);
 });
 
 module.exports = router;

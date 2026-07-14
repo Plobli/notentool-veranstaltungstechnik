@@ -1,0 +1,51 @@
+<h1>Wiederholer importieren</h1>
+<p class="hinweis">
+  Nicht bestandene Prüflinge eines früheren Termins in <strong><%= termin.name %></strong>
+  übernehmen. Bereits bestandene Prüfungsteile werden aus dem Vortermin übernommen –
+  wiederholt werden nur die offenen Teile.
+</p>
+
+<% if (!vortermine.length) { %>
+  <p class="hinweis">Es gibt keinen anderen Abschlusstermin, aus dem importiert werden könnte.</p>
+<% } else { %>
+  <form method="get" action="/admin/termine/<%= termin.id %>/import" class="stamm-neu">
+    <label class="inline-label">Vortermin
+      <select name="von" onchange="this.form.submit()">
+        <% vortermine.forEach(t => { %>
+          <option value="<%= t.id %>" <%= quelle && t.id === quelle.id ? 'selected' : '' %>><%= t.name %></option>
+        <% }) %>
+      </select>
+    </label>
+    <noscript><button type="submit" class="btn">Anzeigen</button></noscript>
+  </form>
+
+  <% if (!kandidaten.length) { %>
+    <p class="hinweis">Aus <strong><%= quelle ? quelle.name : '' %></strong> gibt es keine
+      wiederholungsberechtigten Prüflinge (alle bestanden oder bereits importiert).</p>
+  <% } else { %>
+    <form method="post" action="/admin/termine/<%= termin.id %>/import">
+      <ul class="admin-liste">
+        <% kandidaten.forEach(k => { %>
+          <li class="admin-karte import-karte">
+            <label class="import-wahl">
+              <input type="checkbox" name="pruefling_<%= k.pruefling.id %>" checked>
+              <span class="admin-karte-titel"><%= k.pruefling.name %></span>
+              <% if (k.pruefling.betrieb) { %><span class="pruefer-meta"><%= k.pruefling.betrieb %></span><% } %>
+            </label>
+            <div class="import-teile">
+              <% if (k.offen.length) { %>
+                <span class="teil-gruppe">Wiederholt: <% k.offen.forEach((t, i) => { %><span class="teil teil-offen"><%= t %></span><% }) %></span>
+              <% } %>
+              <% if (k.uebernommen.length) { %>
+                <span class="teil-gruppe">Übernommen: <% k.uebernommen.forEach(t => { %><span class="teil teil-ok"><%= t %></span><% }) %></span>
+              <% } %>
+            </div>
+          </li>
+        <% }) %>
+      </ul>
+      <button type="submit" class="btn btn-primary">Ausgewählte importieren</button>
+    </form>
+  <% } %>
+<% } %>
+
+<p class="hinweis"><a href="/admin/termine/<%= termin.id %>">← zurück</a></p>
