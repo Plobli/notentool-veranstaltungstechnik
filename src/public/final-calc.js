@@ -160,7 +160,7 @@
         st.classList.remove('bestanden');
         const mepAktiv = st.classList.contains('mep');
         if (!mepAktiv) st.classList.add('durchgefallen');
-        if (txt) txt.textContent = mepAktiv ? 'nicht bestanden · MEP möglich' : 'nicht bestanden';
+        if (txt) txt.textContent = mepAktiv ? 'nicht bestanden · MEp möglich' : 'nicht bestanden';
       }
     }
   }
@@ -179,7 +179,7 @@
     } else if (data.mepMoeglich) {
       st.classList.remove('bestanden', 'durchgefallen');
       st.classList.add('mep');
-      if (txt) txt.textContent = 'nicht bestanden · MEP möglich';
+      if (txt) txt.textContent = 'nicht bestanden · MEp möglich';
       if (mep) mep.textContent = data.mepText || '';
     } else {
       st.classList.remove('bestanden', 'mep');

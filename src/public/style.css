@@ -158,7 +158,13 @@ table.fg-tabelle thead th { background: #f7f9fb; text-align: left;
   font-weight: normal; font-size: 0.78rem; color: #778; text-transform: none;
   letter-spacing: 0; padding: 0.3rem 0.5rem; }
 table.fg-tabelle th.fg-th-nr, table.fg-tabelle td.fg-zeile-nr { text-align: center; }
-table.fg-tabelle td.fg-zeile-nr { vertical-align: top; color: #667; }
+table.fg-tabelle td.fg-zeile-nr { vertical-align: top; color: #667;
+  display: flex; align-items: baseline; justify-content: center; gap: 0.3rem; padding-top: 0.45rem; }
+/* Kleiner Löschen-Button je Protokoll-Zeile (dezent, deutlicher beim Hover). */
+.fg-zeile-del { border: none; background: transparent; cursor: pointer; padding: 0;
+  font-size: 0.75rem; line-height: 1; color: #c3ccd6; }
+.fg-zeile:hover .fg-zeile-del { color: #99a3ad; }
+.fg-zeile-del:hover { color: #b00020; }
 
 /* Text-Zellen: Auto-Grow-Textfeld ohne Kasten-Optik, füllt die Zelle. */
 td.fg-zelle { padding: 0; vertical-align: top; }

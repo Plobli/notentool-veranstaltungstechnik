@@ -4,7 +4,7 @@
 
 <p class="hinweis">
   Nach §20 Abs. 3 kann auf Antrag <strong>ein</strong> schriftlicher Prüfungsbereich mündlich
-  ergänzt werden, wenn er schlechter als „ausreichend“ bewertet wurde <em>und</em> die MEP
+  ergänzt werden, wenn er schlechter als „ausreichend“ bewertet wurde <em>und</em> die MEp
   für das Bestehen den Ausschlag geben kann. Bisheriges und mündliches Ergebnis werden 2:1 gewichtet.
 </p>
 
@@ -19,8 +19,8 @@
     <thead>
       <tr>
         <th class="feld-name">Prüfling</th>
-        <th>MEP möglich in</th>
-        <th>Ergebnis nach MEP</th>
+        <th>MEp möglich in</th>
+        <th>Ergebnis nach MEp</th>
         <th>Status</th>
       </tr>
     </thead>
@@ -38,7 +38,7 @@
             <% if (u.mepBereiche.length) { %>
               <%= u.mepBereiche.map(b => b.name).join(', ') %>
             <% } else { %>
-              <span class="hinweis">keine MEP möglich</span>
+              <span class="hinweis">keine MEp möglich</span>
             <% } %>
           </td>
           <td class="<%= u.mep ? (u.mep.bestanden ? 'ok' : 'error') : '' %>">

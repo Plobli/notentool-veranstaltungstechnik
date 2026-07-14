@@ -13,7 +13,7 @@
   <p class="hinweis">
     Für <strong><%= pruefling.name %></strong> ist derzeit <strong>keine</strong> mündliche
     Ergänzungsprüfung möglich: Es gibt keinen schriftlichen Bereich, der schlechter als
-    „ausreichend“ bewertet ist und in dem die MEP für das Bestehen den Ausschlag geben kann.
+    „ausreichend“ bewertet ist und in dem die MEp für das Bestehen den Ausschlag geben kann.
   </p>
 <% } else { %>
 
@@ -68,7 +68,10 @@
             <% const anzuzeigen = zeilen.length ? zeilen : [{ thema: '', begruendung: '', skala: '' }]; %>
             <% anzuzeigen.forEach((z, i) => { %>
               <tr class="fg-zeile" data-skala="<%= z.skala %>">
-                <td class="fg-zeile-nr"><%= i + 1 %></td>
+                <td class="fg-zeile-nr">
+                  <span class="fg-nr"><%= i + 1 %></span>
+                  <button type="button" class="fg-zeile-del" title="Zeile löschen" aria-label="Zeile löschen">✕</button>
+                </td>
                 <td class="fg-zelle"><textarea class="fg-thema" rows="1"><%= z.thema %></textarea></td>
                 <td class="fg-zelle"><textarea class="fg-begruendung" rows="1"><%= z.begruendung %></textarea></td>
                 <td class="fg-skala-zelle">
@@ -106,7 +109,7 @@
       <tbody>
         <tr class="gesamt-zeile">
           <td colspan="3" class="feld-name">
-            Bereichsergebnis nach MEP
+            Bereichsergebnis nach MEp
             <span class="hinweis">(bisher <span class="mep-schriftlich-wert"><%= mepInfo.schriftlich === null ? '–' : mepInfo.schriftlich %></span> + mündlich, 2:1)</span>
           </td>
           <td class="mep-bereich-nach punkte-status <%= mepInfo.wirksam ? (mepInfo.bereichNachMep >= 50 ? 'bestanden' : 'durchgefallen') : '' %>">
@@ -114,7 +117,7 @@
           </td>
         </tr>
         <tr class="gesamt-status-zeile">
-          <td colspan="3" class="feld-name">Gesamtergebnis nach MEP</td>
+          <td colspan="3" class="feld-name">Gesamtergebnis nach MEp</td>
           <td class="mep-status gesamt-status <%= mepInfo.wirksam ? (mepInfo.bestanden ? 'bestanden' : 'durchgefallen') : '' %>">
             <span class="mep-status-text">
               <% if (!mepInfo.wirksam) { %>–<% } else { %><%= mepInfo.bestanden ? 'bestanden' : 'nicht bestanden' %><% } %>
@@ -130,7 +133,7 @@
     <% skala.forEach(s => { %>
       <span class="fg-skala-legende-item"><strong><%= s.symbol %></strong> <%= s.label %> (<%= s.wert.toLocaleString('de-DE') %>)</span>
     <% }) %>
-    · Mündlich = Summe × 10 / Anzahl bewerteter Zeilen (max. 100) · Bereich nach MEP = (2 × schriftlich + mündlich) / 3
+    · Mündlich = Summe × 10 / Anzahl bewerteter Zeilen (max. 100) · Bereich nach MEp = (2 × schriftlich + mündlich) / 3
   </p>
 
   <script src="/mep-calc.js"></script>

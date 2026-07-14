@@ -149,7 +149,7 @@
               <% boegen.forEach(b => {
                    let t, k;
                    if (b.ergebnis.bestanden) { t='bestanden'; k='bestanden'; }
-                   else if (b.ergebnis.mepMoeglich) { t='nicht bestanden · MEP möglich'; k='mep'; }
+                   else if (b.ergebnis.mepMoeglich) { t='nicht bestanden · MEp möglich'; k='mep'; }
                    else { t='nicht bestanden'; k='durchgefallen'; } %>
                 <td class="gesamt-status <%= k %>" <%- b.prueferId === null ? 'data-pruefling="'+gewaehlt.id+'"' : '' %>>
                   <span class="gesamt-status-text"><%= t %></span>

@@ -17,7 +17,7 @@
       <th>Fachgespräch</th>
       <th>Gesamt (schr.)</th>
       <th>Gesamt (alles)</th>
-      <th>MEP</th>
+      <th>MEp</th>
       <th>Status</th>
     </tr>
   </thead>
@@ -45,12 +45,12 @@
         </td>
         <td class="status-zelle">
           <span class="status-pille <%= bestandenFinal ? 'status-ok' : 'status-fail' %>">
-            <%= bestandenFinal ? 'bestanden' : 'nicht bestanden' %><%= z.mep ? ' (n. MEP)' : '' %>
+            <%= bestandenFinal ? 'bestanden' : 'nicht bestanden' %><%= z.mep ? ' (n. MEp)' : '' %>
           </span>
           <% if (!bestandenFinal && z.schriftlich.gruende && z.schriftlich.gruende.length) { %>
             <span class="status-grund"><%= z.schriftlich.gruende.join(' · ') %></span>
           <% } else if (!bestandenFinal && z.schriftlich.mepMoeglich && !z.mep) { %>
-            <span class="status-grund">MEP könnte ausgleichen</span>
+            <span class="status-grund">MEp könnte ausgleichen</span>
           <% } %>
         </td>
       </tr>

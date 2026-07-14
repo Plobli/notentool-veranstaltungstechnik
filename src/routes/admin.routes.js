@@ -80,13 +80,24 @@ router.post('/admin/pruefer/:id/reset', requireAdmin, (req, res) => {
   rendereAdmin(req, res, { art: 'reset', name: ziel.name, url: link });
 });
 
+// Hat ein Prüfling bereits Bewertungen (schriftlich, Fachgespräch oder MEp)?
+function hatErgebnisse(db, prueflingId) {
+  const sp = db.prepare('SELECT 1 FROM schriftlich_punkt WHERE pruefling_id = ? LIMIT 1').get(prueflingId);
+  if (sp) return true;
+  const fg = db.prepare('SELECT 1 FROM fachgespraech_bewertung WHERE pruefling_id = ? LIMIT 1').get(prueflingId);
+  if (fg) return true;
+  const mep = db.prepare('SELECT 1 FROM mep_bewertung WHERE pruefling_id = ? LIMIT 1').get(prueflingId);
+  return Boolean(mep);
+}
+
 router.get('/admin/termine/:id', requireAdmin, (req, res) => {
   const db = getDb();
   const termin = db.prepare('SELECT * FROM pruefungstermin WHERE id = ?').get(req.params.id);
   if (!termin) return res.status(404).send('Prüfungstermin nicht gefunden.');
   const pruefliche = db
     .prepare('SELECT * FROM pruefling WHERE pruefungstermin_id = ? ORDER BY name')
-    .all(termin.id);
+    .all(termin.id)
+    .map((p) => ({ ...p, hatErgebnisse: hatErgebnisse(db, p.id) }));
   res.render('admin/termin', { title: termin.name, user: req.user, termin, pruefliche });
 });
 
@@ -95,6 +106,21 @@ router.post('/admin/termine/:id/pruefling', requireAdmin, (req, res) => {
   getDb()
     .prepare('INSERT INTO pruefling (pruefungstermin_id, name, betrieb) VALUES (?, ?, ?)')
     .run(req.params.id, name, betrieb || null);
+  res.redirect(`/admin/termine/${req.params.id}`);
+});
+
+// Prüfling löschen – nur, solange er keine Bewertungen hat (verhindert
+// versehentlichen Verlust erfasster Ergebnisse).
+router.post('/admin/termine/:id/pruefling/:prueflingId/loeschen', requireAdmin, (req, res) => {
+  const db = getDb();
+  const pruefling = db
+    .prepare('SELECT id FROM pruefling WHERE id = ? AND pruefungstermin_id = ?')
+    .get(req.params.prueflingId, req.params.id);
+  if (!pruefling) return res.status(404).send('Prüfling nicht gefunden.');
+  if (hatErgebnisse(db, pruefling.id)) {
+    return res.status(409).send('Prüfling hat bereits Bewertungen und kann nicht gelöscht werden.');
+  }
+  db.prepare('DELETE FROM pruefling WHERE id = ?').run(pruefling.id);
   res.redirect(`/admin/termine/${req.params.id}`);
 });
 

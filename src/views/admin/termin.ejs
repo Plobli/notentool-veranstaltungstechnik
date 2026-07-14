@@ -12,6 +12,14 @@
         <li class="admin-karte">
           <span class="admin-karte-titel"><%= p.name %></span>
           <% if (p.betrieb) { %><span class="pruefer-meta"><%= p.betrieb %></span><% } %>
+          <% if (p.hatErgebnisse) { %>
+            <span class="pruefer-meta admin-inline-form" title="Prüfling hat bereits Bewertungen – Löschen gesperrt">hat Bewertungen</span>
+          <% } else { %>
+            <form method="post" action="/admin/termine/<%= termin.id %>/pruefling/<%= p.id %>/loeschen"
+                  class="admin-inline-form" onsubmit="return confirm('Prüfling <%= p.name.replace(/'/g, "\\'") %> löschen?');">
+              <button type="submit" class="btn btn-klein">Löschen</button>
+            </form>
+          <% } %>
         </li>
       <% }) %>
     </ul>

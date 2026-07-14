@@ -67,10 +67,10 @@
     return zeilen;
   }
 
-  // Zeilennummern nach Änderungen neu setzen.
+  // Zeilennummern nach Änderungen neu setzen (nur die Nr, nicht den Löschen-Button).
   function nummeriere(bereich) {
-    bereich.querySelectorAll('.fg-zeile .fg-zeile-nr').forEach((td, i) => {
-      td.textContent = i + 1;
+    bereich.querySelectorAll('.fg-zeile .fg-zeile-nr .fg-nr').forEach((el, i) => {
+      el.textContent = i + 1;
     });
   }
 
@@ -99,7 +99,8 @@
       .map((b) => `<button type="button" class="fg-skala-btn" data-skala="${b.dataset.skala}" title="${b.title}">${b.textContent}</button>`)
       .join('');
     tr.innerHTML =
-      '<td class="fg-zeile-nr"></td>' +
+      '<td class="fg-zeile-nr"><span class="fg-nr"></span>' +
+        '<button type="button" class="fg-zeile-del" title="Zeile löschen" aria-label="Zeile löschen">✕</button></td>' +
       '<td class="fg-zelle"><textarea class="fg-thema" rows="1"></textarea></td>' +
       '<td class="fg-zelle"><textarea class="fg-begruendung" rows="1"></textarea></td>' +
       '<td class="fg-skala-zelle"><div class="fg-skala-wahl" role="group" aria-label="Bewertung">' + skalaButtons + '</div></td>';
@@ -165,6 +166,22 @@
     const add = ev.target.closest('.fg-zeile-add');
     if (add) {
       fuegeZeileHinzu(add.closest('.fg-bereich'), true);
+      return;
+    }
+    const del = ev.target.closest('.fg-zeile-del');
+    if (del) {
+      const row = del.closest('.fg-zeile');
+      const bereich = row.closest('.fg-bereich');
+      const koerper = row.closest('.fg-zeilen');
+      // Letzte verbleibende Zeile nicht entfernen, sondern leeren.
+      if (koerper.querySelectorAll('.fg-zeile').length <= 1) {
+        row.querySelectorAll('textarea').forEach((t) => { t.value = ''; autoGrow(t); });
+        row.dataset.skala = '';
+      } else {
+        row.remove();
+      }
+      nummeriere(bereich);
+      speichere(bereich);
       return;
     }
     const skalaBtn = ev.target.closest('.fg-skala-btn');

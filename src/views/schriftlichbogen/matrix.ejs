@@ -175,11 +175,11 @@
                    const erg = ergebnisse.get(p.id);
                    let statusText, statusKlasse;
                    if (erg.bestanden) { statusText = 'bestanden'; statusKlasse = 'bestanden'; }
-                   else if (erg.mepMoeglich) { statusText = 'nicht bestanden · MEP möglich'; statusKlasse = 'mep'; }
+                   else if (erg.mepMoeglich) { statusText = 'nicht bestanden · MEp möglich'; statusKlasse = 'mep'; }
                    else { statusText = 'nicht bestanden'; statusKlasse = 'durchgefallen'; } %>
                 <td class="gesamt-status <%= statusKlasse %>"
                   data-pruefling="<%= p.id %>"
-                  title="MEP = mündliche Ergänzungsprüfung (§ 20 Abs. 3 VfAusbV)">
+                  title="MEp = mündliche Ergänzungsprüfung (§ 20 Abs. 3 VfAusbV)">
                   <span class="gesamt-status-text"><%= statusText %></span>
                   <span class="mep-hinweis" data-pruefling="<%= p.id %>"><%= erg.mepMoeglich ? erg.mepText : '' %></span>
                 </td>

@@ -150,7 +150,7 @@ function mepTextVon(mepDetails) {
       ? `${name} mind. ${d.noetigeMuendlich}`
       : name;
   });
-  return `MEP: ${teile.join(' oder ')} Punkte mündlich`;
+  return `MEp: ${teile.join(' oder ')} Punkte mündlich`;
 }
 
 // Speichert die übermittelten Felder in den Bogen von `prueferId` (null =

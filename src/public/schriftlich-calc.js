@@ -66,7 +66,7 @@
         statusText = 'bestanden';
         statusZelle.classList.add('bestanden');
       } else if (data.mepMoeglich) {
-        statusText = 'nicht bestanden · MEP möglich';
+        statusText = 'nicht bestanden · MEp möglich';
         statusZelle.classList.add('mep');
       } else {
         statusText = 'nicht bestanden';
