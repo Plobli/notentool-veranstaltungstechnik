@@ -101,7 +101,8 @@ CREATE TABLE IF NOT EXISTS fachgespraech_bewertung (
   pruefling_id INTEGER NOT NULL REFERENCES pruefling(id) ON DELETE CASCADE,
   kriterium_key TEXT NOT NULL,       -- 'anforderungen' | 'planung' | 'energie' | 'ablaeufe' | 'unterlagen'
   protokoll TEXT,
-  punkte REAL,                       -- 0–100; NULL = noch nicht bewertet
+  punkte REAL,                       -- manueller Bereichspunkte-Override 0–100;
+                                     -- NULL = aus Protokoll-Zeilen errechnen
   UNIQUE(pruefling_id, kriterium_key)
 );
 

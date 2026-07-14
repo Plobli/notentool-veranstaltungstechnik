@@ -66,8 +66,12 @@
           <tfoot>
             <tr class="fg-bereich-ergebnis">
               <td colspan="3"><button type="button" class="fg-zeile-add">+ Zeile</button></td>
-              <td class="fg-bereich-punkte" data-kriterium="<%= k.key %>">
-                <span class="fg-ergebnis-label">Ergebnis</span> <span class="fg-ergebnis-wert"><%= erg ? erg.punkte : 0 %></span>
+              <td class="fg-bereich-punkte<%= erg && erg.override !== null ? ' fg-override' : '' %>"
+                  data-kriterium="<%= k.key %>"
+                  data-errechnet="<%= erg ? erg.errechnet : 0 %>">
+                <span class="fg-ergebnis-label">Ergebnis</span>
+                <span class="fg-ergebnis-wert" role="button" tabindex="0"
+                      title="Zum Überschreiben klicken (leeren = errechnet)"><%= erg ? erg.punkte : 0 %></span>
               </td>
             </tr>
           </tfoot>

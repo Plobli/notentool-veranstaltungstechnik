@@ -14,7 +14,7 @@ const {
   FACHGESPRAECH_KRITERIUM_BY_KEY,
   FACHGESPRAECH_SKALA,
 } = require('../lib/fachgespraech-struktur');
-const { berechneFachgespraech } = require('../lib/fachgespraech-scoring');
+const { berechneFachgespraech, normOverride } = require('../lib/fachgespraech-scoring');
 const {
   ladeZeilenListe,
   serialisiereZeilen,
@@ -33,26 +33,46 @@ function ladeTermin(req, res, next) {
   next();
 }
 
-// Lädt die Protokoll-Zeilen je Bereich für einen Prüfling.
-// Rückgabe: Map<kriterium_key, [{ thema, begruendung, skala }]>
+// Lädt die Protokoll-Zeilen und den Punkte-Override je Bereich für einen
+// Prüfling.
+// Rückgabe: {
+//   zeilen:    Map<kriterium_key, [{ thema, begruendung, skala }]>,
+//   override:  Map<kriterium_key, zahl|null>  (manuell gesetzte Bereichspunkte)
+// }
 function ladeZeilen(db, prueflingId) {
   const rows = db
     .prepare('SELECT * FROM fachgespraech_bewertung WHERE pruefling_id = ?')
     .all(prueflingId);
-  const map = new Map();
+  const zeilen = new Map();
+  const override = new Map();
   for (const r of rows) {
-    map.set(r.kriterium_key, ladeZeilenListe(r.protokoll));
+    zeilen.set(r.kriterium_key, ladeZeilenListe(r.protokoll));
+    override.set(r.kriterium_key, normOverride(r.punkte));
   }
-  return map;
+  return { zeilen, override };
 }
 
 // Baut das { [key]: zeilen[] }-Objekt für die Berechnung.
-function zeilenObjekt(zeilenMap) {
+function zeilenObjekt(daten) {
   const obj = {};
   for (const k of FACHGESPRAECH_KRITERIEN) {
-    obj[k.key] = zeilenMap.get(k.key) || [];
+    obj[k.key] = daten.zeilen.get(k.key) || [];
   }
   return obj;
+}
+
+// Baut das { [key]: override|null }-Objekt für die Berechnung.
+function overrideObjekt(daten) {
+  const obj = {};
+  for (const k of FACHGESPRAECH_KRITERIEN) {
+    obj[k.key] = daten.override.get(k.key) ?? null;
+  }
+  return obj;
+}
+
+// Berechnet das Fachgespräch-Ergebnis aus geladenen Daten (Zeilen + Overrides).
+function ergebnisAus(daten) {
+  return berechneFachgespraech(zeilenObjekt(daten), overrideObjekt(daten));
 }
 
 // --- Übersicht: Prüflingsliste ---
@@ -65,7 +85,7 @@ router.get('/pruefung/:slug/fachgespraech', requireAuth, ladeTermin, (req, res) 
     .all(termin.id);
 
   const uebersicht = pruefliche.map((p) => {
-    const erg = berechneFachgespraech(zeilenObjekt(ladeZeilen(db, p.id)));
+    const erg = ergebnisAus(ladeZeilen(db, p.id));
     return { pruefling: p, gesamtpunkte: erg.gesamtpunkte, bestanden: erg.bestanden };
   });
 
@@ -93,8 +113,8 @@ router.get('/pruefung/:slug/fachgespraech/:prueflingId', requireAuth, ladeTermin
     .prepare('SELECT id, name FROM pruefling WHERE pruefungstermin_id = ? ORDER BY name')
     .all(pruefling.pruefungstermin_id);
 
-  const zeilenMap = ladeZeilen(db, pruefling.id);
-  const ergebnis = berechneFachgespraech(zeilenObjekt(zeilenMap));
+  const daten = ladeZeilen(db, pruefling.id);
+  const ergebnis = ergebnisAus(daten);
 
   res.render('fachgespraech/bogen', {
     title: `Fachgespräch – ${pruefling.name}`,
@@ -104,7 +124,7 @@ router.get('/pruefung/:slug/fachgespraech/:prueflingId', requireAuth, ladeTermin
     geschwister,
     kriterien: FACHGESPRAECH_KRITERIEN,
     skala: FACHGESPRAECH_SKALA,
-    zeilen: zeilenMap,
+    zeilen: daten.zeilen,
     ergebnis,
     bereiche: bereicheFuer(termin.art),
     aktiverBereich: 'fachgespraech',
@@ -133,15 +153,48 @@ router.post('/pruefung/:slug/fachgespraech/:prueflingId/feld', requireAuth, lade
      DO UPDATE SET protokoll = excluded.protokoll`
   ).run(pruefling.id, kriterium, protokoll);
 
-  const ergebnis = berechneFachgespraech(zeilenObjekt(ladeZeilen(db, pruefling.id)));
-  res.json({
+  res.json(antwort(ergebnisAus(ladeZeilen(db, pruefling.id))));
+});
+
+// --- Manueller Punkte-Override eines Bereichs (überschreibt die errechneten
+//     Bereichspunkte; leerer/ungültiger Wert setzt zurück auf errechnet). ---
+
+router.post('/pruefung/:slug/fachgespraech/:prueflingId/punkte', requireAuth, ladeTermin, express.json(), (req, res) => {
+  const db = getDb();
+  const pruefling = db
+    .prepare('SELECT id FROM pruefling WHERE id = ? AND pruefungstermin_id = ?')
+    .get(req.params.prueflingId, req.termin.id);
+  if (!pruefling) return res.status(404).json({ error: 'Prüfling nicht gefunden.' });
+
+  const { kriterium, punkte } = req.body || {};
+  if (!FACHGESPRAECH_KRITERIUM_BY_KEY.has(kriterium)) {
+    return res.status(400).json({ error: 'Unbekanntes Kriterium.' });
+  }
+
+  const override = normOverride(punkte); // null = zurück auf errechnet
+  db.prepare(
+    `INSERT INTO fachgespraech_bewertung (pruefling_id, kriterium_key, punkte)
+     VALUES (?, ?, ?)
+     ON CONFLICT(pruefling_id, kriterium_key)
+     DO UPDATE SET punkte = excluded.punkte`
+  ).run(pruefling.id, kriterium, override);
+
+  res.json(antwort(ergebnisAus(ladeZeilen(db, pruefling.id))));
+});
+
+// Serialisiert ein Berechnungsergebnis für die Auto-Save-Antwort.
+function antwort(ergebnis) {
+  return {
     kriterien: Object.fromEntries(
-      ergebnis.kriterien.map((k) => [k.key, { punkte: k.punkte, ergebnis: k.ergebnis }])
+      ergebnis.kriterien.map((k) => [
+        k.key,
+        { punkte: k.punkte, ergebnis: k.ergebnis, errechnet: k.errechnet, override: k.override },
+      ])
     ),
     gesamtpunkte: ergebnis.gesamtpunkte,
     bestanden: ergebnis.bestanden,
     note: ergebnis.note,
-  });
-});
+  };
+}
 
 module.exports = router;

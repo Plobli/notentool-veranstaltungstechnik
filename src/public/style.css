@@ -199,7 +199,20 @@ td.fg-skala-zelle { vertical-align: top; }
 table.fg-tabelle .fg-bereich-ergebnis td { background: #f7f9fb; }
 table.fg-tabelle td.fg-bereich-punkte { text-align: right; white-space: nowrap; }
 .fg-ergebnis-label { font-size: 0.8rem; color: #778; }
-.fg-ergebnis-wert { font-weight: 600; font-size: 1rem; color: #1a2b3c; margin-left: 0.3rem; }
+.fg-ergebnis-wert {
+  font-weight: 600; font-size: 1rem; color: #1a2b3c; margin-left: 0.3rem;
+  cursor: pointer; border-radius: 4px; padding: 0 0.3rem;
+  min-width: 1.4em; display: inline-block; text-align: right;
+}
+.fg-ergebnis-wert:hover { background: #e7edf3; }
+.fg-ergebnis-wert.fg-ergebnis-edit {
+  cursor: text; background: #fff; outline: 2px solid #4a7bd0; outline-offset: 0;
+}
+/* Manuell überschriebener Bereich: Wert hervorheben. */
+.fg-bereich-punkte.fg-override .fg-ergebnis-wert { color: #b8620a; }
+.fg-bereich-punkte.fg-override .fg-ergebnis-label::after {
+  content: " (manuell)"; font-size: 0.72rem; color: #b8620a;
+}
 
 /* Gesamt-/Statuszeile: erbt fg-tabelle (gleiche Spaltenbreiten wie die
    Bereichstabellen). Ergebnis-/Statuswert steht in der letzten Spalte. */

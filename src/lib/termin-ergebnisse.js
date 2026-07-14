@@ -20,7 +20,7 @@ const {
   berechneMep,
   bestehensGruende,
 } = require('./schriftlich-scoring');
-const { berechneFachgespraech } = require('./fachgespraech-scoring');
+const { berechneFachgespraech, normOverride } = require('./fachgespraech-scoring');
 const { ladeZeilenListe, bereichPunkte } = require('./fachgespraech-protokoll');
 const { berechneGesamtAlles } = require('./gesamt-scoring');
 
@@ -70,10 +70,11 @@ function ladeSchriftlich(db, prueflingIds) {
   return byPruefling;
 }
 
-// pruefling_id -> { [kriterium_key]: zeilen[] }; plus, ob überhaupt Zeilen da sind.
+// pruefling_id -> { [kriterium_key]: zeilen[] }, Overrides je Kriterium und ob
+// überhaupt eine Bewertung da ist (Zeilen ODER manueller Punkte-Override).
 function ladeFachgespraech(db, prueflingIds) {
   const byPruefling = new Map();
-  for (const id of prueflingIds) byPruefling.set(id, { zeilen: {}, hat: false });
+  for (const id of prueflingIds) byPruefling.set(id, { zeilen: {}, override: {}, hat: false });
   if (!prueflingIds.length) return byPruefling;
   const rows = db
     .prepare(
@@ -86,7 +87,9 @@ function ladeFachgespraech(db, prueflingIds) {
     if (!eintrag) continue;
     const zeilen = ladeZeilenListe(row.protokoll);
     eintrag.zeilen[row.kriterium_key] = zeilen;
-    if (zeilen.length) eintrag.hat = true;
+    const override = normOverride(row.punkte);
+    eintrag.override[row.kriterium_key] = override;
+    if (zeilen.length || override !== null) eintrag.hat = true;
   }
   return byPruefling;
 }
@@ -133,7 +136,7 @@ function finaleTeilpunkteVon(db, prueflingId) {
       ? berechneTeilgebiet(t.key, s.tg[t.key], anzahlMap[t.key]).punkte
       : null;
   }
-  out.fachgespraech = f.hat ? berechneFachgespraech(f.zeilen).gesamtpunkte : null;
+  out.fachgespraech = f.hat ? berechneFachgespraech(f.zeilen, f.override).gesamtpunkte : null;
   return out;
 }
 
@@ -174,7 +177,7 @@ function ladeTerminErgebnisse(db, terminId) {
     const gesamtInfo = berechneSchriftlichGesamt(punkteJeBereich);
 
     // Fachgespräch berechnen; für Wiederholer ggf. aus dem Vortermin übernehmen.
-    const fgErg = berechneFachgespraech(f.zeilen);
+    const fgErg = berechneFachgespraech(f.zeilen, f.override);
     let fgPunkte = fgErg.gesamtpunkte;
     let fgUebernommen = false;
     if (!f.hat && uebernommen && uebernommen.fachgespraech !== null) {

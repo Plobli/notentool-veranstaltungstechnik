@@ -8,6 +8,7 @@
   const prueflingId = root.dataset.pruefling;
   const terminSlug = root.dataset.terminSlug;
   const feldUrl = `/pruefung/${terminSlug}/fachgespraech/${prueflingId}/feld`;
+  const punkteUrl = `/pruefung/${terminSlug}/fachgespraech/${prueflingId}/punkte`;
   const statusEl = document.getElementById('autosave-status');
 
   let statusTimer = null;
@@ -32,8 +33,13 @@
   // Ergebnisse aus der Server-Antwort anwenden.
   function ergebnisseAnwenden(data) {
     for (const [key, k] of Object.entries(data.kriterien)) {
-      const wert = root.querySelector(`.fg-bereich-punkte[data-kriterium="${key}"] .fg-ergebnis-wert`);
-      if (wert) wert.textContent = k.punkte;
+      const zelle = root.querySelector(`.fg-bereich-punkte[data-kriterium="${key}"]`);
+      if (!zelle) continue;
+      const wert = zelle.querySelector('.fg-ergebnis-wert');
+      // Nicht überschreiben, solange das Feld gerade editiert wird.
+      if (wert && !wert.isContentEditable) wert.textContent = k.punkte;
+      zelle.dataset.errechnet = k.errechnet;
+      zelle.classList.toggle('fg-override', k.override !== null);
     }
     const gesamt = root.querySelector('.fg-gesamt');
     if (gesamt) {
@@ -90,6 +96,54 @@
     }
   }
 
+  // Speichert den manuellen Punkte-Override eines Bereichs. punkte === '' setzt
+  // zurück auf den errechneten Wert.
+  async function speichereOverride(kriterium, punkte) {
+    zeigeStatus('Speichern …');
+    try {
+      const res = await fetch(punkteUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kriterium, punkte }),
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      ergebnisseAnwenden(await res.json());
+      zeigeStatus('Gespeichert.');
+    } catch (err) {
+      zeigeStatus('Nicht gespeichert – bitte erneut versuchen.', true);
+    }
+  }
+
+  // Beendet das Inline-Editieren der Ergebnis-Zahl und speichert den Override.
+  function beendeOverrideEdit(wert, speichern) {
+    const zelle = wert.closest('.fg-bereich-punkte');
+    wert.contentEditable = 'false';
+    wert.classList.remove('fg-ergebnis-edit');
+    const roh = wert.textContent.replace(/[^0-9]/g, '');
+    if (speichern) {
+      speichereOverride(zelle.dataset.kriterium, roh === '' ? '' : Number(roh));
+    } else {
+      // Abbruch: sichtbaren Wert aus dem letzten Serverstand wiederherstellen.
+      wert.textContent = zelle.classList.contains('fg-override')
+        ? wert.textContent
+        : zelle.dataset.errechnet;
+    }
+  }
+
+  // Klick/Enter auf die Ergebnis-Zahl: inline editierbar machen.
+  function starteOverrideEdit(wert) {
+    if (wert.isContentEditable) return;
+    wert.contentEditable = 'true';
+    wert.classList.add('fg-ergebnis-edit');
+    wert.focus();
+    // Gesamten Inhalt selektieren, damit direktes Tippen ersetzt.
+    const range = document.createRange();
+    range.selectNodeContents(wert);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
   // Neues Zeilen-Element (entspricht dem Server-Markup).
   function neueZeile(bereich) {
     const tr = document.createElement('tr');
@@ -139,8 +193,21 @@
   });
 
   // Enter im Thema/Begründung: neue Zeile (kein Zeilenumbruch); Shift+Enter = Umbruch.
+  // Enter/Escape in der editierbaren Ergebnis-Zahl: übernehmen bzw. abbrechen.
   root.addEventListener('keydown', (ev) => {
     const el = ev.target;
+    if (el.classList && el.classList.contains('fg-ergebnis-wert') && el.isContentEditable) {
+      if (ev.key === 'Enter') {
+        ev.preventDefault();
+        beendeOverrideEdit(el, true);
+        el.blur();
+      } else if (ev.key === 'Escape') {
+        ev.preventDefault();
+        beendeOverrideEdit(el, false);
+        el.blur();
+      }
+      return;
+    }
     if (ev.key !== 'Enter' || ev.shiftKey) return;
     if (!el.classList || !(el.classList.contains('fg-thema') || el.classList.contains('fg-begruendung'))) return;
     ev.preventDefault();
@@ -149,8 +216,21 @@
     fuegeZeileHinzu(bereich, true);
   });
 
-  // Klicks: Info-Button, +Zeile und Skala-Buttons.
+  // Verlassen der editierbaren Ergebnis-Zahl: übernehmen.
+  root.addEventListener('blur', (ev) => {
+    const el = ev.target;
+    if (el.classList && el.classList.contains('fg-ergebnis-wert') && el.isContentEditable) {
+      beendeOverrideEdit(el, true);
+    }
+  }, true);
+
+  // Klicks: Ergebnis-Zahl (Override), Info-Button, +Zeile und Skala-Buttons.
   root.addEventListener('click', (ev) => {
+    const ergWert = ev.target.closest('.fg-ergebnis-wert');
+    if (ergWert) {
+      starteOverrideEdit(ergWert);
+      return;
+    }
     const info = ev.target.closest('.fg-info');
     if (info) {
       const header = info.closest('.fg-bereich-header');
