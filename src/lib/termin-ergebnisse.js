@@ -12,6 +12,7 @@ const {
   TEILGEBIETE,
   DEFAULT_ANZAHL,
   KONFIGURIERBARE_TEILGEBIETE,
+  BESTEHENSGRENZE,
 } = require('./schriftlich-struktur');
 const {
   berechneTeilgebiet,
@@ -224,9 +225,30 @@ function ladeTerminErgebnisse(db, terminId) {
 
     // Gründe fürs Nicht-Bestehen (maßgeblicher Stand: nach MEP, falls wirksam).
     // Nur sinnvoll, wenn überhaupt schriftliche Eingaben existieren.
-    const hatSchriftlich = s.hat.wiso || s.hat.planung || s.hat.durchfuehrung || s.hat.energie;
+    const hatSchriftlich = s.hat.wiso || s.hat.planung || s.hat.durchfuehrung || s.hat.energie
+      || (uebernommen && Object.keys(uebernommeneBereiche).length > 0);
     const massgeblich = mepInfo.wirksam ? mepInfo.punkteNachMep : punkteJeBereich;
     const gruende = hatSchriftlich ? bestehensGruende(massgeblich) : [];
+
+    // Gesamt-Bestehen der Abschlussprüfung: schriftlich (nach §20/MEp) bestanden
+    // UND Fachgespräch >= 50. Solange ein Pflichtteil noch nicht erfasst ist,
+    // gilt der Status als "offen" (nicht voreilig "nicht bestanden").
+    const schriftlichBestanden = mepInfo.wirksam ? mepInfo.bestanden : gesamtInfo.bestanden;
+    const fgErfasst = f.hat || fgUebernommen;
+    const fgBestanden = fgErfasst && fgPunkte >= BESTEHENSGRENZE;
+    let gesamtStatus; // 'bestanden' | 'nicht_bestanden' | 'offen'
+    if (!hatSchriftlich || !fgErfasst) {
+      gesamtStatus = 'offen';
+    } else if (schriftlichBestanden && fgBestanden) {
+      gesamtStatus = 'bestanden';
+    } else {
+      gesamtStatus = 'nicht_bestanden';
+    }
+    // Grund fürs Nicht-Bestehen um das Fachgespräch ergänzen.
+    const gesamtGruende = [...gruende];
+    if (gesamtStatus === 'nicht_bestanden' && fgErfasst && !fgBestanden) {
+      gesamtGruende.push(`Fachgespräch unter 50 (${fgPunkte})`);
+    }
 
     return {
       pruefling: p,
@@ -239,6 +261,12 @@ function ladeTerminErgebnisse(db, terminId) {
         mepDetails: gesamtInfo.mepDetails,
         bereiche: gesamtInfo.bereiche,
         gruende,
+      },
+      // Gesamt-Status der Abschlussprüfung (schriftlich + Fachgespräch).
+      gesamt: {
+        status: gesamtStatus,
+        fachgespraechBestanden: fgBestanden,
+        gruende: gesamtGruende,
       },
       mep: mepBlock,
       gesamtAlles,
@@ -275,14 +303,12 @@ function ladeTerminFortschritt(db, terminId) {
   let bestanden = 0, nichtBestanden = 0, offen = 0;
   for (const p of pruefliche) {
     const z = ergById.get(p.id);
-    if (p.schriftlich_finalisiert) {
-      schriftlichFinal += 1;
-      // Maßgeblicher Stand (nach MEp, falls wirksam).
-      const best = z && (z.mep ? z.mep.bestanden : z.schriftlich.bestanden);
-      if (best) bestanden += 1; else nichtBestanden += 1;
-    } else {
-      offen += 1;
-    }
+    if (p.schriftlich_finalisiert) schriftlichFinal += 1;
+    // Gesamt-Status der Abschlussprüfung (schriftlich + Fachgespräch).
+    const status = z ? z.gesamt.status : 'offen';
+    if (status === 'bestanden') bestanden += 1;
+    else if (status === 'nicht_bestanden') nichtBestanden += 1;
+    else offen += 1;
     if (z && z.bereiche.fachgespraech !== null) fachgespraech += 1;
     if (z && z.mep) mepCount += 1;
   }

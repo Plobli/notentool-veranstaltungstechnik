@@ -35,7 +35,7 @@
   </thead>
   <tbody>
     <% zeilen.forEach(z => { %>
-      <% const bestandenFinal = z.mep ? z.mep.bestanden : z.schriftlich.bestanden; %>
+      <% const st = z.gesamt.status; // 'bestanden' | 'nicht_bestanden' | 'offen' %>
       <tr>
         <td>
           <%= z.pruefling.name %>
@@ -59,13 +59,25 @@
           <% } else { %>–<% } %>
         </td>
         <td class="status-zelle">
-          <span class="status-pille <%= bestandenFinal ? 'status-ok' : 'status-fail' %>">
-            <%= bestandenFinal ? 'bestanden' : 'nicht bestanden' %><%= z.mep ? ' (n. MEp)' : '' %>
-          </span>
-          <% if (!bestandenFinal && z.schriftlich.gruende && z.schriftlich.gruende.length) { %>
-            <span class="status-grund"><%= z.schriftlich.gruende.join(' · ') %></span>
-          <% } else if (!bestandenFinal && z.schriftlich.mepMoeglich && !z.mep) { %>
-            <span class="status-grund">MEp könnte ausgleichen</span>
+          <% if (st === 'offen') { %>
+            <%
+              const fehlt = [];
+              const hatSchr = z.bereiche.wiso !== null || z.bereiche.planung !== null
+                || z.bereiche.durchfuehrung !== null || z.bereiche.energie !== null;
+              if (!hatSchr) fehlt.push('schriftlich');
+              if (z.bereiche.fachgespraech === null) fehlt.push('Fachgespräch');
+            %>
+            <span class="status-pille status-offen">offen</span>
+            <% if (fehlt.length) { %><span class="status-grund"><%= fehlt.join(' & ') %> noch nicht erfasst</span><% } %>
+          <% } else if (st === 'bestanden') { %>
+            <span class="status-pille status-ok">bestanden<%= z.mep ? ' (n. MEp)' : '' %></span>
+          <% } else { %>
+            <span class="status-pille status-fail">nicht bestanden<%= z.mep ? ' (n. MEp)' : '' %></span>
+            <% if (z.gesamt.gruende && z.gesamt.gruende.length) { %>
+              <span class="status-grund"><%= z.gesamt.gruende.join(' · ') %></span>
+            <% } else if (z.schriftlich.mepMoeglich && !z.mep) { %>
+              <span class="status-grund">MEp könnte ausgleichen</span>
+            <% } %>
           <% } %>
         </td>
       </tr>
