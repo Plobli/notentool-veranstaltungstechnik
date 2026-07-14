@@ -13,6 +13,8 @@ const {
   TEILGEBIET_BY_KEY,
   KONFIGURIERBARE_TEILGEBIETE,
   DEFAULT_ANZAHL,
+  BESTEHENSGRENZE,
+  UNGENUEGEND_GRENZE,
   uFelder,
 } = require('../lib/schriftlich-struktur');
 const {
@@ -417,6 +419,35 @@ function boegenFuerPruefling(db, termin, prueflingId, prueferListe, anzahlMap) {
   return eintraege;
 }
 
+// Vorschlagswerte je (teilgebiet, feld): kaufmännischer Durchschnitt über alle
+// PRÜFER-Bögen (nicht der finale), die für das Feld einen Zahlenwert haben.
+// Felder ohne einen einzigen Prüfer-Wert erscheinen nicht.
+// Rückgabe: { [tgKey]: { [feld]: gerundeterDurchschnitt } }.
+function mittelwerteJeFeld(boegen) {
+  const prueferBoegen = boegen.filter((b) => b.prueferId !== null);
+  const summe = {}; // tg -> feld -> { s, n }
+  for (const b of prueferBoegen) {
+    for (const [tgKey, map] of Object.entries(b.roh)) {
+      for (const [feld, eintrag] of map.entries()) {
+        const wert = eintrag && eintrag.punkte;
+        if (wert === null || wert === undefined || !Number.isFinite(Number(wert))) continue;
+        if (!summe[tgKey]) summe[tgKey] = {};
+        if (!summe[tgKey][feld]) summe[tgKey][feld] = { s: 0, n: 0 };
+        summe[tgKey][feld].s += Number(wert);
+        summe[tgKey][feld].n += 1;
+      }
+    }
+  }
+  const out = {};
+  for (const [tgKey, felder] of Object.entries(summe)) {
+    out[tgKey] = {};
+    for (const [feld, { s, n }] of Object.entries(felder)) {
+      out[tgKey][feld] = Math.round(s / n);
+    }
+  }
+  return out;
+}
+
 // Wie ladeBogen, aber nur für einen Prüfling und einen Bogen (Prüfer/final).
 function ladeBogenEinerPruefling(db, prueflingId, prueferId) {
   const bedingung = prueferId === null ? 'pruefer_id IS NULL' : 'pruefer_id = ?';
@@ -452,11 +483,37 @@ router.get('/pruefung/:slug/schriftlich/final', requireAuth, ladeTermin, (req, r
   let prueferListe = [];
   let boegen = [];
   let finalDaten = null;
+  let vorschlaege = {};
   if (gewaehlt) {
     prueferListe = ladePrueferMitBewertung(db, gewaehlt.id);
     boegen = boegenFuerPruefling(db, termin, gewaehlt.id, prueferListe, anzahlMap);
     finalDaten = ladeBogenEinerPruefling(db, gewaehlt.id, null).byPruefling;
+    // Vorschlag je Feld = kaufmännischer Durchschnitt der Prüfer-Werte (nur die
+    // Prüfer, die für das Feld einen Wert haben). Dient als Vorbelegung leerer
+    // finaler Felder; wird NICHT gespeichert, bis der Prüfer bestätigt.
+    vorschlaege = mittelwerteJeFeld(boegen);
   }
+
+  // Struktur-Konstanten für die clientseitige Live-Berechnung (final-calc.js).
+  // Die effektive Feldliste je Teilgebiet stammt aus felderMap (konfigurierbare
+  // Anzahl); WISO trägt zusätzlich 'gebunden' vorn.
+  const struktur = {
+    bestehen: BESTEHENSGRENZE,
+    ungenuegend: UNGENUEGEND_GRENZE,
+    teilgebiete: TEILGEBIETE.map((t) => ({
+      key: t.key,
+      gewicht: t.gewicht,
+      sperrfach: Boolean(t.sperrfach),
+      streichung: Boolean(t.streichung),
+      gebunden: Boolean(t.gebunden),
+      gebundenDivisor: t.gebundenDivisor,
+      gebundenMax: t.gebundenMax,
+      uFaktor: t.uFaktor,
+      divisor: t.divisor,
+      faktor: t.faktor,
+      felder: felderMap[t.key],
+    })),
+  };
 
   res.render('schriftlichbogen/finalisierung', {
     title: 'Finalisierung – Schriftliche Prüfung',
@@ -470,6 +527,8 @@ router.get('/pruefung/:slug/schriftlich/final', requireAuth, ladeTermin, (req, r
     prueferListe,
     boegen,
     finalDaten,
+    vorschlaege,
+    struktur,
     bereiche: bereicheFuer(termin.art),
     aktiverBereich: 'schriftlich-final',
   });

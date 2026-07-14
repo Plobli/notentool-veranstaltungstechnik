@@ -1,0 +1,209 @@
+// src/public/final-calc.js
+// Finalisierungs-Ansicht der schriftlichen Prüfung. Übernimmt:
+//  - Auto-Save der finalen Feldwerte (POST an data-feld-url),
+//  - Live-Berechnung der Teilgebiet- und Gesamtpunkte über die AKTUELL
+//    sichtbaren Feldwerte (inkl. noch unbestätigter Durchschnitts-Vorschläge),
+//  - Vorschlags-Handling: ein vorbelegtes Feld (data-vorschlag) ist farblich
+//    abgesetzt; sobald es fokussiert/geändert und gespeichert wird, gilt es als
+//    bewusst gesetzter finaler Wert (normale Optik).
+//
+// Die Rechenformeln entsprechen 1:1 src/lib/schriftlich-scoring.js; die dafür
+// nötigen Konstanten kommen als JSON aus der View (#final-struktur), damit hier
+// keine abweichende zweite Wahrheit entsteht.
+(function () {
+  const root = document.getElementById('final-form');
+  if (!root) return;
+  const statusEl = document.getElementById('autosave-status');
+  const feldUrl = root.dataset.feldUrl;
+  const prueflingId = Number(root.dataset.pruefling);
+
+  const strukturEl = document.getElementById('final-struktur');
+  if (!strukturEl) return;
+  const S = JSON.parse(strukturEl.textContent);
+  // S = { teilgebiete: [{key,gebunden,gebundenDivisor,gebundenMax,uFaktor,
+  //        divisor,faktor,gewicht,sperrfach,streichung,felder:[...]}],
+  //        bestehen: 50, ungenuegend: 30 }
+  const tgByKey = {};
+  S.teilgebiete.forEach((t) => (tgByKey[t.key] = t));
+
+  let statusTimer = null;
+  function zeigeStatus(text, fehler) {
+    if (!statusEl) return;
+    statusEl.textContent = text;
+    statusEl.classList.toggle('autosave-fehler', Boolean(fehler));
+    if (statusTimer) clearTimeout(statusTimer);
+    if (!fehler) {
+      statusTimer = setTimeout(() => {
+        statusEl.textContent = 'Änderungen am finalen Bogen werden automatisch gespeichert.';
+      }, 2000);
+    }
+  }
+
+  // --- Live-Berechnung über die sichtbaren finalen Feldwerte ---
+
+  // Aktueller Zahlenwert eines finalen Feldes (leer -> 0).
+  function feldWert(tgKey, feld) {
+    const inp = root.querySelector(
+      `.feld-input[data-tg="${tgKey}"][data-feld="${feld}"]`
+    );
+    if (!inp || inp.value === '') return 0;
+    const n = Number(inp.value);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  // Aktuell gestrichenes WISO-Feld (markiertes Radio, sonst letztes Feld).
+  function gestrichenesFeld(tg) {
+    if (!tg.streichung) return null;
+    const radio = root.querySelector(
+      `.strich-input:checked`
+    );
+    // Streichung gilt nur innerhalb von WISO; die Radios teilen sich den Namen.
+    if (radio && radio.value) return radio.value;
+    return tg.felder[tg.felder.length - 1];
+  }
+
+  // Teilgebiet-Punkte nach den Server-Formeln.
+  function teilgebietPunkte(tg) {
+    const streich = gestrichenesFeld(tg);
+    let summe = 0;
+    for (const feld of tg.felder) {
+      if (feld === streich) continue;
+      summe += feldWert(tg.key, feld);
+    }
+    if (tg.gebunden) {
+      const gebundenTeil = Math.round(feldWert(tg.key, 'gebunden') / tg.gebundenDivisor);
+      const uTeil = Math.round(summe * tg.uFaktor);
+      return gebundenTeil + uTeil;
+    }
+    if (tg.divisor) return Math.round(summe / tg.divisor);
+    return Math.round(summe * (tg.faktor != null ? tg.faktor : 1));
+  }
+
+  // Gewichtetes Gesamt + Bestehen (wie pruefeBestehen()).
+  function gesamtRechnen(punkteJeTg) {
+    let sumGew = 0, sumG = 0, sperr = true, sechser = 0, fuenfer = 0;
+    for (const tg of S.teilgebiete) {
+      const p = punkteJeTg[tg.key] || 0;
+      sumGew += p * (tg.gewicht || 0);
+      sumG += tg.gewicht || 0;
+      if (tg.sperrfach && p < S.bestehen) sperr = false;
+      if (p < S.ungenuegend) sechser += 1;
+      else if (p < S.bestehen) fuenfer += 1;
+    }
+    const gewichtet = sumG ? Math.round(sumGew / sumG) : 0;
+    const bestanden = gewichtet >= S.bestehen && sperr && sechser === 0 && fuenfer <= 1;
+    return { gewichtet, bestanden };
+  }
+
+  function statusKlassen(el, bestanden) {
+    if (!el) return;
+    el.classList.toggle('bestanden', Boolean(bestanden));
+    el.classList.toggle('durchgefallen', !bestanden);
+  }
+
+  // Aktualisiert die finale Ergebnis-Spalte (Punkte je Teilgebiet + Gesamt).
+  function liveAktualisieren() {
+    const punkteJeTg = {};
+    for (const tg of S.teilgebiete) {
+      const p = teilgebietPunkte(tg);
+      punkteJeTg[tg.key] = p;
+      const cell = root.querySelector(
+        `.tg-ergebnis[data-tg="${tg.key}"][data-pruefling="${prueflingId}"]`
+      );
+      if (cell) {
+        cell.textContent = p;
+        statusKlassen(cell, p >= S.bestehen);
+      }
+    }
+    const { gewichtet, bestanden } = gesamtRechnen(punkteJeTg);
+    const g = root.querySelector(`.gesamt-ergebnis[data-pruefling="${prueflingId}"]`);
+    if (g) { g.textContent = gewichtet; statusKlassen(g, bestanden); }
+    const st = root.querySelector(`.gesamt-status[data-pruefling="${prueflingId}"]`);
+    if (st) {
+      st.classList.remove('bestanden', 'durchgefallen', 'mep');
+      st.classList.add(bestanden ? 'bestanden' : 'durchgefallen');
+      const txt = st.querySelector('.gesamt-status-text');
+      if (txt) txt.textContent = bestanden ? 'bestanden' : 'nicht bestanden';
+      const mep = st.querySelector('.mep-hinweis');
+      if (mep) mep.textContent = '';
+    }
+  }
+
+  // --- Speichern ---
+
+  async function speichere(payload) {
+    zeigeStatus('Speichern …');
+    try {
+      const res = await fetch(feldUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      await res.json();
+      zeigeStatus('Gespeichert.');
+    } catch (err) {
+      zeigeStatus('Nicht gespeichert – bitte erneut versuchen.', true);
+    }
+  }
+
+  // Ein Vorschlag-Feld wird zum echten finalen Wert: Optik zurücksetzen.
+  function bestaetige(inp) {
+    inp.classList.remove('feld-vorschlag');
+    inp.removeAttribute('data-vorschlag');
+  }
+
+  // --- Ereignisse ---
+
+  // Werte-Clamping beim Tippen + Live-Neuberechnung.
+  root.addEventListener('input', (ev) => {
+    const inp = ev.target;
+    if (!inp.classList || !inp.classList.contains('feld-input')) return;
+    if (inp.value !== '') {
+      const n = parseFloat(inp.value);
+      if (Number.isFinite(n)) {
+        const max = inp.max !== '' ? Number(inp.max) : Infinity;
+        const min = inp.min !== '' ? Number(inp.min) : -Infinity;
+        if (n > max) inp.value = String(max);
+        else if (n < min) inp.value = String(min);
+      }
+    }
+    // Sobald der Nutzer tippt, ist es kein bloßer Vorschlag mehr.
+    bestaetige(inp);
+    liveAktualisieren();
+  });
+
+  // Fokus auf ein Vorschlag-Feld: Optik bleibt bis zur Änderung; beim Speichern
+  // (change) wird der (ggf. unveränderte) Vorschlag als finaler Wert übernommen.
+  root.addEventListener('change', (ev) => {
+    const inp = ev.target;
+    if (!inp.classList || !inp.classList.contains('feld-input')) return;
+    bestaetige(inp);
+    speichere({
+      prueflingId,
+      teilgebiet: inp.dataset.tg,
+      feld: inp.dataset.feld,
+      punkte: inp.value,
+    });
+    liveAktualisieren();
+  });
+
+  root.addEventListener('keydown', (ev) => {
+    const inp = ev.target;
+    if (ev.key !== 'Enter') return;
+    if (!inp.classList || !inp.classList.contains('feld-input')) return;
+    ev.preventDefault();
+    inp.blur();
+  });
+
+  // Streichung (WISO): speichern + live neu rechnen.
+  root.addEventListener('change', (ev) => {
+    const radio = ev.target;
+    if (!radio.classList || !radio.classList.contains('strich-input')) return;
+    speichere({ prueflingId, teilgebiet: 'wiso', feld: radio.value, streichung: true });
+    liveAktualisieren();
+  });
+
+  // Erststand berechnen (inkl. Vorschläge).
+  liveAktualisieren();
+})();

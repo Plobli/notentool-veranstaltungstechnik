@@ -292,7 +292,15 @@ th.final-spalte { border-bottom: 2px solid #1a2b3c; }
 .final-badge { font-size: 0.8rem; font-weight: 600; border-radius: 4px; padding: 0.1rem 0.5rem; }
 .final-badge--zu { background: #fde9c8; color: #8a5a00; border: 1px solid #e6c78a; }
 .feld-input.gesperrt { background: #f0f0f0; color: #888; }
-.final-abschliessen { background: #1a2b3c; color: #fff; }
+
+/* Vorausgefüllter Prüfer-Durchschnitt (noch nicht final): deutlich abgesetzt –
+   gedämpfte Farbe, kursiv, zarter Hintergrund. Wird beim Bestätigen/Ändern
+   (Klasse entfernt) zur normalen finalen Optik. */
+table.bogen .feld-input.feld-vorschlag { color: #8a6d00; font-style: italic; background: #fffbe9; }
+table.bogen .feld-input.feld-vorschlag:focus { color: inherit; font-style: normal; background: #f3f0ff; }
+.final-vorschlag-legende { display: flex; align-items: center; gap: 0.4rem; }
+.vorschlag-muster { display: inline-block; color: #8a6d00; font-style: italic;
+  background: #fffbe9; border: 1px solid #e6d9a2; border-radius: 4px; padding: 0 0.4rem; font-weight: 600; }
 
 /* Wiederverwendbare Buttons (passend zur dunkelblauen Design-Sprache). */
 .btn { display: inline-block; font: inherit; font-weight: 600; font-size: 0.9rem;

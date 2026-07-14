@@ -31,13 +31,20 @@
         <% if (gewaehlt.schriftlich_finalisiert) { %>
           <span class="final-badge final-badge--zu">finalisiert – Einzelbögen gesperrt</span>
           <input type="hidden" name="finalisiert" value="0">
-          <button type="submit" class="final-entsperren">Entsperren</button>
+          <button type="submit" class="btn final-entsperren">Entsperren</button>
         <% } else { %>
           <input type="hidden" name="finalisiert" value="1">
-          <button type="submit" class="final-abschliessen">Finalisieren &amp; sperren</button>
+          <button type="submit" class="btn btn-primary final-abschliessen">Finalisieren &amp; sperren</button>
         <% } %>
       </form>
     </div>
+
+    <% if (!gewaehlt.schriftlich_finalisiert) { %>
+      <p class="hinweis final-vorschlag-legende">
+        <span class="vorschlag-muster">12</span> = vorausgefüllter Prüfer-Durchschnitt (noch nicht final).
+        Anklicken bzw. bestätigen übernimmt ihn; Änderungen überschreiben ihn.
+      </p>
+    <% } %>
 
     <p class="hinweis" id="autosave-status" role="status" aria-live="polite">Änderungen am finalen Bogen werden automatisch gespeichert.</p>
 
@@ -82,14 +89,20 @@
                           const max = feld === 'gebunden' ? tg.gebundenMax : 10;
                           const erg = finalErg.teilgebiete[tg.key];
                           const istGestrichen = tg.streichung && erg.gestrichenesFeld === feld;
+                          // Finaler Wert gesetzt?
+                          const hatFinal = fe && fe.punkte !== null && fe.punkte !== undefined;
+                          // Vorschlag (Prüfer-Durchschnitt) nur für leere Felder.
+                          const vorschlag = (vorschlaege[tg.key] || {})[feld];
+                          const zeigeVorschlag = !hatFinal && vorschlag !== undefined && !gewaehlt.schriftlich_finalisiert;
                         %>
                         <td class="feld-zelle final-spalte <%= istGestrichen ? 'zelle-gestrichen' : '' %>">
                           <input type="number" step="1" min="0" max="<%= max %>"
-                            class="feld-input <%= gewaehlt.schriftlich_finalisiert ? 'gesperrt' : '' %>"
+                            class="feld-input <%= gewaehlt.schriftlich_finalisiert ? 'gesperrt' : '' %> <%= zeigeVorschlag ? 'feld-vorschlag' : '' %>"
                             data-tg="<%= tg.key %>" data-feld="<%= feld %>"
                             data-pruefling="<%= gewaehlt.id %>"
+                            <%= zeigeVorschlag ? 'data-vorschlag="1"' : '' %>
                             <%= gewaehlt.schriftlich_finalisiert ? 'disabled' : '' %>
-                            value="<%= fe && fe.punkte !== null ? fe.punkte : '' %>">
+                            value="<%= hatFinal ? fe.punkte : (zeigeVorschlag ? vorschlag : '') %>">
                           <% if (tg.streichung) { %>
                             <label class="strich-btn <%= istGestrichen ? 'aktiv' : '' %>" title="streichen">
                               <input type="radio" name="fstrich_<%= tg.key %>" value="<%= feld %>"
@@ -112,7 +125,7 @@
                   <% boegen.forEach(b => {
                        const bereich = b.ergebnis.bereiche[tg.key]; %>
                     <td class="tg-ergebnis punkte-status <%= bereich.bestanden ? 'bestanden' : 'durchgefallen' %>"
-                        <%= b.prueferId === null ? 'data-tg="'+tg.key+'" data-pruefling="'+gewaehlt.id+'"' : '' %>>
+                        <%- b.prueferId === null ? 'data-tg="'+tg.key+'" data-pruefling="'+gewaehlt.id+'"' : '' %>>
                       <%= b.ergebnis.teilgebiete[tg.key].punkte %>
                     </td>
                   <% }) %>
@@ -130,7 +143,7 @@
               <td class="feld-name">Gesamt schriftlich (gewichtet)</td>
               <% boegen.forEach(b => { %>
                 <td class="gesamt-ergebnis punkte-status <%= b.ergebnis.bestanden ? 'bestanden' : 'durchgefallen' %>"
-                    <%= b.prueferId === null ? 'data-pruefling="'+gewaehlt.id+'"' : '' %>>
+                    <%- b.prueferId === null ? 'data-pruefling="'+gewaehlt.id+'"' : '' %>>
                   <%= b.ergebnis.gesamt %>
                 </td>
               <% }) %>
@@ -142,7 +155,7 @@
                    if (b.ergebnis.bestanden) { t='bestanden'; k='bestanden'; }
                    else if (b.ergebnis.mepMoeglich) { t='nicht bestanden · MEP möglich'; k='mep'; }
                    else { t='nicht bestanden'; k='durchgefallen'; } %>
-                <td class="gesamt-status <%= k %>" <%= b.prueferId === null ? 'data-pruefling="'+gewaehlt.id+'"' : '' %>>
+                <td class="gesamt-status <%= k %>" <%- b.prueferId === null ? 'data-pruefling="'+gewaehlt.id+'"' : '' %>>
                   <span class="gesamt-status-text"><%= t %></span>
                   <span class="mep-hinweis" data-pruefling="<%= gewaehlt.id %>"><%= b.ergebnis.mepMoeglich ? b.ergebnis.mepText : '' %></span>
                 </td>
@@ -153,6 +166,7 @@
       </section>
     </div>
 
-    <script src="/schriftlich-calc.js"></script>
+    <script type="application/json" id="final-struktur"><%- JSON.stringify(struktur) %></script>
+    <script src="/final-calc.js"></script>
   <% } %>
 <% } %>
