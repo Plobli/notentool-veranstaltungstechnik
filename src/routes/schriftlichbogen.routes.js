@@ -609,14 +609,47 @@ router.post('/pruefung/:slug/schriftlich/final/feld', requireAuth, ladeTermin, e
   });
 });
 
-// Finalisieren/Entsperren eines Prüflings (sperrt die Einzelbögen).
+// Übernimmt beim Finalisieren die noch offenen Vorschläge: Jedes finale Feld
+// ohne eigenen Wert wird mit dem Prüfer-Durchschnitt gefüllt ("keine Änderung =
+// akzeptiert"). Bereits gesetzte finale Werte bleiben unangetastet.
+function uebernehmeVorschlaege(db, termin, prueflingId) {
+  const anzahlMap = ladeAnzahlMap(db, termin.id);
+  const felderMap = ladeFelderMap(anzahlMap);
+  const prueferListe = ladePrueferMitBewertung(db, prueflingId);
+  const boegen = boegenFuerPruefling(db, termin, prueflingId, prueferListe, anzahlMap);
+  const vorschlaege = mittelwerteJeFeld(boegen);
+  const finalDaten = ladeBogenEinerPruefling(db, prueflingId, null).byPruefling;
+
+  const zuSchreiben = [];
+  for (const tg of TEILGEBIETE) {
+    const felder = [];
+    if (tg.gebunden) felder.push('gebunden');
+    for (const f of felderMap[tg.key]) felder.push(f);
+    for (const feld of felder) {
+      const fe = finalDaten[tg.key] && finalDaten[tg.key].get(feld);
+      const hatFinal = fe && fe.punkte !== null && fe.punkte !== undefined;
+      const vorschlag = (vorschlaege[tg.key] || {})[feld];
+      if (!hatFinal && vorschlag !== undefined) {
+        zuSchreiben.push({ prueflingId, teilgebiet: tg.key, feld, punkte: vorschlag, gestrichen: 0 });
+      }
+    }
+  }
+  if (zuSchreiben.length) speichereFelder(db, zuSchreiben, null);
+}
+
+// Finalisieren/Entsperren eines Prüflings (sperrt die Einzelbögen). Beim
+// Finalisieren werden offene Durchschnitts-Vorschläge in den finalen Bogen
+// übernommen (leere Felder = akzeptierter Durchschnitt).
 router.post('/pruefung/:slug/schriftlich/final/status', requireAuth, ladeTermin, (req, res) => {
   const db = getDb();
   const termin = req.termin;
   const pId = Number(req.body.prueflingId);
   const finalisiert = req.body.finalisiert === '1' ? 1 : 0;
-  db.prepare('UPDATE pruefling SET schriftlich_finalisiert = ? WHERE id = ? AND pruefungstermin_id = ?')
-    .run(finalisiert, pId, termin.id);
+  db.transaction(() => {
+    if (finalisiert) uebernehmeVorschlaege(db, termin, pId);
+    db.prepare('UPDATE pruefling SET schriftlich_finalisiert = ? WHERE id = ? AND pruefungstermin_id = ?')
+      .run(finalisiert, pId, termin.id);
+  })();
   res.redirect(`/pruefung/${termin.slug}/schriftlich/final?p=${pId}`);
 });
 
