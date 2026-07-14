@@ -17,6 +17,7 @@ const {
   berechneTeilgebiet,
   berechneSchriftlichGesamt,
   berechneMep,
+  bestehensGruende,
 } = require('./schriftlich-scoring');
 const { berechneFachgespraech } = require('./fachgespraech-scoring');
 const { ladeZeilenListe, bereichPunkte } = require('./fachgespraech-protokoll');
@@ -181,6 +182,12 @@ function ladeTerminErgebnisse(db, terminId) {
       };
     }
 
+    // Gründe fürs Nicht-Bestehen (maßgeblicher Stand: nach MEP, falls wirksam).
+    // Nur sinnvoll, wenn überhaupt schriftliche Eingaben existieren.
+    const hatSchriftlich = s.hat.wiso || s.hat.planung || s.hat.durchfuehrung || s.hat.energie;
+    const massgeblich = mepInfo.wirksam ? mepInfo.punkteNachMep : punkteJeBereich;
+    const gruende = hatSchriftlich ? bestehensGruende(massgeblich) : [];
+
     return {
       pruefling: p,
       bereiche,
@@ -191,6 +198,7 @@ function ladeTerminErgebnisse(db, terminId) {
         mepBereiche: gesamtInfo.mepBereiche,
         mepDetails: gesamtInfo.mepDetails,
         bereiche: gesamtInfo.bereiche,
+        gruende,
       },
       mep: mepBlock,
       gesamtAlles,

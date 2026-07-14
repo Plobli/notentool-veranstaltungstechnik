@@ -123,6 +123,40 @@ function pruefeBestehen(teilgebietePunkte) {
   return { gewichtet, bestanden };
 }
 
+// Liefert die konkreten Gründe, warum ein Punktebild NICHT besteht – als kurze,
+// im Dashboard anzeigbare Texte. Leeres Array = alle Bedingungen erfüllt.
+// Spiegelt exakt die Regeln aus pruefeBestehen() wider.
+function bestehensGruende(teilgebietePunkte) {
+  const { gewichtet } = pruefeBestehen(teilgebietePunkte);
+  const gruende = [];
+
+  const mangelhaft = []; // Note 5 (30..49), ohne Sperrfach (das wird separat genannt)
+  for (const tg of TEILGEBIETE) {
+    const punkte = Number(teilgebietePunkte[tg.key]) || 0;
+    // Sperrfach hat Vorrang: es wird immer als "Sperrfach unter 50" genannt und
+    // nicht zusätzlich als mangelhaft/ungenügend gezählt (ein Grund je Bereich).
+    if (tg.sperrfach && punkte < BESTEHENSGRENZE) {
+      const wie = punkte < UNGENUEGEND_GRENZE ? 'ungenügend' : 'unter 50';
+      gruende.push(`${tg.name} (Sperrfach) ${wie}`);
+      continue;
+    }
+    if (punkte < UNGENUEGEND_GRENZE) {
+      gruende.push(`${tg.name} ungenügend (unter 30)`);
+    } else if (punkte < BESTEHENSGRENZE) {
+      mangelhaft.push(tg.name);
+    }
+  }
+
+  // Mehr als ein "mangelhaft" (Note 5) ist nicht ausgleichbar.
+  if (mangelhaft.length > 1) {
+    gruende.push(`${mangelhaft.length} Bereiche mangelhaft (${mangelhaft.join(', ')})`);
+  }
+  if (gewichtet < BESTEHENSGRENZE) {
+    gruende.push(`Gesamt unter 50 (${gewichtet})`);
+  }
+  return gruende;
+}
+
 // Bereichswert nach mündlicher Ergänzungsprüfung (§20 Abs. 3): bisheriges
 // (schriftliches) Ergebnis und mündliches Ergebnis im Verhältnis 2:1.
 function nachMep(schriftlich, muendlich) {
@@ -264,4 +298,5 @@ module.exports = {
   berechneSchriftlichGesamt,
   berechneMep,
   nachMep,
+  bestehensGruende,
 };

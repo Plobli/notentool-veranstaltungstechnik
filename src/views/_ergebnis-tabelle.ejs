@@ -1,6 +1,10 @@
 <%
-  // Helfer: Bereichswert anzeigen ("–" für null).
+  // Bereichswert anzeigen ("–" für null).
   function zeig(v) { return v === null || v === undefined ? '–' : v; }
+  // Nur kritische Bereiche (gesetzt und < 50) rot markieren.
+  function kritKlasse(v) {
+    return (v !== null && v !== undefined && v < 50) ? 'zelle-krit' : '';
+  }
 %>
 <table class="ergebnis-tabelle">
   <thead>
@@ -19,14 +23,15 @@
   </thead>
   <tbody>
     <% zeilen.forEach(z => { %>
+      <% const bestandenFinal = z.mep ? z.mep.bestanden : z.schriftlich.bestanden; %>
       <tr>
         <td><%= z.pruefling.name %></td>
-        <td><%= zeig(z.bereiche.wiso) %></td>
-        <td><%= zeig(z.bereiche.planung) %></td>
-        <td><%= zeig(z.bereiche.durchfuehrung) %></td>
-        <td><%= zeig(z.bereiche.energie) %></td>
-        <td><%= zeig(z.bereiche.fachgespraech) %></td>
-        <td><%= z.schriftlich.gesamt %></td>
+        <td class="<%= kritKlasse(z.bereiche.wiso) %>"><%= zeig(z.bereiche.wiso) %></td>
+        <td class="<%= kritKlasse(z.bereiche.planung) %>"><%= zeig(z.bereiche.planung) %></td>
+        <td class="<%= kritKlasse(z.bereiche.durchfuehrung) %>"><%= zeig(z.bereiche.durchfuehrung) %></td>
+        <td class="<%= kritKlasse(z.bereiche.energie) %>"><%= zeig(z.bereiche.energie) %></td>
+        <td class="<%= kritKlasse(z.bereiche.fachgespraech) %>"><%= zeig(z.bereiche.fachgespraech) %></td>
+        <td class="<%= (z.schriftlich.gesamt < 50) ? 'zelle-krit' : '' %>"><%= z.schriftlich.gesamt %></td>
         <td><%= z.gesamtAlles %></td>
         <td>
           <% if (z.mep) { %>
@@ -38,9 +43,15 @@
             <span class="mep-moeglich" title="<%= z.schriftlich.mepBereiche.join(', ') %>">möglich</span>
           <% } else { %>–<% } %>
         </td>
-        <% const bestandenFinal = z.mep ? z.mep.bestanden : z.schriftlich.bestanden; %>
-        <td class="<%= bestandenFinal ? 'ok' : 'error' %>">
-          <%= bestandenFinal ? 'bestanden' : 'nicht bestanden' %><%= z.mep ? ' (nach MEP)' : '' %>
+        <td class="status-zelle">
+          <span class="status-pille <%= bestandenFinal ? 'status-ok' : 'status-fail' %>">
+            <%= bestandenFinal ? 'bestanden' : 'nicht bestanden' %><%= z.mep ? ' (n. MEP)' : '' %>
+          </span>
+          <% if (!bestandenFinal && z.schriftlich.gruende && z.schriftlich.gruende.length) { %>
+            <span class="status-grund"><%= z.schriftlich.gruende.join(' · ') %></span>
+          <% } else if (!bestandenFinal && z.schriftlich.mepMoeglich && !z.mep) { %>
+            <span class="status-grund">MEP könnte ausgleichen</span>
+          <% } %>
         </td>
       </tr>
     <% }) %>
