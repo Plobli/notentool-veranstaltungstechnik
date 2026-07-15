@@ -5,6 +5,12 @@ name: prfungskommission
 
 services:
   app:
+    # Fertiges Image aus der GitHub Container Registry (GHCR). Wird bei jedem
+    # Push auf main automatisch per GitHub Actions gebaut (.github/workflows/
+    # docker.yml). Update auf dem Server: in Dockge "Pull" + Restart.
+    # `build: .` bleibt als Fallback für lokale Entwicklung (docker compose
+    # up --build); für den Server-Pull ist `image:` maßgeblich.
+    image: ghcr.io/plobli/notentool-veranstaltungstechnik:latest
     build: .
     restart: unless-stopped
     environment:
@@ -15,6 +21,24 @@ services:
       - app-data:/app/data
     expose:
       - "3000"
+
+  # Automatisches tägliches Voll-Backup der Datenbank in app-data/backups.
+  # Nutzt dasselbe Image wie app (better-sqlite3 vorhanden), aber ein anderes
+  # Startkommando. BACKUP_KEEP steuert die Aufbewahrung (ältere werden gelöscht).
+  backup:
+    image: ghcr.io/plobli/notentool-veranstaltungstechnik:latest
+    build: .
+    restart: unless-stopped
+    environment:
+      - DB_PATH=/app/data/pruefung.sqlite
+      - BACKUP_DIR=/app/data/backups
+      - BACKUP_KEEP=30
+      - BACKUP_INTERVAL=86400
+    volumes:
+      - app-data:/app/data
+    command: ["sh", "/app/scripts/backup-loop.sh"]
+    depends_on:
+      - app
 
   caddy:
     image: caddy:2-alpine

@@ -1,0 +1,42 @@
+name: Docker-Image bauen und veröffentlichen
+
+# Baut bei jedem Push auf main automatisch das App-Image und veröffentlicht es
+# in der GitHub Container Registry (GHCR). Danach lässt sich das Update auf dem
+# Server über Dockge per "Pull" + Restart einspielen – ohne SSH/lokalen Build.
+on:
+  push:
+    branches: [main]
+  # Erlaubt manuelles Auslösen über die GitHub-Actions-Oberfläche.
+  workflow_dispatch:
+
+env:
+  # GHCR verlangt Kleinschreibung; Repo heißt Plobli/notentool-veranstaltungstechnik.
+  IMAGE: ghcr.io/plobli/notentool-veranstaltungstechnik
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write   # zum Pushen nach GHCR (nutzt GITHUB_TOKEN, keine Secrets nötig)
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@v4
+
+      - name: Bei GHCR anmelden
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Image bauen und pushen
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          # latest = immer die neueste main-Version; zusätzlich der Commit-SHA
+          # als unveränderlicher Tag zum Zurückrollen.
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ github.sha }}
