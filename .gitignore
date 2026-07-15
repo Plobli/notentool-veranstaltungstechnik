@@ -1,8 +1,19 @@
 node_modules/
-data/*.sqlite
-data/*.sqlite-journal
-data/*.sqlite-shm
-data/*.sqlite-wal
+
+# Datenbanken & Backups (enthalten personenbezogene Prüfungsdaten)
+data/
+backups/
+*.sqlite
+*.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
+
+# Secrets
 .env
+
+# Interne / KI-Arbeitsdaten, Planungs- & Testdokumente
 .superpowers/
+.claude/
+docs/
+tests/
 Dokumente/
