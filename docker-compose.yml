@@ -1,7 +1,9 @@
-# Fester Projektname: hält Container-/Volume-Namen (prfungskommission_app-data
-# mit den produktiven Daten) stabil, unabhängig davon, wie der Verzeichnisname
-# "Prüfungskommission" (ü) transliteriert wird. Nicht ändern.
-name: prfungskommission
+# Fester Projektname: hält Container-/Volume-Namen stabil, unabhängig vom
+# Verzeichnis-/Stack-Namen. MUSS mit dem Namen des produktiven Daten-Volumes
+# übereinstimmen: auf dem Server liegen die Daten in
+# "notentool-veranstaltungstechnik_app-data". NICHT ändern – sonst wird ein
+# leeres Volume angelegt und die Prüfungsdaten sind nicht mehr eingebunden.
+name: notentool-veranstaltungstechnik
 
 services:
   app:
