@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= title %> – Prüfungsverwaltung</title>
+  <title><%= title %> – Notentool Veranstaltungstechnik</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
   <header>
     <div class="header-links">
-      <a href="/" class="logo">Prüfungsverwaltung</a>
+      <a href="/" class="logo">Notentool Veranstaltungstechnik</a>
       <% if (typeof termin !== 'undefined' && termin && termin.slug) { %>
         <span class="header-sep">›</span>
         <a href="/pruefung/<%= termin.slug %>" class="header-termin"><%= termin.name %></a>

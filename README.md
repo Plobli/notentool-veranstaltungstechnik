@@ -1,4 +1,4 @@
-# Prüfungsverwaltung
+# Notentool Veranstaltungstechnik
 
 Web-App zur Bewertung der IHK-Abschlussprüfung "Fachkraft für Veranstaltungstechnik":
 schriftliche Prüfungen (unabhängige Korrektur durch mehrere Prüfer mit automatischem
