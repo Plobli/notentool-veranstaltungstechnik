@@ -2,13 +2,37 @@
 <%- include('../_bereich-nav', { termin, bereiche, aktiverBereich }) %>
 <h1>Fachgespräch – <%= pruefling.name %></h1>
 <p class="hinweis"><a href="/pruefung/<%= termin.slug %>/fachgespraech">← zur Übersicht</a></p>
+<% if (typeof uebernommen === 'undefined' || uebernommen === null) { %>
 <p class="hinweis" id="autosave-status" role="status" aria-live="polite">Eingaben werden automatisch gespeichert.</p>
+<% } %>
 
 <div class="pruefling-nav">
   <% geschwister.forEach(g => { %>
     <a href="/pruefung/<%= termin.slug %>/fachgespraech/<%= g.id %>" class="<%= g.id === pruefling.id ? 'aktiv' : '' %>"><%= g.name %></a>
   <% }) %>
 </div>
+
+<% if (uebernommen !== null) { %>
+  <section class="fg-uebernommen-box">
+    <p>
+      <span class="uebernommen-badge" aria-label="Wiederholer">W</span>
+      <strong><%= pruefling.name %></strong> ist Wiederholer. Das Fachgespräch wurde im
+      <strong>Vortermin bereits bestanden</strong> und wird übernommen – es ist hier nicht erneut zu bewerten.
+    </p>
+    <table class="bogen fg-tabelle fg-gesamt-tabelle">
+      <tbody>
+        <tr class="gesamt-zeile">
+          <td class="feld-name">Gesamtergebnis Fachgespräch (übernommen)</td>
+          <td class="fg-gesamt punkte-status uebernommen"><%= uebernommen %></td>
+        </tr>
+        <tr class="gesamt-status-zeile">
+          <td class="feld-name">Ergebnis</td>
+          <td class="gesamt-status uebernommen">bestanden (aus Vortermin übernommen)</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+<% } else { %>
 
 <div id="fg-form" data-pruefling="<%= pruefling.id %>" data-termin-slug="<%= termin.slug %>">
 
@@ -112,3 +136,4 @@
 </p>
 
 <script src="/fachgespraech-calc.js"></script>
+<% } %>

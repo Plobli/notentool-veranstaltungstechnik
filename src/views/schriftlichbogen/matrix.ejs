@@ -10,6 +10,24 @@
   </p>
 <% } else { %>
   <%
+    // Wiederholer: wurde dieser schriftliche Bereich aus dem Vortermin als
+    // bestanden übernommen? Dann wird die ganze Spalte für diesen Bereich
+    // gesperrt (nicht erneut zu prüfen). Rückgabe: übernommene Punkte oder null.
+    function uebernommenePunkte(prueflingId, tgKey) {
+      const u = uebernommeneBereiche.get(prueflingId);
+      if (!u || u[tgKey] === undefined) return null;
+      return u[tgKey];
+    }
+
+    // Rohpunkte einer einzelnen Aufgabe aus dem übernommenen Vortermin-Bogen
+    // (für die Anzeige in den gesperrten Feldern). '' wenn kein Wert.
+    function uebernommenerFeldwert(prueflingId, tgKey, feld) {
+      const tgMap = uebernommeneFelder.get(prueflingId);
+      if (!tgMap || !tgMap[tgKey]) return '';
+      const e = tgMap[tgKey].get(feld);
+      return e && e.punkte !== null && e.punkte !== undefined ? e.punkte : '';
+    }
+
     // Rendert die fremden Bewertungen einer Zelle (grau, read-only), falls
     // Einsicht aktiv ist und fremde Werte vorliegen.
     function fremdZelle(prueflingId, tgKey, feld) {
@@ -47,6 +65,13 @@
     Das Gesamt ist nach § 20 VfAusbV gewichtet.
     Die <strong>Energieversorgung</strong> ist Sperrfach – ist sie nicht bestanden, gilt die schriftliche Prüfung als nicht bestanden.
   </p>
+  <% if (uebernommeneBereiche.size > 0) { %>
+    <p class="hinweis">
+      Bei <strong>Wiederholern</strong> sind bereits bestandene Bereiche (aus dem Vortermin)
+      ausgegraut und mit <span class="uebernommen-badge">W</span> markiert – sie werden übernommen
+      und nicht erneut bewertet.
+    </p>
+  <% } %>
 
   <div id="bogen-form" data-modus="matrix" data-termin-slug="<%= termin.slug %>">
     <div class="bogen-wrap">
@@ -90,13 +115,18 @@
                 <tr class="gebunden" data-tg="<%= tg.key %>" data-feld="gebunden">
                   <td class="feld-name">Gebunden</td>
                   <% pruefliche.forEach(p => {
-                       const e = daten.get(p.id)[tg.key].get('gebunden'); %>
-                    <td class="feld-zelle">
+                       const e = daten.get(p.id)[tg.key].get('gebunden');
+                       const uebernommen = uebernommenePunkte(p.id, tg.key) !== null;
+                       const wert = uebernommen
+                         ? uebernommenerFeldwert(p.id, tg.key, 'gebunden')
+                         : (e && e.punkte !== null ? e.punkte : ''); %>
+                    <td class="feld-zelle <%= uebernommen ? 'zelle-uebernommen' : '' %>">
                       <input type="number" step="1" min="0" max="<%= tg.gebundenMax %>"
                         class="feld-input" data-tg="<%= tg.key %>" data-feld="gebunden"
                         data-pruefling="<%= p.id %>"
                         name="p<%= p.id %>_<%= tg.key %>_gebunden"
-                        value="<%= e && e.punkte !== null ? e.punkte : '' %>">
+                        value="<%= wert %>"
+                        <%= uebernommen ? 'disabled' : '' %>>
                       <%- fremdZelle(p.id, tg.key, 'gebunden') %>
                     </td>
                   <% }) %>
@@ -114,19 +144,31 @@
                   <% pruefliche.forEach(p => {
                        const e = daten.get(p.id)[tg.key].get(feld);
                        const erg = ergebnisse.get(p.id).teilgebiete[tg.key];
-                       const istGestrichen = tg.streichung && erg.gestrichenesFeld === feld; %>
-                    <td class="feld-zelle <%= istGestrichen ? 'zelle-gestrichen' : '' %>">
+                       const uebernommen = uebernommenePunkte(p.id, tg.key) !== null;
+                       // Bei Übernahme: Wert + Streichung stammen aus dem Vortermin-Bogen.
+                       const vorFeld = uebernommen
+                         ? (uebernommeneFelder.get(p.id)[tg.key] || new Map()).get(feld)
+                         : null;
+                       const istGestrichen = uebernommen
+                         ? Boolean(tg.streichung && vorFeld && vorFeld.gestrichen)
+                         : (tg.streichung && erg.gestrichenesFeld === feld);
+                       const wert = uebernommen
+                         ? uebernommenerFeldwert(p.id, tg.key, feld)
+                         : (e && e.punkte !== null ? e.punkte : ''); %>
+                    <td class="feld-zelle <%= istGestrichen ? 'zelle-gestrichen' : '' %> <%= uebernommen ? 'zelle-uebernommen' : '' %>">
                       <input type="number" step="1" min="0" max="10"
                         class="feld-input" data-tg="<%= tg.key %>" data-feld="<%= feld %>"
                         data-pruefling="<%= p.id %>"
                         name="p<%= p.id %>_<%= tg.key %>_<%= feld %>"
-                        value="<%= e && e.punkte !== null ? e.punkte : '' %>">
+                        value="<%= wert %>"
+                        <%= uebernommen ? 'disabled' : '' %>>
                       <% if (tg.streichung) { %>
                         <label class="strich-btn <%= istGestrichen ? 'aktiv' : '' %>" title="Diese Aufgabe streichen">
                           <input type="radio" name="strich_p<%= p.id %>_wiso"
                             value="<%= feld %>" class="strich-input"
                             data-pruefling="<%= p.id %>"
-                            <%= istGestrichen ? 'checked' : '' %>>
+                            <%= istGestrichen ? 'checked' : '' %>
+                            <%= uebernommen ? 'disabled' : '' %>>
                           <span class="strich-text" aria-label="streichen">✗</span>
                         </label>
                       <% } %>
@@ -140,11 +182,20 @@
                 <td class="feld-name">Punkte</td>
                 <% pruefliche.forEach(p => {
                      const erg = ergebnisse.get(p.id);
-                     const bereich = erg.bereiche[tg.key]; %>
-                  <td class="tg-ergebnis punkte-status <%= bereich.bestanden ? 'bestanden' : 'durchgefallen' %>"
-                    data-tg="<%= tg.key %>" data-pruefling="<%= p.id %>">
-                    <%= erg.teilgebiete[tg.key].punkte %>
-                  </td>
+                     const bereich = erg.bereiche[tg.key];
+                     const uebernommen = uebernommenePunkte(p.id, tg.key); %>
+                  <% if (uebernommen !== null) { %>
+                    <td class="tg-ergebnis punkte-status uebernommen"
+                      data-tg="<%= tg.key %>" data-pruefling="<%= p.id %>"
+                      title="Aus dem Vortermin übernommen – bereits bestanden, wird nicht erneut geprüft">
+                      <%= uebernommen %> <span class="uebernommen-badge" aria-label="Wiederholer – übernommen">W</span>
+                    </td>
+                  <% } else { %>
+                    <td class="tg-ergebnis punkte-status <%= bereich.bestanden ? 'bestanden' : 'durchgefallen' %>"
+                      data-tg="<%= tg.key %>" data-pruefling="<%= p.id %>">
+                      <%= erg.teilgebiete[tg.key].punkte %>
+                    </td>
+                  <% } %>
                 <% }) %>
               </tr>
             </tbody>

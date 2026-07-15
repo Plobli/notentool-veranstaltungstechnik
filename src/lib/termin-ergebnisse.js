@@ -166,8 +166,11 @@ function ladeTerminErgebnisse(db, terminId) {
     const uebernommeneBereiche = {}; // key -> true, wenn aus Vortermin referenziert
     for (const t of TEILGEBIETE) {
       if (s.hat[t.key]) {
+        // Eigene Eingabe im aktuellen Termin (Wiederholung) hat Vorrang.
         punkteJeBereich[t.key] = berechneTeilgebiet(t.key, s.tg[t.key], anzahlMap[t.key]).punkte;
-      } else if (uebernommen && uebernommen[t.key] !== null) {
+      } else if (uebernommen && uebernommen[t.key] !== null && uebernommen[t.key] >= BESTEHENSGRENZE) {
+        // Nur BESTANDENE Bereiche werden aus dem Vortermin übernommen. Nicht
+        // bestandene sind zu wiederholen – ihr alter Wert wird NICHT angezeigt.
         punkteJeBereich[t.key] = uebernommen[t.key];
         uebernommeneBereiche[t.key] = true;
       } else {
@@ -180,7 +183,9 @@ function ladeTerminErgebnisse(db, terminId) {
     const fgErg = berechneFachgespraech(f.zeilen, f.override);
     let fgPunkte = fgErg.gesamtpunkte;
     let fgUebernommen = false;
-    if (!f.hat && uebernommen && uebernommen.fachgespraech !== null) {
+    // Nur ein im Vortermin BESTANDENES Fachgespräch wird übernommen; ein
+    // nicht bestandenes ist zu wiederholen und wird bis dahin nicht angezeigt.
+    if (!f.hat && uebernommen && uebernommen.fachgespraech !== null && uebernommen.fachgespraech >= BESTEHENSGRENZE) {
       fgPunkte = uebernommen.fachgespraech;
       fgUebernommen = true;
     }
@@ -194,13 +199,24 @@ function ladeTerminErgebnisse(db, terminId) {
       fachgespraech: (f.hat || fgUebernommen) ? fgPunkte : null,
     };
 
-    const gesamtAlles = berechneGesamtAlles({
-      wiso: punkteJeBereich.wiso,
-      planung: punkteJeBereich.planung,
-      durchfuehrung: punkteJeBereich.durchfuehrung,
-      energie: punkteJeBereich.energie,
-      fachgespraech: fgPunkte,
-    });
+    // Vollständigkeit: ein Bereich ist erfasst, wenn er eine eigene Eingabe hat
+    // ODER (bei Wiederholern) bestanden übernommen wurde. Fehlt ein zu
+    // wiederholender Bereich noch, ist das Gesamt unvollständig und wird nicht
+    // angezeigt (leer statt mit 0 gerechnet).
+    const schriftlichVollstaendig =
+      bereiche.wiso !== null && bereiche.planung !== null &&
+      bereiche.durchfuehrung !== null && bereiche.energie !== null;
+    const allesVollstaendig = schriftlichVollstaendig && bereiche.fachgespraech !== null;
+
+    const gesamtAlles = allesVollstaendig
+      ? berechneGesamtAlles({
+          wiso: punkteJeBereich.wiso,
+          planung: punkteJeBereich.planung,
+          durchfuehrung: punkteJeBereich.durchfuehrung,
+          energie: punkteJeBereich.energie,
+          fachgespraech: fgPunkte,
+        })
+      : null;
 
     // Mündliche Ergänzungsprüfung einrechnen (§20 Abs. 3, 2:1). Der schriftliche
     // Stand oben bleibt unangetastet; hier entsteht der Stand NACH MEP.
@@ -240,7 +256,10 @@ function ladeTerminErgebnisse(db, terminId) {
     const fgErfasst = f.hat || fgUebernommen;
     const fgBestanden = fgErfasst && fgPunkte >= BESTEHENSGRENZE;
     let gesamtStatus; // 'bestanden' | 'nicht_bestanden' | 'offen'
-    if (!hatSchriftlich || !fgErfasst) {
+    // Solange nicht ALLE schriftlichen Bereiche erfasst sind (z. B. ein noch zu
+    // wiederholender Bereich fehlt) oder das Fachgespräch fehlt, ist der Status
+    // "offen" – nicht voreilig "nicht bestanden".
+    if (!hatSchriftlich || !schriftlichVollstaendig || !fgErfasst) {
       gesamtStatus = 'offen';
     } else if (schriftlichBestanden && fgBestanden) {
       gesamtStatus = 'bestanden';
@@ -257,7 +276,7 @@ function ladeTerminErgebnisse(db, terminId) {
       pruefling: p,
       bereiche,
       schriftlich: {
-        gesamt: gesamtInfo.gewichtet,
+        gesamt: schriftlichVollstaendig ? gesamtInfo.gewichtet : null,
         bestanden: gesamtInfo.bestanden,
         mepMoeglich: gesamtInfo.mepMoeglich,
         mepBereiche: gesamtInfo.mepBereiche,
@@ -329,4 +348,10 @@ function ladeTerminFortschritt(db, terminId) {
   };
 }
 
-module.exports = { ladeAnzahlMap, ladeTerminErgebnisse, ladeMep, ladeTerminFortschritt };
+module.exports = {
+  ladeAnzahlMap,
+  ladeTerminErgebnisse,
+  ladeMep,
+  ladeTerminFortschritt,
+  finaleTeilpunkteVon,
+};

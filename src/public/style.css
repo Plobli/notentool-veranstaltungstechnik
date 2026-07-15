@@ -121,6 +121,28 @@ table.bogen .feld-input:focus {
 /* Sichtbare Streichung einer Aufgabe (Zelle) */
 td.zelle-gestrichen .feld-input { text-decoration: line-through; opacity: 0.5; }
 
+/* Aus dem Vortermin übernommener (bereits bestandener) Bereich eines
+   Wiederholers: die ganze Spalte dieses Bereichs ist gesperrt und ausgegraut. */
+td.zelle-uebernommen { background: #f2f2f4; cursor: not-allowed; }
+td.zelle-uebernommen .feld-input { background: transparent; color: #99a; cursor: not-allowed; }
+td.zelle-uebernommen .strich-btn { opacity: 0.35; pointer-events: none; }
+table.bogen td.tg-ergebnis.uebernommen,
+table.bogen td.punkte-status.uebernommen,
+table.bogen td.gesamt-status.uebernommen {
+  background: #eceef2; color: #556;
+}
+.uebernommen-badge {
+  display: inline-block; font-size: 0.7rem; font-weight: bold;
+  color: #556; background: #dfe3ea; border-radius: 3px; padding: 0 0.3em; margin-left: 0.15em;
+}
+
+/* Fachgespräch bei Wiederholern: aus dem Vortermin übernommen (nicht editierbar). */
+.fg-uebernommen-box {
+  border: 1px solid #d7dbe4; background: #f6f7fa; border-radius: 6px;
+  padding: 1rem 1.2rem; margin: 1rem 0;
+}
+.fg-uebernommen-box p { margin-top: 0; }
+
 /* Auto-Save-Status */
 #autosave-status { min-height: 1.2em; }
 #autosave-status.autosave-fehler { color: #b00020; font-weight: bold; }

@@ -21,6 +21,7 @@ const {
   berechneTeilgebiet,
   berechneSchriftlichGesamt,
 } = require('../lib/schriftlich-scoring');
+const { finaleTeilpunkteVon } = require('../lib/termin-ergebnisse');
 
 const { terminBySlug, bereicheFuer } = require('../lib/pruefung');
 
@@ -116,15 +117,19 @@ function ladeBogen(db, terminId, prueferId = null) {
 }
 
 // Berechnet für einen Prüfling alle Teilgebiete, das gewichtete schriftliche
-// Gesamt (§20 VfAusbV) und die Bestehens-Stati.
-function ergebnisFuer(teilgebietMaps, anzahlMap) {
+// Gesamt (§20 VfAusbV) und die Bestehens-Stati. `uebernommen` (optional) bildet
+// key -> Punkte für aus dem Vortermin übernommene (bereits bestandene) Bereiche;
+// diese fließen mit ihrem Vortermin-Wert ins Gesamt statt aus dem eigenen
+// (leeren) Bogen berechnet zu werden.
+function ergebnisFuer(teilgebietMaps, anzahlMap, uebernommen = null) {
   const teilgebiete = {};
   const punkteJeBereich = {};
   for (const t of TEILGEBIETE) {
     const anzahl = anzahlMap ? anzahlMap[t.key] : undefined;
     const erg = berechneTeilgebiet(t.key, teilgebietMaps[t.key] || new Map(), anzahl);
     teilgebiete[t.key] = erg;
-    punkteJeBereich[t.key] = erg.punkte;
+    punkteJeBereich[t.key] =
+      uebernommen && uebernommen[t.key] !== undefined ? uebernommen[t.key] : erg.punkte;
   }
   const gesamtInfo = berechneSchriftlichGesamt(punkteJeBereich);
   return {
@@ -197,6 +202,41 @@ function speichereFelder(db, felder, prueferId = null) {
 
 // --- Matrix-Ansicht ---
 
+// Ermittelt je Wiederholer-Prüfling die schriftlichen Bereiche, die aus dem
+// Vortermin als bestanden übernommen wurden und daher NICHT erneut zu bewerten
+// sind. Rückgabe: Map<prueflingId, { [teilgebiet]: uebernommenePunkte }>.
+// Nur Bereiche >= Bestehensgrenze gelten als übernommen.
+function ladeUebernommeneBereiche(db, pruefliche) {
+  const map = new Map();
+  for (const p of pruefliche) {
+    if (!p.wiederholt_von) continue;
+    const vor = finaleTeilpunkteVon(db, p.wiederholt_von);
+    const uebernommen = {};
+    for (const t of TEILGEBIETE) {
+      const punkte = vor[t.key];
+      if (punkte !== null && punkte >= BESTEHENSGRENZE) {
+        uebernommen[t.key] = punkte;
+      }
+    }
+    if (Object.keys(uebernommen).length) map.set(p.id, uebernommen);
+  }
+  return map;
+}
+
+// Lädt je Wiederholer-Prüfling die einzelnen Aufgaben-Rohpunkte des finalen
+// Bogens aus dem Vortermin, damit sie in der Matrix (in den gesperrten Feldern)
+// angezeigt werden können.
+// Rückgabe: Map<prueflingId, { [teilgebiet]: Map<feld, {punkte, gestrichen}> }>.
+function ladeUebernommeneFelder(db, pruefliche) {
+  const map = new Map();
+  for (const p of pruefliche) {
+    if (!p.wiederholt_von) continue;
+    const { byPruefling } = ladeBogenEinerPruefling(db, p.wiederholt_von, null);
+    map.set(p.id, byPruefling);
+  }
+  return map;
+}
+
 router.get('/pruefung/:slug/schriftlich', requireAuth, ladeTermin, (req, res) => {
   const db = getDb();
   const termin = req.termin;
@@ -206,9 +246,17 @@ router.get('/pruefung/:slug/schriftlich', requireAuth, ladeTermin, (req, res) =>
   const felderMap = ladeFelderMap(anzahlMap);
   // Eigener Bogen des eingeloggten Prüfers.
   const { pruefliche, byPruefling } = ladeBogen(db, termin.id, prueferId);
+  // Bei Wiederholern: bereits bestandene Bereiche aus dem Vortermin. Diese
+  // Spalten werden in der Matrix gesperrt statt erneut geprüft; die einzelnen
+  // Aufgaben-Rohpunkte kommen aus dem Vortermin-Bogen zur Anzeige.
+  const uebernommeneBereiche = ladeUebernommeneBereiche(db, pruefliche);
+  const uebernommeneFelder = ladeUebernommeneFelder(db, pruefliche);
   const ergebnisse = new Map();
   for (const p of pruefliche) {
-    ergebnisse.set(p.id, ergebnisFuer(byPruefling.get(p.id), anzahlMap));
+    ergebnisse.set(
+      p.id,
+      ergebnisFuer(byPruefling.get(p.id), anzahlMap, uebernommeneBereiche.get(p.id) || null)
+    );
   }
 
   // Fremde Bewertungen nur laden, wenn der Termin die Einsicht erlaubt.
@@ -227,6 +275,8 @@ router.get('/pruefung/:slug/schriftlich', requireAuth, ladeTermin, (req, res) =>
     pruefliche,
     daten: byPruefling,
     ergebnisse,
+    uebernommeneBereiche,
+    uebernommeneFelder,
     fremdWerte,
     bereiche: bereicheFuer(termin.art),
     aktiverBereich: 'schriftlich',
@@ -281,7 +331,7 @@ router.post('/pruefung/:slug/schriftlich/feld', requireAuth, ladeTermin, express
   const pId = Number(prueflingId);
 
   const pruefling = db
-    .prepare('SELECT id, schriftlich_finalisiert FROM pruefling WHERE id = ? AND pruefungstermin_id = ?')
+    .prepare('SELECT id, schriftlich_finalisiert, wiederholt_von FROM pruefling WHERE id = ? AND pruefungstermin_id = ?')
     .get(pId, termin.id);
   if (!pruefling) return res.status(404).json({ error: 'Prüfling nicht gefunden.' });
   // Nach der Finalisierung sind die Einzelbögen gesperrt.
@@ -290,6 +340,15 @@ router.post('/pruefung/:slug/schriftlich/feld', requireAuth, ladeTermin, express
   }
   if (!TEILGEBIET_BY_KEY.has(teilgebiet)) {
     return res.status(400).json({ error: 'Unbekanntes Teilgebiet.' });
+  }
+  // Wiederholer: aus dem Vortermin übernommene (bestandene) Bereiche werden
+  // nicht erneut bewertet und sind gesperrt (auch serverseitig, falls das
+  // clientseitige disabled umgangen wird).
+  if (pruefling.wiederholt_von) {
+    const vor = finaleTeilpunkteVon(db, pruefling.wiederholt_von);
+    if (vor[teilgebiet] !== null && vor[teilgebiet] >= BESTEHENSGRENZE) {
+      return res.status(409).json({ error: 'Bereich aus dem Vortermin übernommen – gesperrt.' });
+    }
   }
 
   const anzahlMap = ladeAnzahlMap(db, termin.id);
@@ -341,9 +400,19 @@ router.post('/pruefung/:slug/schriftlich/feld', requireAuth, ladeTermin, express
     );
   }
 
-  // Neu berechnen und zurückgeben – auf Basis des eigenen Bogens.
+  // Neu berechnen und zurückgeben – auf Basis des eigenen Bogens, ergänzt um
+  // die aus dem Vortermin übernommenen (bestandenen) Bereiche eines Wiederholers,
+  // damit das Gesamt vollständig ist.
   const { byPruefling } = ladeBogen(db, termin.id, prueferId);
-  const ergebnis = ergebnisFuer(byPruefling.get(pId), anzahlMap);
+  let uebernommen = null;
+  if (pruefling.wiederholt_von) {
+    const vor = finaleTeilpunkteVon(db, pruefling.wiederholt_von);
+    uebernommen = {};
+    for (const t of TEILGEBIETE) {
+      if (vor[t.key] !== null && vor[t.key] >= BESTEHENSGRENZE) uebernommen[t.key] = vor[t.key];
+    }
+  }
+  const ergebnis = ergebnisFuer(byPruefling.get(pId), anzahlMap, uebernommen);
   res.json({
     teilgebiete: Object.fromEntries(
       Object.entries(ergebnis.teilgebiete).map(([k, v]) => [
@@ -484,7 +553,20 @@ router.get('/pruefung/:slug/schriftlich/final', requireAuth, ladeTermin, (req, r
   let boegen = [];
   let finalDaten = null;
   let vorschlaege = {};
+  // Wiederholer: aus dem Vortermin übernommene (bestandene) Bereiche des
+  // gewählten Prüflings. In der Finalisierung wie in der Matrix gesperrt.
+  let uebernommen = {};
+  // Einzelne Aufgaben-Rohpunkte aus dem Vortermin-Bogen (zur Anzeige in den
+  // gesperrten Feldern): { [tgKey]: Map<feld, {punkte, gestrichen}> }.
+  let uebernommeneFelder = {};
   if (gewaehlt) {
+    if (gewaehlt.wiederholt_von) {
+      const vor = finaleTeilpunkteVon(db, gewaehlt.wiederholt_von);
+      for (const t of TEILGEBIETE) {
+        if (vor[t.key] !== null && vor[t.key] >= BESTEHENSGRENZE) uebernommen[t.key] = vor[t.key];
+      }
+      uebernommeneFelder = ladeBogenEinerPruefling(db, gewaehlt.wiederholt_von, null).byPruefling;
+    }
     prueferListe = ladePrueferMitBewertung(db, gewaehlt.id);
     boegen = boegenFuerPruefling(db, termin, gewaehlt.id, prueferListe, anzahlMap);
     finalDaten = ladeBogenEinerPruefling(db, gewaehlt.id, null).byPruefling;
@@ -500,6 +582,9 @@ router.get('/pruefung/:slug/schriftlich/final', requireAuth, ladeTermin, (req, r
   const struktur = {
     bestehen: BESTEHENSGRENZE,
     ungenuegend: UNGENUEGEND_GRENZE,
+    // Aus dem Vortermin übernommene Bereiche (key -> Punkte). In der
+    // Live-Berechnung fest, nicht editierbar; gehen mit diesem Wert ins Gesamt.
+    uebernommen,
     teilgebiete: TEILGEBIETE.map((t) => ({
       key: t.key,
       gewicht: t.gewicht,
@@ -528,6 +613,8 @@ router.get('/pruefung/:slug/schriftlich/final', requireAuth, ladeTermin, (req, r
     boegen,
     finalDaten,
     vorschlaege,
+    uebernommen,
+    uebernommeneFelder,
     struktur,
     bereiche: bereicheFuer(termin.art),
     aktiverBereich: 'schriftlich-final',
@@ -542,7 +629,7 @@ router.post('/pruefung/:slug/schriftlich/final/feld', requireAuth, ladeTermin, e
   const pId = Number(prueflingId);
 
   const pruefling = db
-    .prepare('SELECT id, schriftlich_finalisiert FROM pruefling WHERE id = ? AND pruefungstermin_id = ?')
+    .prepare('SELECT id, schriftlich_finalisiert, wiederholt_von FROM pruefling WHERE id = ? AND pruefungstermin_id = ?')
     .get(pId, termin.id);
   if (!pruefling) return res.status(404).json({ error: 'Prüfling nicht gefunden.' });
   // Nach dem Finalisieren ist auch der finale Bogen gesperrt (erst entsperren).
@@ -551,6 +638,13 @@ router.post('/pruefung/:slug/schriftlich/final/feld', requireAuth, ladeTermin, e
   }
   if (!TEILGEBIET_BY_KEY.has(teilgebiet)) {
     return res.status(400).json({ error: 'Unbekanntes Teilgebiet.' });
+  }
+  // Wiederholer: übernommene (bestandene) Bereiche werden nicht finalisiert.
+  if (pruefling.wiederholt_von) {
+    const vor = finaleTeilpunkteVon(db, pruefling.wiederholt_von);
+    if (vor[teilgebiet] !== null && vor[teilgebiet] >= BESTEHENSGRENZE) {
+      return res.status(409).json({ error: 'Bereich aus dem Vortermin übernommen – gesperrt.' });
+    }
   }
   const anzahlMap = ladeAnzahlMap(db, termin.id);
   const felderMap = ladeFelderMap(anzahlMap);

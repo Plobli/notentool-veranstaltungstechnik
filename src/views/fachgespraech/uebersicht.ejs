@@ -19,10 +19,17 @@
       <% uebersicht.forEach(u => { %>
         <tr>
           <td class="feld-name"><a href="/pruefung/<%= termin.slug %>/fachgespraech/<%= u.pruefling.id %>"><%= u.pruefling.name %></a></td>
-          <td class="punkte-status <%= u.bestanden ? 'bestanden' : 'durchgefallen' %>"><%= u.gesamtpunkte %></td>
-          <td class="gesamt-status <%= u.bestanden ? 'bestanden' : 'durchgefallen' %>">
-            <%= u.bestanden ? 'bestanden' : 'nicht bestanden' %>
-          </td>
+          <% if (u.uebernommen) { %>
+            <td class="punkte-status uebernommen" title="Aus dem Vortermin übernommen – bereits bestanden">
+              <%= u.gesamtpunkte %> <span class="uebernommen-badge" aria-label="Wiederholer">W</span>
+            </td>
+            <td class="gesamt-status uebernommen" title="Aus dem Vortermin übernommen">bestanden (übernommen)</td>
+          <% } else { %>
+            <td class="punkte-status <%= u.bestanden ? 'bestanden' : 'durchgefallen' %>"><%= u.gesamtpunkte %></td>
+            <td class="gesamt-status <%= u.bestanden ? 'bestanden' : 'durchgefallen' %>">
+              <%= u.bestanden ? 'bestanden' : 'nicht bestanden' %>
+            </td>
+          <% } %>
         </tr>
       <% }) %>
     </tbody>

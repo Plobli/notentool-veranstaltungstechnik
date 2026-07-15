@@ -62,8 +62,13 @@
     return tg.felder[tg.felder.length - 1];
   }
 
+  // Aus dem Vortermin übernommene Bereiche (key -> Punkte) oder {}.
+  const uebernommen = S.uebernommen || {};
+
   // Teilgebiet-Punkte nach den Server-Formeln.
   function teilgebietPunkte(tg) {
+    // Übernommener Bereich: fester Wert aus dem Vortermin, nicht neu berechnet.
+    if (uebernommen[tg.key] !== undefined) return uebernommen[tg.key];
     const streich = gestrichenesFeld(tg);
     let summe = 0;
     for (const feld of tg.felder) {
@@ -129,6 +134,8 @@
       streichungAnzeigen(tg);
       const p = teilgebietPunkte(tg);
       punkteJeTg[tg.key] = p;
+      // Übernommene Bereiche behalten ihre „W"-Zelle unverändert.
+      if (uebernommen[tg.key] !== undefined) continue;
       const cell = root.querySelector(
         `.tg-ergebnis[data-tg="${tg.key}"][data-pruefling="${prueflingId}"]`
       );

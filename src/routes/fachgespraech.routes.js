@@ -19,10 +19,23 @@ const {
   ladeZeilenListe,
   serialisiereZeilen,
 } = require('../lib/fachgespraech-protokoll');
+const { finaleTeilpunkteVon } = require('../lib/termin-ergebnisse');
+const { BESTEHENSGRENZE } = require('../lib/schriftlich-struktur');
 
 const { terminBySlug, bereicheFuer } = require('../lib/pruefung');
 
 const router = express.Router();
+
+// Wiederholer: im Vortermin bestandenes Fachgespräch (>= Bestehensgrenze)?
+// Rückgabe: übernommene Punkte oder null (kein Wiederholer / nicht bestanden).
+function fachgespraechUebernommen(db, pruefling) {
+  if (!pruefling.wiederholt_von) return null;
+  const vor = finaleTeilpunkteVon(db, pruefling.wiederholt_von);
+  if (vor.fachgespraech !== null && vor.fachgespraech >= BESTEHENSGRENZE) {
+    return vor.fachgespraech;
+  }
+  return null;
+}
 
 // Lädt den Prüfungstermin per Slug (req.termin), 404 sonst.
 function ladeTermin(req, res, next) {
@@ -85,8 +98,12 @@ router.get('/pruefung/:slug/fachgespraech', requireAuth, ladeTermin, (req, res) 
     .all(termin.id);
 
   const uebersicht = pruefliche.map((p) => {
+    const uebernommen = fachgespraechUebernommen(db, p);
+    if (uebernommen !== null) {
+      return { pruefling: p, gesamtpunkte: uebernommen, bestanden: true, uebernommen: true };
+    }
     const erg = ergebnisAus(ladeZeilen(db, p.id));
-    return { pruefling: p, gesamtpunkte: erg.gesamtpunkte, bestanden: erg.bestanden };
+    return { pruefling: p, gesamtpunkte: erg.gesamtpunkte, bestanden: erg.bestanden, uebernommen: false };
   });
 
   res.render('fachgespraech/uebersicht', {
@@ -115,6 +132,7 @@ router.get('/pruefung/:slug/fachgespraech/:prueflingId', requireAuth, ladeTermin
 
   const daten = ladeZeilen(db, pruefling.id);
   const ergebnis = ergebnisAus(daten);
+  const uebernommen = fachgespraechUebernommen(db, pruefling);
 
   res.render('fachgespraech/bogen', {
     title: `Fachgespräch – ${pruefling.name}`,
@@ -126,6 +144,7 @@ router.get('/pruefung/:slug/fachgespraech/:prueflingId', requireAuth, ladeTermin
     skala: FACHGESPRAECH_SKALA,
     zeilen: daten.zeilen,
     ergebnis,
+    uebernommen,
     bereiche: bereicheFuer(termin.art),
     aktiverBereich: 'fachgespraech',
   });
@@ -136,9 +155,12 @@ router.get('/pruefung/:slug/fachgespraech/:prueflingId', requireAuth, ladeTermin
 router.post('/pruefung/:slug/fachgespraech/:prueflingId/feld', requireAuth, ladeTermin, express.json(), (req, res) => {
   const db = getDb();
   const pruefling = db
-    .prepare('SELECT id FROM pruefling WHERE id = ? AND pruefungstermin_id = ?')
+    .prepare('SELECT id, wiederholt_von FROM pruefling WHERE id = ? AND pruefungstermin_id = ?')
     .get(req.params.prueflingId, req.termin.id);
   if (!pruefling) return res.status(404).json({ error: 'Prüfling nicht gefunden.' });
+  if (fachgespraechUebernommen(db, pruefling) !== null) {
+    return res.status(409).json({ error: 'Fachgespräch aus dem Vortermin übernommen – gesperrt.' });
+  }
 
   const { kriterium, zeilen } = req.body || {};
   if (!FACHGESPRAECH_KRITERIUM_BY_KEY.has(kriterium)) {
@@ -162,9 +184,12 @@ router.post('/pruefung/:slug/fachgespraech/:prueflingId/feld', requireAuth, lade
 router.post('/pruefung/:slug/fachgespraech/:prueflingId/punkte', requireAuth, ladeTermin, express.json(), (req, res) => {
   const db = getDb();
   const pruefling = db
-    .prepare('SELECT id FROM pruefling WHERE id = ? AND pruefungstermin_id = ?')
+    .prepare('SELECT id, wiederholt_von FROM pruefling WHERE id = ? AND pruefungstermin_id = ?')
     .get(req.params.prueflingId, req.termin.id);
   if (!pruefling) return res.status(404).json({ error: 'Prüfling nicht gefunden.' });
+  if (fachgespraechUebernommen(db, pruefling) !== null) {
+    return res.status(409).json({ error: 'Fachgespräch aus dem Vortermin übernommen – gesperrt.' });
+  }
 
   const { kriterium, punkte } = req.body || {};
   if (!FACHGESPRAECH_KRITERIUM_BY_KEY.has(kriterium)) {

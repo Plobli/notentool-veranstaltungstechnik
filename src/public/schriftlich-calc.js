@@ -40,7 +40,9 @@
       const cell = root.querySelector(
         `.tg-ergebnis[data-tg="${tgKey}"][data-pruefling="${prueflingId}"]`
       );
-      if (cell) {
+      // Aus dem Vortermin übernommene Bereiche bleiben unangetastet – ihre
+      // Punktzahl stammt nicht aus dem aktuellen Bogen.
+      if (cell && !cell.classList.contains('uebernommen')) {
         cell.textContent = erg.punkte;
         statusKlassen(cell, erg.bestanden);
       }

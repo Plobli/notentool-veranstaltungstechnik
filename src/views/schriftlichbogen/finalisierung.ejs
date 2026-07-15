@@ -52,13 +52,29 @@
         const e = m.get(feld);
         return e && e.punkte !== null && e.punkte !== undefined ? e.punkte : null;
       }
+      // Wiederholer: aus dem Vortermin übernommener (bestandener) Bereich?
+      // Rückgabe: übernommene Punkte oder null.
+      function uebernommenePunkte(tgKey) {
+        return uebernommen[tgKey] !== undefined ? uebernommen[tgKey] : null;
+      }
     %>
+    <% if (Object.keys(uebernommen).length > 0) { %>
+      <p class="hinweis">
+        <strong>Wiederholer:</strong> bereits bestandene Bereiche (aus dem Vortermin) sind
+        ausgegraut und mit <span class="uebernommen-badge">W</span> markiert – sie werden
+        übernommen und nicht erneut finalisiert.
+      </p>
+    <% } %>
     <div id="final-form" data-termin-slug="<%= termin.slug %>" data-pruefling="<%= gewaehlt.id %>"
          data-feld-url="/pruefung/<%= termin.slug %>/schriftlich/final/feld">
       <% teilgebiete.forEach(tg => {
-           const finalErg = boegen[0].ergebnis; %>
+           const finalErg = boegen[0].ergebnis;
+           const tgUebernommen = uebernommenePunkte(tg.key); %>
         <section class="tg-block" data-tg="<%= tg.key %>">
-          <h3><%= tg.name %> <span class="tg-gewicht"><%= tg.gewicht %> %</span></h3>
+          <h3>
+            <%= tg.name %> <span class="tg-gewicht"><%= tg.gewicht %> %</span>
+            <% if (tgUebernommen !== null) { %><span class="uebernommen-badge" title="Aus dem Vortermin übernommen">übernommen · <%= tgUebernommen %> Pkt.</span><% } %>
+          </h3>
           <div class="bogen-wrap">
             <table class="bogen">
               <thead>
@@ -84,27 +100,38 @@
                           const fe = finalDaten[tg.key].get(feld);
                           const max = feld === 'gebunden' ? tg.gebundenMax : 10;
                           const erg = finalErg.teilgebiete[tg.key];
-                          const istGestrichen = tg.streichung && erg.gestrichenesFeld === feld;
                           // Finaler Wert gesetzt?
                           const hatFinal = fe && fe.punkte !== null && fe.punkte !== undefined;
                           // Vorschlag (Prüfer-Durchschnitt) nur für leere Felder.
                           const vorschlag = (vorschlaege[tg.key] || {})[feld];
-                          const zeigeVorschlag = !hatFinal && vorschlag !== undefined && !gewaehlt.schriftlich_finalisiert;
+                          // Übernommene Bereiche werden nicht finalisiert – kein
+                          // Vorschlag, Feld gesperrt.
+                          const feldUebernommen = tgUebernommen !== null;
+                          // Bei Übernahme: Wert + Streichung stammen aus dem Vortermin-Bogen.
+                          const vorFeld = feldUebernommen
+                            ? ((uebernommeneFelder[tg.key] || new Map()).get(feld) || null)
+                            : null;
+                          const istGestrichen = feldUebernommen
+                            ? Boolean(tg.streichung && vorFeld && vorFeld.gestrichen)
+                            : (tg.streichung && erg.gestrichenesFeld === feld);
+                          const zeigeVorschlag = !hatFinal && vorschlag !== undefined && !gewaehlt.schriftlich_finalisiert && !feldUebernommen;
+                          const feldGesperrt = gewaehlt.schriftlich_finalisiert || feldUebernommen;
+                          const vorWert = vorFeld && vorFeld.punkte !== null && vorFeld.punkte !== undefined ? vorFeld.punkte : '';
                         %>
-                        <td class="feld-zelle final-spalte <%= istGestrichen ? 'zelle-gestrichen' : '' %>">
+                        <td class="feld-zelle final-spalte <%= istGestrichen ? 'zelle-gestrichen' : '' %> <%= feldUebernommen ? 'zelle-uebernommen' : '' %>">
                           <input type="number" step="1" min="0" max="<%= max %>"
-                            class="feld-input <%= gewaehlt.schriftlich_finalisiert ? 'gesperrt' : '' %> <%= zeigeVorschlag ? 'feld-vorschlag' : '' %>"
+                            class="feld-input <%= feldGesperrt ? 'gesperrt' : '' %> <%= zeigeVorschlag ? 'feld-vorschlag' : '' %>"
                             data-tg="<%= tg.key %>" data-feld="<%= feld %>"
                             data-pruefling="<%= gewaehlt.id %>"
                             <%= zeigeVorschlag ? 'data-vorschlag="1"' : '' %>
-                            <%= gewaehlt.schriftlich_finalisiert ? 'disabled' : '' %>
-                            value="<%= hatFinal ? fe.punkte : (zeigeVorschlag ? vorschlag : '') %>">
+                            <%= feldGesperrt ? 'disabled' : '' %>
+                            value="<%= feldUebernommen ? vorWert : (hatFinal ? fe.punkte : (zeigeVorschlag ? vorschlag : '')) %>">
                           <% if (tg.streichung) { %>
                             <label class="strich-btn <%= istGestrichen ? 'aktiv' : '' %>" title="streichen">
                               <input type="radio" name="fstrich_<%= tg.key %>" value="<%= feld %>"
                                 class="strich-input" data-pruefling="<%= gewaehlt.id %>"
                                 <%= istGestrichen ? 'checked' : '' %>
-                                <%= gewaehlt.schriftlich_finalisiert ? 'disabled' : '' %>>
+                                <%= feldGesperrt ? 'disabled' : '' %>>
                               <span class="strich-text">✗</span>
                             </label>
                           <% } %>
@@ -119,11 +146,20 @@
                 <tr class="ergebnis-zeile">
                   <td class="feld-name">Punkte</td>
                   <% boegen.forEach(b => {
-                       const bereich = b.ergebnis.bereiche[tg.key]; %>
-                    <td class="tg-ergebnis punkte-status <%= bereich.bestanden ? 'bestanden' : 'durchgefallen' %>"
-                        <%- b.prueferId === null ? 'data-tg="'+tg.key+'" data-pruefling="'+gewaehlt.id+'"' : '' %>>
-                      <%= b.ergebnis.teilgebiete[tg.key].punkte %>
-                    </td>
+                       const bereich = b.ergebnis.bereiche[tg.key];
+                       const finalUebernommen = b.prueferId === null && tgUebernommen !== null; %>
+                    <% if (finalUebernommen) { %>
+                      <td class="tg-ergebnis punkte-status uebernommen"
+                          data-tg="<%= tg.key %>" data-pruefling="<%= gewaehlt.id %>"
+                          title="Aus dem Vortermin übernommen – bereits bestanden, wird nicht erneut finalisiert">
+                        <%= tgUebernommen %> <span class="uebernommen-badge" aria-label="Wiederholer – übernommen">W</span>
+                      </td>
+                    <% } else { %>
+                      <td class="tg-ergebnis punkte-status <%= bereich.bestanden ? 'bestanden' : 'durchgefallen' %>"
+                          <%- b.prueferId === null ? 'data-tg="'+tg.key+'" data-pruefling="'+gewaehlt.id+'"' : '' %>>
+                        <%= b.ergebnis.teilgebiete[tg.key].punkte %>
+                      </td>
+                    <% } %>
                   <% }) %>
                 </tr>
               </tbody>

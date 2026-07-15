@@ -11,10 +11,10 @@
     if (key === 'fachgespraech') return z.wiederholer.fachgespraechUebernommen;
     return z.wiederholer.uebernommeneBereiche.includes(key);
   }
-  // Markierung "aus Vortermin" hinter einem übernommenen Wert.
+  // Markierung "aus Vortermin" hinter einem übernommenen Wert (W = Wiederholer).
   function uebMark(z, key) {
     return istUebernommen(z, key)
-      ? '<span class="ueb-mark" title="aus Vortermin übernommen">ü</span>'
+      ? '<span class="ueb-mark" title="aus Vortermin übernommen (Wiederholer)">W</span>'
       : '';
   }
 %>
@@ -39,15 +39,15 @@
       <tr>
         <td>
           <%= z.pruefling.name %>
-          <% if (z.wiederholer) { %><span class="rolle-badge rolle-pruefer" title="Wiederholer – übernommene Teile mit „ü“ markiert">W</span><% } %>
+          <% if (z.wiederholer) { %><span class="rolle-badge rolle-pruefer" title="Wiederholer – übernommene Teile mit „W“ markiert">W</span><% } %>
         </td>
         <td class="<%= kritKlasse(z.bereiche.wiso) %>"><%= zeig(z.bereiche.wiso) %><%- uebMark(z, 'wiso') %></td>
         <td class="<%= kritKlasse(z.bereiche.planung) %>"><%= zeig(z.bereiche.planung) %><%- uebMark(z, 'planung') %></td>
         <td class="<%= kritKlasse(z.bereiche.durchfuehrung) %>"><%= zeig(z.bereiche.durchfuehrung) %><%- uebMark(z, 'durchfuehrung') %></td>
         <td class="<%= kritKlasse(z.bereiche.energie) %>"><%= zeig(z.bereiche.energie) %><%- uebMark(z, 'energie') %></td>
         <td class="<%= kritKlasse(z.bereiche.fachgespraech) %>"><%= zeig(z.bereiche.fachgespraech) %><%- uebMark(z, 'fachgespraech') %></td>
-        <td class="<%= (z.schriftlich.gesamt < 50) ? 'zelle-krit' : '' %>"><%= z.schriftlich.gesamt %></td>
-        <td><%= z.gesamtAlles %></td>
+        <td class="<%= kritKlasse(z.schriftlich.gesamt) %>"><%= zeig(z.schriftlich.gesamt) %></td>
+        <td><%= zeig(z.gesamtAlles) %></td>
         <td>
           <% if (z.mep) { %>
             <span class="<%= z.mep.bestanden ? 'ok' : 'error' %>"
@@ -62,9 +62,11 @@
           <% if (st === 'offen') { %>
             <%
               const fehlt = [];
-              const hatSchr = z.bereiche.wiso !== null || z.bereiche.planung !== null
-                || z.bereiche.durchfuehrung !== null || z.bereiche.energie !== null;
-              if (!hatSchr) fehlt.push('schriftlich');
+              // Alle vier schriftlichen Bereiche müssen erfasst sein; fehlt einer
+              // (z. B. ein noch zu wiederholender), gilt "schriftlich" als offen.
+              const schriftlichVollstaendig = z.bereiche.wiso !== null && z.bereiche.planung !== null
+                && z.bereiche.durchfuehrung !== null && z.bereiche.energie !== null;
+              if (!schriftlichVollstaendig) fehlt.push('schriftlich');
               if (z.bereiche.fachgespraech === null) fehlt.push('Fachgespräch');
             %>
             <span class="status-pille status-offen">offen</span>
