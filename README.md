@@ -1,8 +1,9 @@
 # Notentool Veranstaltungstechnik
 
-Web-App zur Bewertung der IHK-Abschlussprüfung "Fachkraft für Veranstaltungstechnik":
-schriftliche Prüfungen (unabhängige Korrektur durch mehrere Prüfer mit automatischem
-Vergleich), Projekt-/Fachgesprächs-Bewertungsbogen, automatische Gesamtergebnis-Berechnung.
+Web-App zur Bewertung der IHK-Prüfungen für "Fachkraft für Veranstaltungstechnik"
+(Abschluss- und Zwischenprüfung): schriftliche Prüfungen (unabhängige Korrektur durch
+mehrere Prüfer mit automatischem Vergleich), Projekt-/Fachgesprächs-Bewertungsbogen,
+automatische Gesamtergebnis-Berechnung.
 
 ## Lokale Entwicklung
 
@@ -48,8 +49,8 @@ docker cp $(docker compose ps -q app):/app/data/backup.sqlite ./backup-$(date +%
 
 ## Aufbau
 
-- `src/lib/scoring.js` – reine Berechnungsfunktionen (Divisor-Normierung, Gesamtergebnis,
-  Sperrfach-Regel, MeP), vollständig unit-getestet in `tests/`
+- `src/lib/` – reine Berechnungsfunktionen (Divisor-Normierung, Gesamtergebnis,
+  Sperrfach-Regel, MEP, Fachgespräch)
 - `src/routes/` – Express-Routen je Bereich
 - `src/views/` – EJS-Templates
 - `src/db.js` / `src/schema.sql` – SQLite-Anbindung und Datenbankschema
