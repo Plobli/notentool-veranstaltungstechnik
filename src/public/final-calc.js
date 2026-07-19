@@ -14,6 +14,7 @@
   const root = document.getElementById('final-form');
   if (!root) return;
   const statusEl = document.getElementById('autosave-status');
+  if (statusEl) statusEl.textContent = 'Änderungen am finalen Bogen werden automatisch gespeichert.';
   const feldUrl = root.dataset.feldUrl;
   const prueflingId = Number(root.dataset.pruefling);
 

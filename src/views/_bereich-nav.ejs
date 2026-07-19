@@ -1,10 +1,16 @@
 <!-- Kompakte Bereichs-Navigation zum schnellen Wechseln zwischen den
      Prüfungsbereichen. Erwartet: termin, bereiche (Array), aktiverBereich (slug). -->
 <nav class="bereich-nav">
-  <% bereiche.forEach(b => { %>
-    <a class="bereich-tab<%= b.slug === aktiverBereich ? ' aktiv' : '' %><%= b.fertig ? '' : ' bereich-tab--offen' %>"
-       href="/pruefung/<%= termin.slug %>/<%= b.pfad || b.slug %>">
-      <%= b.name %>
-    </a>
-  <% }) %>
+  <div class="bereich-nav-tabs">
+    <% bereiche.forEach(b => { %>
+      <a class="bereich-tab<%= b.slug === aktiverBereich ? ' aktiv' : '' %><%= b.fertig ? '' : ' bereich-tab--offen' %>"
+         href="/pruefung/<%= termin.slug %>/<%= b.pfad || b.slug %>">
+        <%= b.name %>
+      </a>
+    <% }) %>
+  </div>
+  <div class="bereich-nav-rechts">
+    <span class="bereich-nav-trenner" aria-hidden="true"></span>
+    <a class="bereich-nav-uebersicht" href="/pruefung/<%= termin.slug %>">Prüfungsübersicht</a>
+  </div>
 </nav>

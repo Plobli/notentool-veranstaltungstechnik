@@ -63,8 +63,12 @@ router.get('/registrieren', (req, res) => {
     code,
     gueltig: Boolean(einladung),
     rolle: einladung ? einladung.role : null,
+    // Ohne (oder mit ungültigem) Code aus der URL zeigt das Formular ein
+    // Eingabefeld für den Code – z.B. wenn Code und Link getrennt geteilt
+    // wurden (WhatsApp-Gruppe).
+    codeEingabe: !einladung,
     error: null,
-    werte: { name: '', email: '' },
+    werte: { name: '', email: '', code: einladung ? '' : code },
   });
 });
 
@@ -80,12 +84,13 @@ router.post('/registrieren', async (req, res) => {
       code: code || '',
       gueltig: Boolean(einladung),
       rolle: einladung ? einladung.role : null,
+      codeEingabe: !einladung,
       error: fehler,
-      werte: { name: name || '', email: email || '' },
+      werte: { name: name || '', email: email || '', code: code || '' },
     });
 
   if (!einladung) {
-    return zeigeFehler('Dieser Einladungslink ist ungültig oder abgelaufen.');
+    return zeigeFehler(null);
   }
   if (!name || !email) {
     return zeigeFehler('Bitte Name und E-Mail angeben.');

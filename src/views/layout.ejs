@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title %> – Notentool Veranstaltungstechnik</title>
   <link rel="stylesheet" href="/style.css">
+  <script>
+    if (localStorage.getItem('hinweiseAus') === '1') {
+      document.documentElement.classList.add('hinweise-aus');
+    }
+  </script>
 </head>
 <body>
   <header>
@@ -29,5 +34,13 @@
   <main>
     <%- body %>
   </main>
+  <footer>
+    <p class="hinweis" id="autosave-status" role="status" aria-live="polite"></p>
+    <label class="hinweise-schalter-label">
+      <input type="checkbox" id="hinweise-schalter" checked>
+      Erklärende Hinweistexte anzeigen
+    </label>
+  </footer>
+  <script src="/hinweise-toggle.js"></script>
 </body>
 </html>

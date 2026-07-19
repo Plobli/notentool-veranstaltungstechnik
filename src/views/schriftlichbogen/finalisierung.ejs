@@ -5,9 +5,9 @@
 <% if (!pruefliche.length) { %>
   <p><strong><%= termin.name %></strong> hat noch keine Prüflinge.</p>
 <% } else { %>
-  <p class="hinweis">
+  <p class="hinweis erklaerung">
     Die Einzelbewertungen aller Prüfer stehen nebeneinander. Der <strong>finale Wert</strong>
-    (erste Spalte) ist das maßgebliche Ergebnis für Dashboard und §-20-Berechnung.
+    (erste Spalte) ist das maßgebliche Ergebnis für Dashboard und Gesamtberechnung.
   </p>
 
   <div class="pruefling-nav">
@@ -22,17 +22,9 @@
   <% if (gewaehlt) { %>
     <div class="final-kopf">
       <h2><%= gewaehlt.name %></h2>
-      <form method="post" action="/pruefung/<%= termin.slug %>/schriftlich/final/status">
-        <input type="hidden" name="prueflingId" value="<%= gewaehlt.id %>">
-        <% if (gewaehlt.schriftlich_finalisiert) { %>
-          <span class="final-badge final-badge--zu">finalisiert – Einzelbögen gesperrt</span>
-          <input type="hidden" name="finalisiert" value="0">
-          <button type="submit" class="btn final-entsperren">Entsperren</button>
-        <% } else { %>
-          <input type="hidden" name="finalisiert" value="1">
-          <button type="submit" class="btn btn-primary final-abschliessen">Finalisieren &amp; sperren</button>
-        <% } %>
-      </form>
+      <% if (gewaehlt.schriftlich_finalisiert) { %>
+        <span class="final-badge final-badge--zu">finalisiert – Einzelbögen gesperrt</span>
+      <% } %>
     </div>
 
     <% if (!gewaehlt.schriftlich_finalisiert) { %>
@@ -41,8 +33,6 @@
         Anklicken bzw. bestätigen übernimmt ihn; Änderungen überschreiben ihn.
       </p>
     <% } %>
-
-    <p class="hinweis" id="autosave-status" role="status" aria-live="polite">Änderungen am finalen Bogen werden automatisch gespeichert.</p>
 
     <%
       // Liest den eingetragenen Punktwert eines Bogens für ein Feld (oder null).
@@ -59,7 +49,7 @@
       }
     %>
     <% if (Object.keys(uebernommen).length > 0) { %>
-      <p class="hinweis">
+      <p class="hinweis erklaerung">
         <strong>Wiederholer:</strong> bereits bestandene Bereiche (aus dem Vortermin) sind
         ausgegraut und mit <span class="uebernommen-badge">W</span> markiert – sie werden
         übernommen und nicht erneut finalisiert.
@@ -197,6 +187,17 @@
         </table>
       </section>
     </div>
+
+    <form method="post" action="/pruefung/<%= termin.slug %>/schriftlich/final/status" class="final-aktion">
+      <input type="hidden" name="prueflingId" value="<%= gewaehlt.id %>">
+      <% if (gewaehlt.schriftlich_finalisiert) { %>
+        <input type="hidden" name="finalisiert" value="0">
+        <button type="submit" class="btn final-entsperren">Entsperren</button>
+      <% } else { %>
+        <input type="hidden" name="finalisiert" value="1">
+        <button type="submit" class="btn btn-primary final-abschliessen">Finalisieren &amp; sperren</button>
+      <% } %>
+    </form>
 
     <script type="application/json" id="final-struktur"><%- JSON.stringify(struktur) %></script>
     <script src="/final-calc.js"></script>

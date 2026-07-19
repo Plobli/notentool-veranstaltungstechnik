@@ -81,6 +81,18 @@ function migriere(db) {
     `);
   }
 
+  // Mehrfachnutzbare Einladungscodes (z.B. für eine WhatsApp-Gruppe): Limit
+  // statt starrem Einmalgebrauch. Alt-Zeilen sind bereits einmal genutzt,
+  // wenn verbraucht_am gesetzt ist – dafür genutzt_anzahl entsprechend füllen.
+  const eiSpalten = db.prepare('PRAGMA table_info(einladung)').all().map((c) => c.name);
+  if (!eiSpalten.includes('max_nutzungen')) {
+    db.exec('ALTER TABLE einladung ADD COLUMN max_nutzungen INTEGER NOT NULL DEFAULT 1');
+  }
+  if (!eiSpalten.includes('genutzt_anzahl')) {
+    db.exec('ALTER TABLE einladung ADD COLUMN genutzt_anzahl INTEGER NOT NULL DEFAULT 0');
+    db.exec("UPDATE einladung SET genutzt_anzahl = 1 WHERE verbraucht_am IS NOT NULL");
+  }
+
   // Partieller Unique-Index für den finalen Bogen: garantiert genau eine
   // finale Zeile je (Prüfling, Teilgebiet, Feld) trotz NULL-Semantik von UNIQUE,
   // und macht ON CONFLICT beim finalen Upsert nutzbar.

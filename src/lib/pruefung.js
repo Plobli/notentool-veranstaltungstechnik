@@ -18,7 +18,7 @@ const BEREICHE = {
       fertig: true, unterpunkt: true },
     { slug: 'fachgespraech', name: 'Fachgespräch', fertig: true },
     { slug: 'mep', name: 'Mündliche Ergänzungsprüfung',
-      hinweis: 'nur bei ausschlaggebendem Bereich (§20 Abs. 3)', fertig: true },
+      hinweis: 'nur bei ausschlaggebendem Bereich', fertig: true },
   ],
   zwischen: [
     { slug: 'schriftlich', name: 'Schriftliche Prüfung', fertig: false },

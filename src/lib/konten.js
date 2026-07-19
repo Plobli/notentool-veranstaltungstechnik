@@ -19,45 +19,54 @@ function inStunden(stunden) {
 
 // --- Einladungen ---
 
-// Erzeugt eine Einladung für eine Rolle. Rückgabe: der Klartext-Code (nur hier
-// verfügbar) – daraus baut die Route den Registrierungslink.
-function erstelleEinladung(db, { role, erstelltVon }) {
+// Erzeugt eine Einladung für eine Rolle, gültig für `maxNutzungen`
+// Registrierungen (Standard 1). Für eine Gruppen-Einladung (z.B. WhatsApp)
+// kann der Admin ein höheres Limit setzen. Rückgabe: der Klartext-Code (nur
+// hier verfügbar) – daraus baut die Route den Registrierungslink.
+function erstelleEinladung(db, { role, erstelltVon, maxNutzungen }) {
   const rolle = role === 'admin' ? 'admin' : 'pruefer';
+  const limit = Math.max(1, Number(maxNutzungen) || 1);
   const code = erzeugeToken();
   db.prepare(
-    `INSERT INTO einladung (code_hash, role, erstellt_von, ablauf_am)
-     VALUES (?, ?, ?, ?)`
-  ).run(hashToken(code), rolle, erstelltVon || null, inTagen(EINLADUNG_TAGE));
+    `INSERT INTO einladung (code_hash, role, erstellt_von, ablauf_am, max_nutzungen)
+     VALUES (?, ?, ?, ?, ?)`
+  ).run(hashToken(code), rolle, erstelltVon || null, inTagen(EINLADUNG_TAGE), limit);
   return code;
 }
 
-// Liefert die gültige (unverbrauchte, nicht abgelaufene) Einladung zu einem
-// Code oder null.
+// Liefert die gültige (nicht ausgeschöpfte, nicht abgelaufene) Einladung zu
+// einem Code oder null.
 function findeGueltigeEinladung(db, code) {
   if (!code) return null;
   return (
     db
       .prepare(
         `SELECT * FROM einladung
-         WHERE code_hash = ? AND verbraucht_am IS NULL AND ablauf_am > datetime('now')`
+         WHERE code_hash = ? AND genutzt_anzahl < max_nutzungen AND ablauf_am > datetime('now')`
       )
       .get(hashToken(code)) || null
   );
 }
 
-// Markiert eine Einladung als verbraucht.
+// Zählt eine Nutzung der Einladung. Ist das Limit danach erreicht, wird sie
+// zusätzlich als verbraucht markiert (für die Admin-Übersicht).
 function verbraucheEinladung(db, id) {
-  db.prepare("UPDATE einladung SET verbraucht_am = datetime('now') WHERE id = ?").run(id);
+  db.prepare(
+    `UPDATE einladung
+     SET genutzt_anzahl = genutzt_anzahl + 1,
+         verbraucht_am = CASE WHEN genutzt_anzahl + 1 >= max_nutzungen THEN datetime('now') ELSE verbraucht_am END
+     WHERE id = ?`
+  ).run(id);
 }
 
 // Offene Einladungen für die Admin-Übersicht (Klartext-Code steht nicht mehr
-// zur Verfügung – nur Rolle/Ablauf).
+// zur Verfügung – nur Rolle/Ablauf/Nutzungsstand).
 function offeneEinladungen(db) {
   return db
     .prepare(
-      `SELECT e.id, e.role, e.erstellt_am, e.ablauf_am, u.name AS ersteller
+      `SELECT e.id, e.role, e.erstellt_am, e.ablauf_am, e.max_nutzungen, e.genutzt_anzahl, u.name AS ersteller
        FROM einladung e LEFT JOIN user u ON u.id = e.erstellt_von
-       WHERE e.verbraucht_am IS NULL AND e.ablauf_am > datetime('now')
+       WHERE e.genutzt_anzahl < e.max_nutzungen AND e.ablauf_am > datetime('now')
        ORDER BY e.erstellt_am DESC`
     )
     .all();

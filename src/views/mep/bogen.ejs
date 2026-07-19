@@ -10,14 +10,12 @@
 </div>
 
 <% if (auswahl.length === 0) { %>
-  <p class="hinweis">
+  <p class="hinweis erklaerung">
     Für <strong><%= pruefling.name %></strong> ist derzeit <strong>keine</strong> mündliche
     Ergänzungsprüfung möglich: Es gibt keinen schriftlichen Bereich, der schlechter als
     „ausreichend“ bewertet ist und in dem die MEp für das Bestehen den Ausschlag geben kann.
   </p>
 <% } else { %>
-
-  <p class="hinweis" id="autosave-status" role="status" aria-live="polite">Eingaben werden automatisch gespeichert.</p>
 
   <div id="mep-form"
        data-pruefling="<%= pruefling.id %>"
@@ -26,7 +24,7 @@
     <!-- Bereichswahl: nur ausschlaggebende Bereiche (genau einer). -->
     <section class="mep-bereichswahl">
       <h3>Zu ergänzender Prüfungsbereich</h3>
-      <p class="hinweis">Es kann genau <strong>ein</strong> Bereich mündlich ergänzt werden.</p>
+      <p class="hinweis erklaerung">Es kann genau <strong>ein</strong> Bereich mündlich ergänzt werden.</p>
       <div class="mep-bereich-optionen">
         <% auswahl.forEach(a => { %>
           <label class="mep-bereich-option">

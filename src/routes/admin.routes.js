@@ -56,14 +56,16 @@ router.post('/admin/pruefungstermine', requireAdmin, (req, res) => {
   res.redirect('/admin');
 });
 
-// Einladung erzeugen: gibt einen einmaligen Registrierungslink zurück, den der
-// Admin dem neuen Prüfer übergibt.
+// Einladung erzeugen: gibt einen Registrierungslink samt Code zurück. Bei
+// Gruppen-Einladungen (z.B. WhatsApp) kann derselbe Code mehrfach genutzt
+// werden – der Admin gibt dazu ein Nutzungslimit an.
 router.post('/admin/einladungen', requireAdmin, (req, res) => {
   const db = getDb();
   const role = req.body.role === 'admin' ? 'admin' : 'pruefer';
-  const code = erstelleEinladung(db, { role, erstelltVon: req.user.id });
+  const maxNutzungen = Math.min(200, Math.max(1, Number(req.body.max_nutzungen) || 1));
+  const code = erstelleEinladung(db, { role, erstelltVon: req.user.id, maxNutzungen });
   const link = `${basisUrl(req)}/registrieren?code=${code}`;
-  rendereAdmin(req, res, { art: 'einladung', role, url: link });
+  rendereAdmin(req, res, { art: 'einladung', role, code, url: link, maxNutzungen });
 });
 
 router.post('/admin/einladungen/:id/loeschen', requireAdmin, (req, res) => {

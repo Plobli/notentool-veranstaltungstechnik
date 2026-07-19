@@ -1,22 +1,129 @@
-/* src/public/style.css */
-body { font-family: system-ui, sans-serif; margin: 0; color: #1a1a1a; }
-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1.5rem; background: #1a2b3c; color: white; }
-.header-links { display: flex; align-items: center; gap: 0.6rem; min-width: 0; }
-header .logo { color: white; text-decoration: none; font-weight: bold; white-space: nowrap; }
-.header-sep { color: #8aa0b8; }
-.header-termin { color: #fff; text-decoration: none; font-weight: 600;
+/* src/public/style.css
+   Design-System im Stil des Vercel "Geist" Design Systems: neutrale
+   Graustufen-Skala, klare Typografie, viel Weißraum, dezente Radien/Schatten. */
+
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --g-100: #ffffff;
+  --g-200: #fafafa;
+  --g-300: #f2f2f2;
+  --g-400: #ebebeb;
+  --g-500: #eaeaea;
+  --g-600: #e2e2e2;
+  --g-700: #c9c9c9;
+  --g-800: #a8a8a8;
+  --g-900: #8a8a8a;
+  --g-1000: #6e6e6e;
+  --g-1100: #454545;
+  --g-1200: #1a1a1a;
+  --g-1300: #000000;
+
+  --blue: #0070f3;
+  --blue-light: #e6f1fe;
+  --green: #12805c;
+  --green-light: #e6f7f1;
+  --red: #e5484d;
+  --red-light: #fde8e8;
+  --amber: #f5a623;
+  --amber-light: #fef3e0;
+  --purple: #7c5cff;
+  --purple-light: #f3f0ff;
+
+  --font-sans: 'Geist', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+}
+
+html { font-size: 18px; }
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: var(--font-sans);
+  margin: 0;
+  color: var(--g-1200);
+  background: var(--g-100);
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) var(--space-5);
+  background: var(--g-100);
+  border-bottom: 1px solid var(--g-500);
+  color: var(--g-1200);
+}
+.header-links { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+header .logo {
+  color: var(--g-1200);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.header-sep { color: var(--g-800); }
+.header-termin { color: var(--g-1000); text-decoration: none; font-weight: 500;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.header-termin:hover { text-decoration: underline; }
-header nav a, header nav span { color: white; margin-left: 1rem; }
-main { padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
+.header-termin:hover { color: var(--g-1200); }
+
+header nav { display: flex; align-items: center; gap: var(--space-1); }
+header nav a, header nav span {
+  color: var(--g-1100);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  transition: background 0.12s ease, color 0.12s ease;
+  margin-left: 0;
+}
+header nav a:hover { background: var(--g-300); color: var(--g-1200); }
+header nav button {
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--g-1100);
+  background: transparent;
+  border: 1px solid var(--g-600);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-3);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+header nav button:hover { background: var(--g-300); border-color: var(--g-800); }
+
+main { padding: var(--space-6) var(--space-5); max-width: 1400px; margin: 0 auto; }
+
+h1 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 var(--space-5); }
+h2 { font-size: 1rem; font-weight: 600; letter-spacing: -0.01em; color: var(--g-1100); margin: 0 0 var(--space-3); }
+h3 { font-size: 0.95rem; font-weight: 600; color: var(--g-1100); }
+
 table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
-th, td { border: 1px solid #ccc; padding: 0.4rem 0.6rem; text-align: right; }
+th, td { border: 1px solid var(--g-500); padding: 7px 10px; text-align: right; font-size: 0.875rem; }
 th:first-child, td:first-child { text-align: left; }
-.error { color: #b00020; }
-.ok { color: #0a7d1e; }
-.besser { background: #d7f5d7; }
-.schlechter { background: #f8d7d7; }
+.error { color: var(--red); }
+.ok { color: var(--green); }
+.besser { background: var(--green-light); }
+.schlechter { background: var(--red-light); }
 input[type="number"] { width: 4.5rem; }
+
+a { color: var(--blue); }
 
 /* Schriftlicher Auswertungsbogen */
 .bogen-wrap { overflow-x: auto; }
@@ -24,38 +131,48 @@ input[type="number"] { width: 4.5rem; }
 /* Jeder Bereich ist eine eigene Tabelle mit echter <h2>-Überschrift. Damit die
    Spalten über alle Bereichs-Tabellen bündig untereinander stehen, nutzen alle
    Tabellen dieselbe feste Spaltenaufteilung (colgroup + table-layout: fixed). */
-table.bogen { table-layout: fixed; width: 100%; min-width: 40rem; margin: 0; }
+table.bogen {
+  table-layout: fixed; width: 100%; min-width: 40rem; margin: 0;
+  border: 1px solid var(--g-500);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
 table.bogen col.col-feldname { width: 16rem; }
 table.bogen col.col-pruefling { width: auto; }
-table.bogen .feld-name { text-align: left; white-space: nowrap; }
-table.bogen .gebunden td:first-child { font-style: italic; }
-table.bogen thead th { background: #f4f7fa; }
-table.bogen .ergebnis-zeile td.feld-name { font-weight: bold; }
+table.bogen .feld-name { text-align: left; white-space: nowrap; color: var(--g-1100); font-weight: 500; }
+table.bogen .gebunden td:first-child { font-style: italic; color: var(--g-1000); }
+table.bogen thead th { background: var(--g-200); font-weight: 600; font-size: 0.8125rem; color: var(--g-1100); }
+table.bogen thead th:first-child { border-left: none; }
+table.bogen thead th:last-child { border-right: none; }
+table.bogen tr:last-child td { border-bottom: none; }
+table.bogen td:first-child { border-left: none; }
+table.bogen td:last-child { border-right: none; }
+table.bogen .ergebnis-zeile td.feld-name { font-weight: 600; color: var(--g-1200); }
 table.bogen .gesamt-zeile td.feld-name,
-table.bogen .gesamt-status-zeile td.feld-name { font-weight: bold; }
+table.bogen .gesamt-status-zeile td.feld-name { font-weight: 600; color: var(--g-1200); }
 
 /* Bereichsblock: echter Abstand zwischen den Bereichen + Header mit h2. */
-.tg-block { margin-top: 1.75rem; }
-.tg-block:first-of-type { margin-top: 0.5rem; }
-.tg-header { display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.35rem; }
-.tg-header h2 { margin: 0; font-size: 1.15rem; display: inline-flex; align-items: baseline; gap: 0.5rem; }
+.tg-block { margin-top: var(--space-6); }
+.tg-block:first-of-type { margin-top: var(--space-3); }
+.tg-header { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-2); }
+.tg-header h2 { margin: 0; font-size: 1rem; display: inline-flex; align-items: baseline; gap: var(--space-2); }
 
 /* Gewichtung und Sperrfach für die Prüfer sichtbar machen. */
-.tg-gewicht { font-size: 0.8rem; font-weight: normal; color: #fff; background: #5b6b7f;
-  border-radius: 4px; padding: 0.05rem 0.4rem; }
-.tg-sperrfach { font-size: 0.75rem; font-weight: bold; color: #b00020; background: #f8d7d7;
-  border: 1px solid #e6a2a2; border-radius: 4px; padding: 0.05rem 0.4rem; letter-spacing: 0.02em; }
+.tg-gewicht { font-size: 0.6875rem; font-weight: 600; color: var(--g-1100);
+  background: var(--g-400); border-radius: 999px; padding: 1px 9px; }
+.tg-sperrfach { font-size: 0.6875rem; font-weight: 600; color: var(--red);
+  background: var(--red-light); border-radius: 999px; padding: 1px 9px; letter-spacing: 0.01em; }
 
 /* Bestehens-Färbung der Punkte-/Gesamt-Zellen (50%-Grenze je Bereich). */
-table.bogen td.punkte-status { font-weight: bold; }
-table.bogen td.punkte-status.bestanden { background: #d7f5d7; color: #0a5d1e; }
-table.bogen td.punkte-status.durchgefallen { background: #f8d7d7; color: #8a0016; }
-table.bogen td.gesamt-status { font-weight: bold; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.03em; }
-table.bogen td.gesamt-status.bestanden { background: #b8ebc0; color: #0a5d1e; }
-table.bogen td.gesamt-status.durchgefallen { background: #f4bcbc; color: #8a0016; }
-table.bogen td.gesamt-status.mep { background: #ffe4a3; color: #7a5200; }
+table.bogen td.punkte-status { font-weight: 600; }
+table.bogen td.punkte-status.bestanden { background: var(--green-light); color: var(--green); }
+table.bogen td.punkte-status.durchgefallen { background: var(--red-light); color: var(--red); }
+table.bogen td.gesamt-status { font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.03em; }
+table.bogen td.gesamt-status.bestanden { background: var(--green-light); color: var(--green); }
+table.bogen td.gesamt-status.durchgefallen { background: var(--red-light); color: var(--red); }
+table.bogen td.gesamt-status.mep { background: var(--amber-light); color: #8a5a00; }
 .gesamt-status-text { display: block; }
-.mep-hinweis:not(:empty) { display: block; margin-top: 0.2rem; font-size: 0.72rem;
+.mep-hinweis:not(:empty) { display: block; margin-top: 2px; font-size: 0.6875rem;
   font-weight: normal; text-transform: none; letter-spacing: 0; }
 
 /* Punkt-Zelle: kein Padding, Eingabefeld füllt die ganze Zelle klickbar aus.
@@ -73,8 +190,9 @@ table.bogen .feld-input {
   background: transparent;
   text-align: right;
   font: inherit;
+  font-size: 0.875rem;
   color: inherit;
-  padding: 0.4rem 0.6rem;
+  padding: 7px 10px;
   -moz-appearance: textfield;
   appearance: textfield;
   cursor: text;
@@ -94,141 +212,148 @@ table.bogen .feld-input:focus {
 }
 
 /* Anzahl-Feld in der Teilgebiets-Überschrift, mit eigenem Speichern-Button */
-.anzahl-form { display: inline-flex; align-items: center; gap: 0.4rem; }
-.anzahl-label { font-weight: normal; font-size: 0.85em; }
-.anzahl-input { width: 3.5rem; }
+.anzahl-form { display: inline-flex; align-items: center; gap: var(--space-2); }
+.anzahl-label { font-weight: normal; font-size: 0.8125rem; color: var(--g-1000); }
+.anzahl-input {
+  width: 3.5rem; font: inherit; font-size: 0.8125rem;
+  border: 1px solid var(--g-700); border-radius: var(--radius-sm); padding: 3px 6px;
+}
 .anzahl-speichern {
-  font-size: 0.78rem;
-  font-weight: normal;
-  padding: 0.12rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 4px 10px;
   background: transparent;
-  color: #567;
-  border: 1px solid #b7c2d0;
-  border-radius: 4px;
+  color: var(--g-1100);
+  border: 1px solid var(--g-700);
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
-.anzahl-speichern:hover { background: #e7edf3; color: #1a2b3c; }
+.anzahl-speichern:hover { background: var(--g-300); }
 
 /* Streich-Button: nur ✗, kompakt, absolut in der linken Zellenecke */
-.strich-btn { position: absolute; left: 0.35rem; top: 50%; transform: translateY(-50%);
+.strich-btn { position: absolute; left: 6px; top: 50%; transform: translateY(-50%);
   display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
-  width: 1.4rem; height: 1.4rem; border: 1px solid #ccc; border-radius: 50%;
-  font-size: 0.8rem; line-height: 1; color: #aaa; background: #fafafa; user-select: none; }
-.strich-btn:hover { border-color: #b00020; color: #b00020; }
+  width: 20px; height: 20px; border: 1px solid var(--g-700); border-radius: 50%;
+  font-size: 0.7rem; line-height: 1; color: var(--g-900); background: var(--g-200); user-select: none; }
+.strich-btn:hover { border-color: var(--red); color: var(--red); }
 .strich-input { position: absolute; opacity: 0; width: 0; height: 0; }
-.strich-btn.aktiv { background: #f8d7d7; border-color: #b00020; color: #b00020; font-weight: bold; }
+.strich-btn.aktiv { background: var(--red-light); border-color: var(--red); color: var(--red); font-weight: bold; }
 
 /* Sichtbare Streichung einer Aufgabe (Zelle) */
 td.zelle-gestrichen .feld-input { text-decoration: line-through; opacity: 0.5; }
 
 /* Aus dem Vortermin übernommener (bereits bestandener) Bereich eines
    Wiederholers: die ganze Spalte dieses Bereichs ist gesperrt und ausgegraut. */
-td.zelle-uebernommen { background: #f2f2f4; cursor: not-allowed; }
-td.zelle-uebernommen .feld-input { background: transparent; color: #99a; cursor: not-allowed; }
+td.zelle-uebernommen { background: var(--g-300); cursor: not-allowed; }
+td.zelle-uebernommen .feld-input { background: transparent; color: var(--g-900); cursor: not-allowed; }
 td.zelle-uebernommen .strich-btn { opacity: 0.35; pointer-events: none; }
 table.bogen td.tg-ergebnis.uebernommen,
 table.bogen td.punkte-status.uebernommen,
 table.bogen td.gesamt-status.uebernommen {
-  background: #eceef2; color: #556;
+  background: var(--g-400); color: var(--g-1100);
 }
 .uebernommen-badge {
-  display: inline-block; font-size: 0.7rem; font-weight: bold;
-  color: #556; background: #dfe3ea; border-radius: 3px; padding: 0 0.3em; margin-left: 0.15em;
+  display: inline-block; font-size: 0.6875rem; font-weight: 700;
+  color: var(--g-1100); background: var(--g-500); border-radius: 3px; padding: 0 5px; margin-left: 3px;
 }
 
 /* Fachgespräch bei Wiederholern: aus dem Vortermin übernommen (nicht editierbar). */
 .fg-uebernommen-box {
-  border: 1px solid #d7dbe4; background: #f6f7fa; border-radius: 6px;
-  padding: 1rem 1.2rem; margin: 1rem 0;
+  border: 1px solid var(--g-500); background: var(--g-200); border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-5); margin: var(--space-4) 0;
 }
 .fg-uebernommen-box p { margin-top: 0; }
 
 /* Auto-Save-Status */
-#autosave-status { min-height: 1.2em; }
-#autosave-status.autosave-fehler { color: #b00020; font-weight: bold; }
-.hinweis { color: #555; font-size: 0.9rem; }
-.pruefling-nav { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0.5rem 0 1rem; }
-.pruefling-nav a { padding: 0.2rem 0.6rem; border: 1px solid #ccc; border-radius: 4px; text-decoration: none; color: #1a2b3c; }
-.pruefling-nav a.aktiv { background: #1a2b3c; color: white; }
-.tg-block { margin: 1.5rem 0; }
-.tg-block h2 { margin-bottom: 0.3rem; }
+#autosave-status { min-height: 1.2em; color: var(--g-1000); }
+#autosave-status.autosave-fehler { color: var(--red); font-weight: bold; }
+.hinweis { color: var(--g-1000); font-size: 0.8125rem; line-height: 1.5; }
+html.hinweise-aus .erklaerung { display: none; }
+.pruefling-nav { display: flex; gap: var(--space-1); flex-wrap: wrap; margin: var(--space-2) 0 var(--space-4); }
+.pruefling-nav a { padding: 4px 12px; border: 1px solid var(--g-600); border-radius: 999px;
+  text-decoration: none; color: var(--g-1100); font-size: 0.8125rem; font-weight: 500; }
+.pruefling-nav a.aktiv { background: var(--g-1200); color: var(--g-100); border-color: var(--g-1200); }
+.tg-block h2 { margin-bottom: var(--space-2); }
 
 /* Fachgespräch-Bogen: je Bereich eine eigene Tabelle mit Bewertungszeilen. */
 .fg-skala-legende { display: flex; flex-wrap: wrap; gap: 0.2rem 0.9rem; align-items: baseline; }
 .fg-skala-legende-item { white-space: nowrap; }
 
-.fg-bereich { margin: 1.5rem 0; }
-.fg-bereich:first-of-type { margin-top: 0.5rem; }
+.fg-bereich { margin: var(--space-5) 0; }
+.fg-bereich:first-of-type { margin-top: var(--space-2); }
 /* Bereichstitel dezent: kleiner, normale Schriftstärke. */
-.fg-bereich-header h3 { margin: 0 0 0.35rem; font-size: 0.95rem; font-weight: normal;
-  color: #445; display: inline-flex; align-items: center; gap: 0.45rem; }
-.fg-bereich-name { font-weight: 600; color: #1a2b3c; }
-.fg-beschreibung { margin: 0 0 0.5rem; font-size: 0.82rem; font-style: italic; color: #555; }
+.fg-bereich-header h3 { margin: 0 0 var(--space-2); font-size: 0.95rem; font-weight: normal;
+  color: var(--g-1100); display: inline-flex; align-items: center; gap: var(--space-2); }
+.fg-bereich-name { font-weight: 600; color: var(--g-1200); }
+.fg-beschreibung { margin: 0 0 var(--space-2); font-size: 0.8125rem; font-style: italic; color: var(--g-1000); }
 .fg-info { width: 1.1rem; height: 1.1rem; border-radius: 50%; cursor: pointer;
-  border: none; background: transparent; color: #aab3bd; font-size: 0.72rem;
+  border: none; background: transparent; color: var(--g-800); font-size: 0.72rem;
   font-weight: bold; line-height: 1; padding: 0; }
-.fg-info:hover, .fg-info[aria-expanded="true"] { color: #5b6b7f; }
-.fg-faktor-badge { font-size: 0.72rem; font-weight: normal; color: #667;
-  background: #eef2f7; border-radius: 4px; padding: 0.05rem 0.4rem; }
+.fg-info:hover, .fg-info[aria-expanded="true"] { color: var(--g-1100); }
+.fg-faktor-badge { font-size: 0.6875rem; font-weight: 600; color: var(--g-1100);
+  background: var(--g-400); border-radius: 999px; padding: 1px 9px; }
 
-table.fg-tabelle { table-layout: fixed; width: 100%; min-width: 48rem; }
+table.fg-tabelle {
+  table-layout: fixed; width: 100%; min-width: 48rem;
+  border: 1px solid var(--g-500); border-radius: var(--radius-md); overflow: hidden;
+}
 table.fg-tabelle col.fg-col-nr { width: 3rem; }
 table.fg-tabelle col.fg-col-thema { width: 30%; }
 table.fg-tabelle col.fg-col-begruendung { width: auto; }
 table.fg-tabelle col.fg-col-skala { width: 11rem; }
-table.fg-tabelle thead th { background: #f7f9fb; text-align: left;
-  font-weight: normal; font-size: 0.78rem; color: #778; text-transform: none;
-  letter-spacing: 0; padding: 0.3rem 0.5rem; }
+table.fg-tabelle thead th { background: var(--g-200); text-align: left;
+  font-weight: 600; font-size: 0.78rem; color: var(--g-1000); text-transform: none;
+  letter-spacing: 0; padding: 6px 10px; }
 table.fg-tabelle th.fg-th-nr, table.fg-tabelle td.fg-zeile-nr { text-align: center; }
-table.fg-tabelle td.fg-zeile-nr { vertical-align: top; color: #667;
-  display: flex; align-items: baseline; justify-content: center; gap: 0.3rem; padding-top: 0.45rem; }
+table.fg-tabelle td.fg-zeile-nr { vertical-align: top; color: var(--g-1000);
+  display: flex; align-items: baseline; justify-content: center; gap: 0.3rem; padding-top: 10px; }
 /* Kleiner Löschen-Button je Protokoll-Zeile (dezent, deutlicher beim Hover). */
 .fg-zeile-del { border: none; background: transparent; cursor: pointer; padding: 0;
-  font-size: 0.75rem; line-height: 1; color: #c3ccd6; }
-.fg-zeile:hover .fg-zeile-del { color: #99a3ad; }
-.fg-zeile-del:hover { color: #b00020; }
+  font-size: 0.75rem; line-height: 1; color: var(--g-700); }
+.fg-zeile:hover .fg-zeile-del { color: var(--g-900); }
+.fg-zeile-del:hover { color: var(--red); }
 
 /* Text-Zellen: Auto-Grow-Textfeld ohne Kasten-Optik, füllt die Zelle. */
 td.fg-zelle { padding: 0; vertical-align: top; }
 .fg-thema, .fg-begruendung { display: block; width: 100%; box-sizing: border-box;
-  font: inherit; color: inherit; border: none; background: transparent;
-  resize: none; overflow: hidden; padding: 0.4rem 0.5rem; line-height: 1.4; }
-.fg-thema:focus, .fg-begruendung:focus { outline: 2px solid #7c5cff;
-  outline-offset: -2px; background: #f3f0ff; }
+  font: inherit; font-size: 0.875rem; color: inherit; border: none; background: transparent;
+  resize: none; overflow: hidden; padding: 7px 10px; line-height: 1.4; }
+.fg-thema:focus, .fg-begruendung:focus { outline: 2px solid var(--purple);
+  outline-offset: -2px; background: var(--purple-light); }
 
 /* Skala-Wahl je Zeile (fünf Stufen). */
 td.fg-skala-zelle { vertical-align: top; }
-.fg-skala-wahl { display: flex; gap: 0.15rem; flex-wrap: nowrap; }
-.fg-skala-btn { cursor: pointer; border: 1px solid #ccc; background: #fafafa;
-  color: #667; border-radius: 4px; padding: 0.15rem 0; font-size: 0.75rem;
+.fg-skala-wahl { display: flex; gap: 3px; flex-wrap: nowrap; padding: 6px; }
+.fg-skala-btn { cursor: pointer; border: 1px solid var(--g-700); background: var(--g-200);
+  color: var(--g-1000); border-radius: var(--radius-sm); padding: 0.15rem 0; font-size: 0.75rem;
   line-height: 1.1; flex: 1 1 0; min-width: 0; }
-.fg-skala-btn:hover { border-color: #7c5cff; color: #1a2b3c; }
+.fg-skala-btn:hover { border-color: var(--purple); color: var(--g-1200); }
 /* Aktive Stufe hervorheben: hoch=grün, mittel=neutral, niedrig=rot. */
 .fg-zeile[data-skala="pp"] .fg-skala-btn[data-skala="pp"],
 .fg-zeile[data-skala="p"] .fg-skala-btn[data-skala="p"] {
-  background: #d7f5d7; border-color: #0a7d1e; color: #0a5d1e; font-weight: bold; }
+  background: var(--green-light); border-color: var(--green); color: var(--green); font-weight: bold; }
 .fg-zeile[data-skala="null"] .fg-skala-btn[data-skala="null"] {
-  background: #e7edf3; border-color: #5b6b7f; color: #1a2b3c; font-weight: bold; }
+  background: var(--g-400); border-color: var(--g-900); color: var(--g-1200); font-weight: bold; }
 .fg-zeile[data-skala="m"] .fg-skala-btn[data-skala="m"],
 .fg-zeile[data-skala="mm"] .fg-skala-btn[data-skala="mm"] {
-  background: #f8d7d7; border-color: #b00020; color: #8a0016; font-weight: bold; }
+  background: var(--red-light); border-color: var(--red); color: var(--red); font-weight: bold; }
 
 /* +Zeile und Bereichs-Ergebniszeile. */
 .fg-zeile-add { font-size: 0.75rem; padding: 0.1rem 0.2rem; background: transparent;
-  color: #99a3ad; border: none; cursor: pointer; }
-.fg-zeile-add:hover { color: #5b6b7f; text-decoration: underline; }
+  color: var(--g-800); border: none; cursor: pointer; }
+.fg-zeile-add:hover { color: var(--g-1100); text-decoration: underline; }
 /* Bereichsergebnis-Zeile: links "+ Zeile", rechts "Ergebnis <Punkte>". */
-table.fg-tabelle .fg-bereich-ergebnis td { background: #f7f9fb; }
+table.fg-tabelle .fg-bereich-ergebnis td { background: var(--g-200); }
 table.fg-tabelle td.fg-bereich-punkte { text-align: right; white-space: nowrap; }
-.fg-ergebnis-label { font-size: 0.8rem; color: #778; }
+.fg-ergebnis-label { font-size: 0.8rem; color: var(--g-1000); }
 .fg-ergebnis-wert {
-  font-weight: 600; font-size: 1rem; color: #1a2b3c; margin-left: 0.3rem;
-  cursor: pointer; border-radius: 4px; padding: 0 0.3rem;
+  font-weight: 600; font-size: 1rem; color: var(--g-1200); margin-left: 0.3rem;
+  cursor: pointer; border-radius: var(--radius-sm); padding: 0 0.3rem;
   min-width: 1.4em; display: inline-block; text-align: right;
 }
-.fg-ergebnis-wert:hover { background: #e7edf3; }
+.fg-ergebnis-wert:hover { background: var(--g-400); }
 .fg-ergebnis-wert.fg-ergebnis-edit {
-  cursor: text; background: #fff; outline: 2px solid #4a7bd0; outline-offset: 0;
+  cursor: text; background: var(--g-100); outline: 2px solid var(--blue); outline-offset: 0;
 }
 /* Manuell überschriebener Bereich: Wert hervorheben. */
 .fg-bereich-punkte.fg-override .fg-ergebnis-wert { color: #b8620a; }
@@ -238,246 +363,316 @@ table.fg-tabelle td.fg-bereich-punkte { text-align: right; white-space: nowrap; 
 
 /* Gesamt-/Statuszeile: erbt fg-tabelle (gleiche Spaltenbreiten wie die
    Bereichstabellen). Ergebnis-/Statuswert steht in der letzten Spalte. */
-table.fg-gesamt-tabelle .feld-name { font-weight: bold; }
-table.fg-gesamt-tabelle .fg-gesamt { text-align: right; font-weight: bold; }
+table.fg-gesamt-tabelle .feld-name { font-weight: 600; color: var(--g-1200); }
+table.fg-gesamt-tabelle .fg-gesamt { text-align: right; font-weight: 600; }
 table.fg-gesamt-tabelle .fg-status { white-space: normal; text-align: right; }
 .fg-status-text { display: block; }
-.fg-note { display: block; margin-top: 0.2rem; font-size: 0.72rem; font-weight: normal;
+.fg-note { display: block; margin-top: 2px; font-size: 0.6875rem; font-weight: normal;
   text-transform: none; letter-spacing: 0; }
 
 /* Dashboard-Ergebnistabelle */
 .ergebnis-tabelle th, .ergebnis-tabelle td {
-  padding: 0.4rem 0.6rem; text-align: center; border-bottom: 1px solid #e0e6ec; }
+  padding: 7px 10px; text-align: center; border: 1px solid var(--g-500); border-bottom: 1px solid var(--g-500); }
 .ergebnis-tabelle th:first-child, .ergebnis-tabelle td:first-child { text-align: left; }
-.ergebnis-tabelle thead th { background: #f4f7fa; }
+.ergebnis-tabelle thead th { background: var(--g-200); font-weight: 600; color: var(--g-1100); }
 .ergebnis-tabelle td.ok, .ergebnis-tabelle td.error { font-weight: 600; }
-.mep-moeglich { color: #8a6d00; font-weight: 600; cursor: help; }
+.mep-moeglich { color: #8a5a00; font-weight: 600; cursor: help; }
 
 /* Kritischer Bereichswert (< 50) – rot markiert wie in der Matrix. */
-.ergebnis-tabelle td.zelle-krit { background: #f8d7d7; color: #8a0016; font-weight: 600; }
+.ergebnis-tabelle td.zelle-krit { background: var(--red-light); color: var(--red); font-weight: 600; }
 /* Marker für aus dem Vortermin übernommene Werte (Wiederholer). */
 .ueb-mark { display: inline-block; margin-left: 0.2rem; font-size: 0.65rem; font-weight: 700;
-  color: #556; background: #e7edf3; border-radius: 3px; padding: 0 0.2rem; vertical-align: super; cursor: help; }
+  color: var(--g-1100); background: var(--g-400); border-radius: 3px; padding: 0 0.2rem; vertical-align: super; cursor: help; }
 
 /* Status-Spalte: farbige Pille + Kurzbegründung. */
 .status-zelle { text-align: left; }
-.status-pille { display: inline-block; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.02em;
-  text-transform: uppercase; border-radius: 4px; padding: 0.1rem 0.5rem; white-space: nowrap; }
-.status-ok { background: #d7f5d7; color: #0a5d1e; }
-.status-fail { background: #f8d7d7; color: #8a0016; }
-.status-offen { background: #eef2f7; color: #556; }
-.status-grund { display: block; margin-top: 0.2rem; font-size: 0.75rem; color: #667; line-height: 1.3; }
+.status-pille { display: inline-block; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.02em;
+  text-transform: uppercase; border-radius: 999px; padding: 1px 9px; white-space: nowrap; }
+.status-ok { background: var(--green-light); color: var(--green); }
+.status-fail { background: var(--red-light); color: var(--red); }
+.status-offen { background: var(--g-400); color: var(--g-1100); }
+.status-grund { display: block; margin-top: 0.2rem; font-size: 0.75rem; color: var(--g-1000); line-height: 1.3; }
 
 /* Mündliche Ergänzungsprüfung: Bereichswahl */
-.mep-bereichswahl { margin: 1rem 0; }
-.mep-bereich-optionen { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.mep-bereichswahl { margin: var(--space-4) 0; }
+.mep-bereich-optionen { display: flex; flex-wrap: wrap; gap: var(--space-3); }
 .mep-bereich-option {
   display: flex; flex-direction: column; gap: 0.15rem;
-  border: 1px solid #ccd; border-radius: 6px; padding: 0.5rem 0.8rem;
+  border: 1px solid var(--g-600); border-radius: var(--radius-md); padding: 0.5rem 0.8rem;
   cursor: pointer; min-width: 12rem;
 }
-.mep-bereich-option:hover { border-color: #7c5cff; }
-.mep-bereich-option:has(input:checked) { border-color: #7c5cff; background: #f4f1ff; }
+.mep-bereich-option:hover { border-color: var(--purple); }
+.mep-bereich-option:has(input:checked) { border-color: var(--purple); background: var(--purple-light); }
 .mep-bereich-option .mep-bereich-name { font-weight: 600; }
 .mep-muendlich-wert, .mep-bereich-nach { font-weight: 600; }
 
-.vergangene { margin-top: 2rem; }
-.vergangene details { margin: 0.5rem 0; }
+.vergangene { margin-top: var(--space-6); }
+.vergangene details { margin: var(--space-2) 0; }
 .vergangene summary { cursor: pointer; font-weight: 600; padding: 0.3rem 0; }
 
 /* Dashboard: Prüfungs-Karten über die volle Breite mit Fortschritt. */
-.termin-liste { display: flex; flex-direction: column; gap: 0.75rem; margin: 0.75rem 0 1.5rem; }
-.termin-karte { display: block; text-decoration: none; color: #1a2b3c;
-  border: 1px solid #d7dde4; border-radius: 8px; background: #fff; padding: 1rem 1.25rem;
-  transition: border-color 0.08s ease, box-shadow 0.08s ease; }
-.termin-karte:hover { border-color: #1a2b3c; box-shadow: 0 1px 4px rgba(26,43,60,0.08); }
-.termin-karte-kopf { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
-.termin-karte-name { font-weight: 700; font-size: 1.1rem; }
-.termin-karte-anzahl { margin-left: auto; font-size: 0.85rem; color: #667; }
-.termin-karte-leer { margin: 0.6rem 0 0; font-size: 0.9rem; color: #778; }
+.termin-liste {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-3) 0 var(--space-5);
+}
+.termin-karte {
+  display: block;
+  text-decoration: none;
+  color: var(--g-1200);
+  border: 1px solid var(--g-500);
+  border-radius: var(--radius-lg);
+  background: var(--g-100);
+  padding: var(--space-4) var(--space-5);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.termin-karte:hover { border-color: var(--g-1200); box-shadow: var(--shadow-md); }
+.termin-karte-kopf { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.termin-karte-name { font-weight: 600; font-size: 1.0625rem; letter-spacing: -0.01em; }
+.termin-karte-anzahl { margin-left: auto; font-size: 0.8125rem; color: var(--g-1000); font-variant-numeric: tabular-nums; }
+.termin-karte-leer { margin: var(--space-3) 0 0; font-size: 0.875rem; color: var(--g-1000); }
 
-.termin-fortschritt { position: relative; display: flex; align-items: center; gap: 0.5rem;
-  margin: 0.7rem 0 0.6rem; }
-.termin-fortschritt::before { content: ''; flex: 1; height: 0.6rem;
-  background: #eef2f7; border-radius: 999px;
-  background-image: linear-gradient(#1a2b3c, #1a2b3c); background-repeat: no-repeat;
-  background-size: var(--fortschritt, 0%) 100%; }
-.termin-fortschritt-text { font-size: 0.78rem; font-weight: 700; color: #1a2b3c; min-width: 2.5rem; text-align: right; }
+.termin-fortschritt { position: relative; display: flex; align-items: center; gap: var(--space-3);
+  margin: var(--space-4) 0 var(--space-3); }
+.termin-fortschritt::before { content: ''; flex: 1; height: 6px;
+  background: var(--g-400); border-radius: 999px;
+  background-image: linear-gradient(var(--g-1200), var(--g-1200)); background-repeat: no-repeat;
+  background-size: var(--fortschritt, 0%) 100%; transition: background-size 0.3s ease; }
+.termin-fortschritt-text { font-size: 0.75rem; font-weight: 600; color: var(--g-1200);
+  font-variant-numeric: tabular-nums; min-width: 2.5rem; text-align: right; }
 
-.termin-kennzahlen { display: flex; flex-wrap: wrap; gap: 0.4rem 1.75rem; margin-top: 0.4rem; }
-.kennzahl { display: flex; flex-direction: column; gap: 0.05rem; }
-.kennzahl-label { font-size: 0.72rem; color: #778; text-transform: uppercase; letter-spacing: 0.02em; }
-.kennzahl-wert { font-size: 1.05rem; font-weight: 700; display: inline-flex; gap: 0.3rem; align-items: center; }
-.pill { font-size: 0.8rem; font-weight: 700; border-radius: 4px; padding: 0.05rem 0.4rem; }
-.pill-ok { background: #d7f5d7; color: #0a5d1e; }
-.pill-fail { background: #f8d7d7; color: #8a0016; }
-.pill-offen { background: #eef2f7; color: #556; }
+.termin-kennzahlen { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5);
+  margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--g-400); }
+.kennzahl { display: flex; flex-direction: column; gap: 2px; }
+.kennzahl-label { font-size: 0.6875rem; color: var(--g-1000); text-transform: uppercase;
+  letter-spacing: 0.03em; font-weight: 500; }
+.kennzahl-wert { font-size: 0.9375rem; font-weight: 600; font-variant-numeric: tabular-nums;
+  display: inline-flex; gap: 0.3rem; align-items: center; }
+.pill { font-size: 0.75rem; font-weight: 600; border-radius: 999px; padding: 1px 8px;
+  font-variant-numeric: tabular-nums; }
+.pill-ok { background: var(--green-light); color: var(--green); }
+.pill-fail { background: var(--red-light); color: var(--red); }
+.pill-offen { background: var(--g-400); color: var(--g-1100); }
 
 /* Brotkrumen */
-.brotkrumen { font-size: 0.85rem; color: #667; margin-bottom: 0.5rem; }
-.brotkrumen a { color: #1a2b3c; text-decoration: none; }
+.brotkrumen { font-size: 0.85rem; color: var(--g-1000); margin-bottom: var(--space-2); }
+.brotkrumen a { color: var(--g-1100); text-decoration: none; }
 .brotkrumen a:hover { text-decoration: underline; }
 
 /* Prüfungs-Typ-Badge */
-.art-badge { display: inline-block; font-size: 0.75rem; font-weight: 600;
-  border-radius: 4px; padding: 0.05rem 0.45rem; letter-spacing: 0.02em; vertical-align: middle; }
-.art-abschluss { background: #e3ecf6; color: #1a2b3c; border: 1px solid #b9cde3; }
-.art-zwischen { background: #eef2f7; color: #556; border: 1px solid #cdd6e0; }
+.art-badge { display: inline-block; font-size: 0.6875rem; font-weight: 600;
+  border-radius: 999px; padding: 2px 9px; letter-spacing: 0.01em; vertical-align: middle; }
+.art-abschluss { background: var(--blue-light); color: var(--blue); }
+.art-zwischen { background: var(--g-400); color: var(--g-1100); }
 
 /* Prüfungs-Liste auf dem Dashboard */
-.pruefung-liste { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 0.5rem 0 1.5rem; }
-.pruefung-karte { display: flex; align-items: center; gap: 0.6rem;
-  padding: 0.6rem 0.9rem; border: 1px solid #ccc; border-radius: 6px;
-  text-decoration: none; color: #1a2b3c; background: #fff; }
-.pruefung-karte:hover { border-color: #1a2b3c; }
+.pruefung-liste { display: flex; flex-wrap: wrap; gap: var(--space-3); margin: var(--space-2) 0 var(--space-5); }
+.pruefung-karte { display: flex; align-items: center; gap: var(--space-2);
+  padding: 0.6rem 0.9rem; border: 1px solid var(--g-600); border-radius: var(--radius-md);
+  text-decoration: none; color: var(--g-1200); background: var(--g-100); }
+.pruefung-karte:hover { border-color: var(--g-1200); }
 .pruefung-karte-name { font-weight: 600; }
 
 /* Bereichs-Links auf der Prüfungs-Übersicht */
-.bereich-links { display: flex; flex-wrap: wrap; gap: 0.8rem; margin: 1.25rem 0 1.75rem; }
+.bereich-links { display: flex; flex-wrap: wrap; gap: var(--space-3); margin: var(--space-5) 0 var(--space-6); }
 .bereich-karte { display: flex; flex-direction: column; gap: 0.25rem; min-width: 13rem; flex: 1 1 13rem;
   max-width: 20rem;
-  padding: 1.1rem 1.2rem; border-radius: 8px;
-  background: #1a2b3c; text-decoration: none; color: #fff;
-  transition: background-color 0.08s ease; }
-.bereich-karte:hover { background: #2c4360; }
-.bereich-karte-name { font-weight: 700; font-size: 1.05rem; color: #fff; }
-.bereich-karte-hinweis { font-size: 0.82rem; color: #c3d0de; }
+  padding: var(--space-4) var(--space-5); border-radius: var(--radius-lg);
+  background: var(--g-1200); text-decoration: none; color: var(--g-100);
+  transition: background-color 0.12s ease; }
+.bereich-karte:hover { background: var(--g-1100); }
+.bereich-karte-name { font-weight: 700; font-size: 1.05rem; color: var(--g-100); }
+.bereich-karte-hinweis { font-size: 0.82rem; color: var(--g-700); }
 
-/* In Vorbereitung: zurückgenommen (gedämpftes Blau). */
-.bereich-karte--offen { background: #55677a; }
-.bereich-karte--offen:hover { background: #63768a; }
-.bereich-karte--offen .bereich-karte-hinweis { color: #d8e0ea; }
+/* In Vorbereitung: zurückgenommen (gedämpftes Grau). */
+.bereich-karte--offen { background: var(--g-800); }
+.bereich-karte--offen:hover { background: var(--g-900); }
+.bereich-karte--offen .bereich-karte-hinweis { color: var(--g-400); }
 
 /* Finalisierung: abhängiger Schritt der schriftlichen Prüfung – eingerückt. */
 .bereich-karte--unter { margin-left: 0.5rem; }
 
 /* Kompakte Bereichs-Navigation (schlanke Reiter) auf den Arbeitsseiten. */
-.bereich-nav { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.5rem 0 1.25rem; }
-.bereich-tab { padding: 0.35rem 0.85rem; border-radius: 6px;
-  background: #e7ecf2; color: #1a2b3c; text-decoration: none;
-  font-size: 0.9rem; font-weight: 600; transition: background-color 0.08s ease; }
-.bereich-tab:hover { background: #d4dce6; }
-.bereich-tab.aktiv { background: #1a2b3c; color: #fff; }
-.bereich-tab.aktiv:hover { background: #2c4360; }
-.bereich-tab--offen { color: #7a8694; }
+.bereich-nav { display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: var(--space-3); margin: 0 0 var(--space-5);
+  border-bottom: 1px solid var(--g-500); padding-bottom: var(--space-3); }
+.bereich-nav-tabs { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.bereich-tab { padding: 6px 14px; border-radius: 999px;
+  background: var(--g-300); color: var(--g-1100); text-decoration: none;
+  font-size: 0.8125rem; font-weight: 500; transition: background-color 0.12s ease, color 0.12s ease; }
+.bereich-tab:hover { background: var(--g-500); color: var(--g-1200); }
+.bereich-tab.aktiv { background: var(--g-1200); color: var(--g-100); }
+.bereich-tab.aktiv:hover { background: var(--g-1200); }
+.bereich-tab--offen { color: var(--g-900); }
+.bereich-nav-rechts { display: flex; align-items: center; gap: var(--space-3); }
+.bereich-nav-trenner { width: 1px; height: 1.5rem; background: var(--g-600); }
+.bereich-nav-uebersicht {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 5px 13px; border: 1px solid var(--g-700); border-radius: 999px;
+  font-size: 0.8125rem; font-weight: 500; color: var(--g-1100);
+  text-decoration: none; white-space: nowrap;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+.bereich-nav-uebersicht::before { content: '←'; }
+.bereich-nav-uebersicht:hover { background: var(--g-300); border-color: var(--g-900); color: var(--g-1200); }
 
 /* Prüfung-anlegen-Formular */
-.pruefung-neu { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.6rem; margin: 0.5rem 0; }
 .pruefung-neu label { display: flex; flex-direction: column; font-size: 0.85rem; gap: 0.15rem; }
 
 /* Prüfer-getrennte schriftliche Bewertung */
-.eigene-bewertung-hinweis { background: #eef4fb; border: 1px solid #cdd6e0; border-radius: 6px;
-  padding: 0.5rem 0.75rem; font-size: 0.9rem; margin: 0.5rem 0; }
+.eigene-bewertung-hinweis { background: var(--blue-light); border: 1px solid #bcdcfc;
+  color: #0b4f8f; border-radius: var(--radius-md); padding: var(--space-3) var(--space-4);
+  font-size: 0.8125rem; line-height: 1.5; margin: var(--space-4) 0; }
+.eigene-bewertung-hinweis a { color: inherit; font-weight: 600; }
 /* Bewertungen der anderen Prüfer: rechtsbündig unter dem eigenen Wert, bei
    mehreren Prüfern direkt nebeneinander. */
 .fremd-werte { display: flex; flex-wrap: wrap; justify-content: flex-end;
-  gap: 0.2rem; margin-top: 0.15rem; padding: 0 0.6rem 0.2rem; }
-.fremd-wert { font-size: 0.72rem; color: #667; background: #f0f0f0; border-radius: 3px;
-  padding: 0 0.3rem; cursor: help; }
+  gap: 2px; margin-top: 0.15rem; padding: 0 10px 4px; }
+.fremd-wert { font-size: 0.6875rem; color: var(--g-1000); background: var(--g-300); border-radius: 3px;
+  padding: 0 4px; cursor: help; }
 
 /* Einstellungen auf der Prüfungs-Übersicht */
-.einstellungen { margin: 1rem 0; padding: 0.6rem 0.9rem; border: 1px solid #e0e0e0;
-  border-radius: 6px; background: #fafafa; }
-.einstellungen form { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-.toggle-label { font-size: 0.9rem; }
+.einstellungen { margin: var(--space-4) 0; padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--g-500); border-radius: var(--radius-md); background: var(--g-200); }
+.einstellungen form { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.toggle-label { font-size: 0.8125rem; color: var(--g-1100); }
 
 /* Finalisierung */
-.final-kopf { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
-.final-spalte { background: #eef4fb; }
-th.final-spalte { border-bottom: 2px solid #1a2b3c; }
-.feld-zelle.read-only { text-align: center; color: #556; background: #fafafa; }
-.final-badge { font-size: 0.8rem; font-weight: 600; border-radius: 4px; padding: 0.1rem 0.5rem; }
-.final-badge--zu { background: #fde9c8; color: #8a5a00; border: 1px solid #e6c78a; }
-.feld-input.gesperrt { background: #f0f0f0; color: #888; }
+.final-kopf { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
+.final-kopf h2 { font-size: 1.375rem; font-weight: 600; letter-spacing: -0.02em; color: var(--g-1200); margin: 0; }
+.final-spalte { background: var(--blue-light); }
+th.final-spalte { border-bottom: 2px solid var(--g-1200); }
+.feld-zelle.read-only { text-align: center; color: var(--g-1100); background: var(--g-200); }
+.final-badge { display: inline-flex; align-items: center; height: 2.25rem; box-sizing: border-box;
+  font-size: 0.75rem; font-weight: 600; border-radius: 999px; padding: 0 12px; margin-left: auto; }
+.final-badge--zu { background: var(--amber-light); color: #8a5a00; border: 1px solid #e6c78a; }
+
+/* Finalisieren/Entsperren-Aktion: eigene Zeile unter der Tabelle, wie ein
+   abschließender OK-Button. */
+.final-aktion { display: flex; justify-content: flex-end; margin-top: var(--space-5); }
+.final-aktion .btn {
+  height: 2.75rem; box-sizing: border-box; display: inline-flex; align-items: center;
+  font-size: 0.9375rem; padding: 0 22px;
+}
+.feld-input.gesperrt { background: var(--g-300); color: var(--g-900); }
 
 /* Vorausgefüllter Prüfer-Durchschnitt (noch nicht final): deutlich abgesetzt –
    gedämpfte Farbe, kursiv, zarter Hintergrund. Wird beim Bestätigen/Ändern
    (Klasse entfernt) zur normalen finalen Optik. */
-table.bogen .feld-input.feld-vorschlag { color: #8a6d00; font-style: italic; background: #fffbe9; }
+table.bogen .feld-input.feld-vorschlag { color: #8a6d00; font-style: italic; background: var(--amber-light); }
 table.bogen .feld-input.feld-vorschlag:focus { color: inherit; font-style: normal; background: transparent; }
 .final-vorschlag-legende { display: flex; align-items: center; gap: 0.4rem; }
 .vorschlag-muster { display: inline-block; color: #8a6d00; font-style: italic;
-  background: #fffbe9; border: 1px solid #e6d9a2; border-radius: 4px; padding: 0 0.4rem; font-weight: 600; }
+  background: var(--amber-light); border: 1px solid #e6d9a2; border-radius: var(--radius-sm); padding: 0 0.4rem; font-weight: 600; }
 
-/* Wiederverwendbare Buttons (passend zur dunkelblauen Design-Sprache). */
-.btn { display: inline-block; font: inherit; font-weight: 600; font-size: 0.9rem;
-  padding: 0.45rem 0.9rem; border-radius: 6px; cursor: pointer;
-  border: 1px solid #c3cdd8; background: #fff; color: #1a2b3c;
-  text-decoration: none; transition: background-color 0.08s ease, border-color 0.08s ease; }
-.btn:hover { background: #eef2f7; border-color: #1a2b3c; }
-.btn-primary { background: #1a2b3c; border-color: #1a2b3c; color: #fff; }
-.btn-primary:hover { background: #2c4360; border-color: #2c4360; }
+/* Wiederverwendbare Buttons (passend zur neutralen Design-Sprache). */
+.btn { display: inline-block; font: inherit; font-weight: 500; font-size: 0.875rem;
+  padding: 6px 14px; border-radius: var(--radius-sm); cursor: pointer;
+  border: 1px solid var(--g-700); background: var(--g-100); color: var(--g-1100);
+  text-decoration: none; transition: background-color 0.12s ease, border-color 0.12s ease; }
+.btn:hover { background: var(--g-300); border-color: var(--g-900); }
+.btn-primary { background: var(--g-1200); border-color: var(--g-1200); color: var(--g-100); }
+.btn-primary:hover { background: var(--g-1100); border-color: var(--g-1100); }
 
 /* Verwaltungsseite (admin/index) */
-.admin-block { margin-bottom: 2rem; }
-.admin-liste { list-style: none; padding: 0; margin: 0.75rem 0 1rem;
-  display: flex; flex-direction: column; gap: 0.5rem; }
-.admin-karte { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap;
-  padding: 0.7rem 1rem; border: 1px solid #d7dde4; border-radius: 8px; background: #fff; }
-.admin-karte-titel { font-weight: 600; color: #1a2b3c; text-decoration: none; }
+.admin-block { margin-bottom: var(--space-6); }
+.admin-liste { list-style: none; padding: 0; margin: var(--space-3) 0 var(--space-4);
+  display: flex; flex-direction: column; gap: var(--space-2); }
+.admin-karte { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;
+  padding: var(--space-3) var(--space-4); border: 1px solid var(--g-500); border-radius: var(--radius-lg); background: var(--g-100); }
+.admin-karte-titel { font-weight: 600; color: var(--g-1200); text-decoration: none; }
 a.admin-karte-titel:hover { text-decoration: underline; }
-.admin-karte .status-aktiv { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em;
-  color: #0a5d1e; background: #d7f5d7; border: 1px solid #a9dbb4; border-radius: 4px; padding: 0.05rem 0.4rem; }
-.admin-karte .admin-aktion { margin-left: auto; font-size: 0.88rem; font-weight: 600;
-  color: #1a2b3c; text-decoration: none; white-space: nowrap; }
+.admin-karte .status-aktiv { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.02em;
+  color: var(--green); background: var(--green-light); border-radius: 999px; padding: 1px 9px; }
+.admin-karte .admin-aktion { margin-left: auto; font-size: 0.875rem; font-weight: 600;
+  color: var(--g-1200); text-decoration: none; white-space: nowrap; }
 .admin-karte .admin-aktion:hover { text-decoration: underline; }
-.pruefer-meta { color: #667; font-size: 0.88rem; }
-.rolle-badge { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em;
-  border-radius: 4px; padding: 0.05rem 0.45rem; }
+.pruefer-meta { color: var(--g-1000); font-size: 0.875rem; }
+.rolle-badge { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.02em;
+  border-radius: 999px; padding: 1px 9px; }
 /* Rolle-Badge nach rechts, wenn keine Inline-Aktion folgt (Prüfer-Liste ohne
    Reset-Button gibt es nicht mehr; hier bleibt sie direkt bei den Meta-Daten). */
 .admin-karte .rolle-badge:last-child { margin-left: auto; }
-.rolle-admin { background: #e3ecf6; color: #1a2b3c; border: 1px solid #b9cde3; }
-.rolle-pruefer { background: #eef2f7; color: #556; border: 1px solid #cdd6e0; }
+.rolle-admin { background: var(--blue-light); color: var(--blue); }
+.rolle-pruefer { background: var(--g-400); color: var(--g-1100); }
 
 /* Prüfung-anlegen-Formular: Karten-Optik */
-.pruefung-neu { align-items: flex-end; padding: 0.9rem 1rem; border: 1px solid #d7dde4;
-  border-radius: 8px; background: #fafbfc; }
+.pruefung-neu { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3);
+  margin: var(--space-2) 0; padding: var(--space-4); border: 1px solid var(--g-500);
+  border-radius: var(--radius-lg); background: var(--g-200); }
 .pruefung-neu select, .pruefung-neu input[type="text"] {
-  font: inherit; height: 2.25rem; box-sizing: border-box;
-  padding: 0 0.55rem; border: 1px solid #c3cdd8; border-radius: 6px; background: #fff; }
+  font: inherit; font-size: 0.875rem; height: 2.25rem; box-sizing: border-box;
+  padding: 0 10px; border: 1px solid var(--g-700); border-radius: var(--radius-sm); background: var(--g-100); }
 .pruefung-neu .btn { height: 2.25rem; box-sizing: border-box;
   display: inline-flex; align-items: center; }
 
 /* Kleiner Sekundär-Button (Inline-Aktionen in Karten) */
-.btn-klein { font-size: 0.8rem; padding: 0.3rem 0.6rem; }
+.btn-klein { font-size: 0.75rem; padding: 3px 10px; }
 .admin-inline-form { margin: 0; margin-left: auto; }
 .admin-karte .admin-inline-form { margin-left: auto; }
-.inline-label { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; }
-.inline-label select { font: inherit; height: 2.25rem; box-sizing: border-box;
-  padding: 0 0.55rem; border: 1px solid #c3cdd8; border-radius: 6px; background: #fff; }
-.admin-unter { font-size: 1rem; margin: 1.25rem 0 0.5rem; }
+.inline-label { display: inline-flex; align-items: center; gap: var(--space-2); font-size: 0.875rem; }
+.inline-label select { font: inherit; font-size: 0.875rem; height: 2.25rem; box-sizing: border-box;
+  padding: 0 10px; border: 1px solid var(--g-700); border-radius: var(--radius-sm); background: var(--g-100); }
+.admin-unter { font-size: 1rem; margin: var(--space-5) 0 var(--space-2); }
 
 /* Wiederholer-Import: Kandidatenliste mit offenen/übernommenen Teilen. */
 .import-karte { flex-wrap: wrap; }
-.import-wahl { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+.import-wahl { display: flex; align-items: center; gap: var(--space-2); cursor: pointer; }
 .import-teile { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; margin-left: auto; font-size: 0.8rem; }
-.teil-gruppe { color: #667; display: inline-flex; flex-wrap: wrap; gap: 0.25rem; align-items: baseline; }
-.teil { font-size: 0.72rem; font-weight: 600; border-radius: 4px; padding: 0.05rem 0.4rem; }
-.teil-offen { background: #f8d7d7; color: #8a0016; }
-.teil-ok { background: #d7f5d7; color: #0a5d1e; }
+.teil-gruppe { color: var(--g-1000); display: inline-flex; flex-wrap: wrap; gap: 0.25rem; align-items: baseline; }
+.teil { font-size: 0.6875rem; font-weight: 600; border-radius: 999px; padding: 1px 9px; }
+.teil-offen { background: var(--red-light); color: var(--red); }
+.teil-ok { background: var(--green-light); color: var(--green); }
 
 /* Einmalig angezeigter Einladungs-/Reset-Link */
-.link-box { border: 1px solid #b9cde3; background: #eef4fb; border-radius: 8px;
-  padding: 0.9rem 1rem; margin: 0.75rem 0 1.25rem; }
-.link-box p { margin: 0 0 0.5rem; }
+.link-box { border: 1px solid #bcdcfc; background: var(--blue-light); border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5); margin: var(--space-3) 0 var(--space-5); }
+.link-box p { margin: 0 0 var(--space-2); }
 .link-feld { width: 100%; box-sizing: border-box; font: inherit; font-size: 0.85rem;
-  padding: 0.5rem 0.6rem; border: 1px solid #c3cdd8; border-radius: 6px; background: #fff; }
+  padding: 8px 10px; border: 1px solid var(--g-700); border-radius: var(--radius-sm); background: var(--g-100); }
 
 /* Vertikales Formular (Login, Registrieren, Passwort) */
-.stack-form { display: flex; flex-direction: column; gap: 0.85rem; max-width: 22rem; margin: 1rem 0; }
-.stack-form label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.9rem; font-weight: 600; }
+.stack-form { display: flex; flex-direction: column; gap: var(--space-4); max-width: 22rem; margin: var(--space-4) 0; }
+.stack-form label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.875rem; font-weight: 600; color: var(--g-1100); }
 .stack-form input, .stack-form select {
-  font: inherit; font-weight: normal; height: 2.4rem; box-sizing: border-box;
-  padding: 0 0.6rem; border: 1px solid #c3cdd8; border-radius: 6px; background: #fff; }
+  font: inherit; font-size: 0.9375rem; font-weight: normal; height: 2.5rem; box-sizing: border-box;
+  padding: 0 12px; border: 1px solid var(--g-700); border-radius: var(--radius-sm); background: var(--g-100); }
 .stack-form input:focus, .stack-form select:focus {
-  outline: 2px solid #7c5cff; outline-offset: -1px; }
-.stack-form .btn { align-self: flex-start; margin-top: 0.25rem; }
+  outline: 2px solid var(--purple); outline-offset: -1px; }
+.stack-form .btn { align-self: flex-start; margin-top: var(--space-1); }
 
 /* Stammdaten-Formular (Prüfling anlegen) */
-.stamm-neu { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin: 0.75rem 0; }
+.stamm-neu { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; margin: var(--space-4) 0; }
 .stamm-neu input[type="text"] {
-  font: inherit; height: 2.25rem; box-sizing: border-box;
-  padding: 0 0.55rem; border: 1px solid #c3cdd8; border-radius: 6px; min-width: 12rem; }
+  font: inherit; font-size: 0.875rem; height: 2.25rem; box-sizing: border-box;
+  padding: 0 10px; border: 1px solid var(--g-700); border-radius: var(--radius-sm); min-width: 12rem; background: var(--g-100); }
 .stamm-neu .btn { height: 2.25rem; box-sizing: border-box;
   display: inline-flex; align-items: center; }
+
+/* Footer: Autosave-Status (nur wenn befüllt) + Schalter für erklärende Hinweistexte */
+footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding: var(--space-4) var(--space-5);
+  margin-top: var(--space-6);
+  border-top: 1px solid var(--g-500);
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+footer #autosave-status { margin: 0; }
+footer #autosave-status:empty { display: none; }
+.hinweise-schalter-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.8125rem;
+  color: var(--g-1000);
+  cursor: pointer;
+  margin-left: auto;
+}
+.hinweise-schalter-label input { cursor: pointer; }

@@ -2,9 +2,6 @@
 <%- include('../_bereich-nav', { termin, bereiche, aktiverBereich }) %>
 <h1>Fachgespräch – <%= pruefling.name %></h1>
 <p class="hinweis"><a href="/pruefung/<%= termin.slug %>/fachgespraech">← zur Übersicht</a></p>
-<% if (typeof uebernommen === 'undefined' || uebernommen === null) { %>
-<p class="hinweis" id="autosave-status" role="status" aria-live="polite">Eingaben werden automatisch gespeichert.</p>
-<% } %>
 
 <div class="pruefling-nav">
   <% geschwister.forEach(g => { %>

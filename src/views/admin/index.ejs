@@ -62,14 +62,27 @@
   <% if (link) { %>
     <div class="link-box">
       <% if (link.art === 'einladung') { %>
-        <p><strong>Einladungslink erstellt</strong> (Rolle: <%= link.role === 'admin' ? 'Admin' : 'Prüfer' %>, 7 Tage gültig).
+        <p><strong>Einladungslink erstellt</strong> (Rolle: <%= link.role === 'admin' ? 'Admin' : 'Prüfer' %>, 7 Tage gültig<% if (link.maxNutzungen > 1) { %>, bis zu <%= link.maxNutzungen %>-mal einlösbar<% } %>).
           Gib ihn der einzuladenden Person weiter:</p>
       <% } else { %>
         <p><strong>Reset-Link für <%= link.name %></strong> (24 Stunden gültig). Übergib ihn der Person:</p>
       <% } %>
       <input type="text" class="link-feld" readonly value="<%= link.url %>"
              onclick="this.select()" aria-label="Link zum Kopieren">
-      <p class="hinweis">Der Link wird nur jetzt angezeigt und lässt sich einmal einlösen.</p>
+      <% if (link.art === 'einladung') { %>
+        <p class="hinweis">Alternativ kann der Code auch von Hand auf der Registrierungsseite eingegeben werden – praktisch für eine Gruppen-Nachricht (z.B. WhatsApp):</p>
+        <input type="text" class="link-feld" readonly value="<%= link.code %>"
+               onclick="this.select()" aria-label="Code zum Kopieren">
+        <p class="hinweis">
+          <% if (link.maxNutzungen > 1) { %>
+            Der Code wird nur jetzt angezeigt und lässt sich bis zu <%= link.maxNutzungen %>-mal einlösen.
+          <% } else { %>
+            Der Code wird nur jetzt angezeigt und lässt sich einmal einlösen.
+          <% } %>
+        </p>
+      <% } else { %>
+        <p class="hinweis">Der Link wird nur jetzt angezeigt und lässt sich einmal einlösen.</p>
+      <% } %>
     </div>
   <% } %>
 
@@ -93,6 +106,10 @@
         <option value="admin">Admin</option>
       </select>
     </label>
+    <label class="inline-label">Anzahl Nutzungen
+      <input type="number" name="max_nutzungen" value="1" min="1" max="200" style="width: 5em">
+    </label>
+    <p class="hinweis">Für eine Einladung an eine einzelne Person genügt 1. Für eine Gruppen-Einladung (z.B. in WhatsApp geteilt) ein höheres Limit wählen – der Code kann dann von mehreren Personen zur Registrierung genutzt werden.</p>
     <button type="submit" class="btn btn-primary">Einladungslink erstellen</button>
   </form>
 
@@ -103,7 +120,8 @@
         <li class="admin-karte">
           <span class="rolle-badge rolle-<%= e.role %>"><%= e.role === 'admin' ? 'Admin' : 'Prüfer' %></span>
           <span class="pruefer-meta">erstellt <%= new Date(e.erstellt_am + 'Z').toLocaleDateString('de-DE') %>
-            · läuft ab <%= new Date(e.ablauf_am + 'Z').toLocaleDateString('de-DE') %></span>
+            · läuft ab <%= new Date(e.ablauf_am + 'Z').toLocaleDateString('de-DE') %>
+            · <%= e.genutzt_anzahl %>/<%= e.max_nutzungen %> genutzt</span>
           <form method="post" action="/admin/einladungen/<%= e.id %>/loeschen" class="admin-inline-form">
             <button type="submit" class="btn btn-klein">Zurückziehen</button>
           </form>

@@ -11,6 +11,7 @@
   const root = document.getElementById('bogen-form') || document.getElementById('final-form');
   if (!root) return;
   const statusEl = document.getElementById('autosave-status');
+  if (statusEl) statusEl.textContent = 'Eingaben werden automatisch gespeichert.';
   const terminSlug = root.dataset.terminSlug;
   const feldUrl = root.dataset.feldUrl || `/pruefung/${terminSlug}/schriftlich/feld`;
 

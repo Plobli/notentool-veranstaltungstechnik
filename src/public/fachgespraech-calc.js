@@ -10,6 +10,7 @@
   const feldUrl = `/pruefung/${terminSlug}/fachgespraech/${prueflingId}/feld`;
   const punkteUrl = `/pruefung/${terminSlug}/fachgespraech/${prueflingId}/punkte`;
   const statusEl = document.getElementById('autosave-status');
+  if (statusEl) statusEl.textContent = 'Eingaben werden automatisch gespeichert.';
 
   let statusTimer = null;
   function zeigeStatus(text, fehler) {

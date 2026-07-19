@@ -40,8 +40,7 @@
       return `<div class="fremd-werte">${eintraege}</div>`;
     }
   %>
-  <p class="hinweis"><strong><%= termin.name %></strong> · Ansicht: Matrix (alle Prüflinge nebeneinander)</p>
-  <p class="eigene-bewertung-hinweis">
+  <p class="hinweis erklaerung eigene-bewertung-hinweis">
     Dies ist <strong>Ihre eigene Bewertung</strong> (<%= user.name %>). Jeder Prüfer bewertet für sich;
     am Ende werden die Bewertungen unter
     <a href="/pruefung/<%= termin.slug %>/schriftlich/final">Finalisierung</a> zusammengeführt.
@@ -49,24 +48,13 @@
       <br>Die Bewertungen der anderen Prüfer sind eingeblendet (grau).
     <% } %>
   </p>
-  <section class="einstellungen">
-    <form method="post" action="/pruefung/<%= termin.slug %>/einstellungen/einsicht">
-      <input type="hidden" name="einsicht_fremd" value="<%= termin.einsicht_fremd ? '0' : '1' %>">
-      <label class="toggle-label">
-        Prüfer sehen fremde Einzelbewertungen —
-        <strong><%= termin.einsicht_fremd ? 'an' : 'aus' %></strong>
-      </label>
-      <button type="submit" class="btn btn-klein"><%= termin.einsicht_fremd ? 'Ausschalten' : 'Einschalten' %></button>
-    </form>
-  </section>
-  <p class="hinweis" id="autosave-status" role="status" aria-live="polite">Eingaben werden automatisch gespeichert.</p>
-  <p class="hinweis">
+  <p class="hinweis erklaerung">
     Jeder Bereich ist ab <strong>50 Punkten</strong> bestanden (mindestens „ausreichend").
-    Das Gesamt ist nach § 20 VfAusbV gewichtet.
+    Das Gesamt ist gewichtet.
     Die <strong>Energieversorgung</strong> ist Sperrfach – ist sie nicht bestanden, gilt die schriftliche Prüfung als nicht bestanden.
   </p>
   <% if (uebernommeneBereiche.size > 0) { %>
-    <p class="hinweis">
+    <p class="hinweis erklaerung">
       Bei <strong>Wiederholern</strong> sind bereits bestandene Bereiche (aus dem Vortermin)
       ausgegraut und mit <span class="uebernommen-badge">W</span> markiert – sie werden übernommen
       und nicht erneut bewertet.
@@ -81,7 +69,7 @@
           <div class="tg-header">
             <h2>
               <%= tg.name %>
-              <span class="tg-gewicht" title="Gewichtung innerhalb der schriftlichen Prüfung (§ 20 VfAusbV)"><%= tg.gewicht %> %</span>
+              <span class="tg-gewicht" title="Gewichtung innerhalb der schriftlichen Prüfung"><%= tg.gewicht %> %</span>
               <% if (tg.sperrfach) { %><span class="tg-sperrfach" title="Sperrfach – muss mindestens ausreichend sein">Sperrfach</span><% } %>
             </h2>
             <% if (['planung','durchfuehrung','energie'].includes(tg.key)) { %>
@@ -230,7 +218,7 @@
                    else { statusText = 'nicht bestanden'; statusKlasse = 'durchgefallen'; } %>
                 <td class="gesamt-status <%= statusKlasse %>"
                   data-pruefling="<%= p.id %>"
-                  title="MEp = mündliche Ergänzungsprüfung (§ 20 Abs. 3 VfAusbV)">
+                  title="MEp = mündliche Ergänzungsprüfung">
                   <span class="gesamt-status-text"><%= statusText %></span>
                   <span class="mep-hinweis" data-pruefling="<%= p.id %>"><%= erg.mepMoeglich ? erg.mepText : '' %></span>
                 </td>
@@ -242,8 +230,19 @@
 
     </div>
 
-    <p class="hinweis">Bei WISO wird genau eine Aufgabe gestrichen (✗). Ohne Auswahl fällt automatisch U6 weg.</p>
+    <p class="hinweis erklaerung">Bei WISO wird genau eine Aufgabe gestrichen (✗). Ohne Auswahl fällt automatisch U6 weg.</p>
   </div>
+
+  <section class="einstellungen">
+    <form method="post" action="/pruefung/<%= termin.slug %>/einstellungen/einsicht">
+      <input type="hidden" name="einsicht_fremd" value="<%= termin.einsicht_fremd ? '0' : '1' %>">
+      <label class="toggle-label">
+        Prüfer sehen fremde Einzelbewertungen —
+        <strong><%= termin.einsicht_fremd ? 'an' : 'aus' %></strong>
+      </label>
+      <button type="submit" class="btn btn-klein"><%= termin.einsicht_fremd ? 'Ausschalten' : 'Einschalten' %></button>
+    </form>
+  </section>
 
   <script src="/schriftlich-calc.js"></script>
 <% } %>

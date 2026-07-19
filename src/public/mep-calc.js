@@ -11,6 +11,7 @@
   const terminSlug = root.dataset.terminSlug;
   const feldUrl = `/pruefung/${terminSlug}/mep/${prueflingId}/feld`;
   const statusEl = document.getElementById('autosave-status');
+  if (statusEl) statusEl.textContent = 'Eingaben werden automatisch gespeichert.';
 
   let statusTimer = null;
   function zeigeStatus(text, fehler) {

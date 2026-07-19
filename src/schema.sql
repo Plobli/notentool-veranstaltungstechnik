@@ -13,11 +13,13 @@ CREATE TABLE IF NOT EXISTS session (
   expires_at TEXT NOT NULL
 );
 
--- Einladung zur Selbstregistrierung. Der Admin erzeugt einen Code; der neue
--- Prüfer registriert sich damit über /registrieren. Nur der Hash des Codes
+-- Einladung zur Selbstregistrierung. Der Admin erzeugt einen Code; neue
+-- Prüfer registrieren sich damit über /registrieren (Link mit Code oder
+-- manuelle Eingabe, z.B. für eine WhatsApp-Gruppe). Nur der Hash des Codes
 -- wird gespeichert (wie ein Passwort), Klartext existiert nur im Link.
 -- Rolle kommt aus der Einladung (nicht vom Registrierenden wählbar).
--- Einmalgebrauch: verbraucht_am wird beim Anlegen des Kontos gesetzt.
+-- Mehrfachnutzung bis max_nutzungen: genutzt_anzahl zählt hoch, die
+-- Einladung gilt als verbraucht, sobald genutzt_anzahl = max_nutzungen.
 CREATE TABLE IF NOT EXISTS einladung (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   code_hash TEXT NOT NULL UNIQUE,
@@ -25,6 +27,8 @@ CREATE TABLE IF NOT EXISTS einladung (
   erstellt_von INTEGER REFERENCES user(id) ON DELETE SET NULL,
   erstellt_am TEXT NOT NULL DEFAULT (datetime('now')),
   ablauf_am TEXT NOT NULL,
+  max_nutzungen INTEGER NOT NULL DEFAULT 1,
+  genutzt_anzahl INTEGER NOT NULL DEFAULT 0,
   verbraucht_am TEXT
 );
 

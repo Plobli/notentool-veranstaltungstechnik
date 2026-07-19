@@ -1,8 +1,27 @@
 <h1>Registrieren</h1>
 
-<% if (!gueltig) { %>
-  <p class="error">Dieser Einladungslink ist ungültig oder abgelaufen.</p>
-  <p class="hinweis">Bitte wende dich an die Prüfungsleitung für eine neue Einladung.</p>
+<% if (codeEingabe) { %>
+  <% if (code) { %>
+    <p class="error">Dieser Einladungscode ist ungültig, abgelaufen oder bereits ausgeschöpft.</p>
+  <% } %>
+  <% if (error) { %><p class="error"><%= error %></p><% } %>
+  <p class="hinweis">Bitte gib deinen Einladungscode ein, um dein Konto anzulegen.</p>
+  <form method="post" action="/registrieren" class="stack-form">
+    <label>Einladungscode
+      <input type="text" name="code" value="<%= werte.code || '' %>" required autofocus autocomplete="off">
+    </label>
+    <label>Name
+      <input type="text" name="name" value="<%= werte.name %>" required>
+    </label>
+    <label>E-Mail
+      <input type="email" name="email" value="<%= werte.email %>" required>
+    </label>
+    <label>Passwort
+      <input type="password" name="password" required>
+    </label>
+    <p class="hinweis">Mindestens 10 Zeichen, kein leicht zu erratendes Passwort.</p>
+    <button type="submit" class="btn btn-primary">Konto anlegen</button>
+  </form>
   <p class="hinweis"><a href="/login">← zur Anmeldung</a></p>
 <% } else { %>
   <p class="hinweis">
